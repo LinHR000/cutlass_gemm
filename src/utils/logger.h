@@ -20,7 +20,7 @@
 #include <map>
 #include <string>
 
-#include "src/utils/string_utils.h"
+#include "utils/string_utils.h"
 
 namespace fastertransformer {
 

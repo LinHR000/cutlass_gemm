@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/utils/cuda_utils.h"
+#include "utils/cuda_utils.h"
 
 namespace fastertransformer {
 

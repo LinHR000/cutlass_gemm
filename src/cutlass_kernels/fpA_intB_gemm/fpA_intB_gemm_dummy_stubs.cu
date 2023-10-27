@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm_template.h"
+#include "cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm_template.h"
 
 namespace fastertransformer {
 template class CutlassFpAIntBGemmRunner<float, uint8_t>;

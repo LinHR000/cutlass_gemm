@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "src/cutlass_kernels/cutlass_preprocessors.h"
-#include "src/utils/cuda_bf16_wrapper.h"
+#include "cutlass_preprocessors.h"
+#include "utils/cuda_bf16_wrapper.h"
 
 #include "cutlass_extensions/gemm/kernel/mixed_gemm_B_layout.h"
 

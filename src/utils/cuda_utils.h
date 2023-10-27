@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include "3rdparty/INIReader.h"
-#include "src/utils/cuda_bf16_wrapper.h"
-#include "src/utils/logger.h"
+#include "INIReader.h"
+#include "utils/cuda_bf16_wrapper.h"
+#include "utils/logger.h"
 
 #include <cublasLt.h>
 #include <cublas_v2.h>

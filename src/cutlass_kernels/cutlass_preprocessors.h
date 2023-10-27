@@ -20,8 +20,8 @@
 #include <stdint.h>
 #include <vector>
 
-#include "src/utils/cuda_utils.h"
-
+#include "utils/cuda_utils.h"
+// using fastertransformer;
 namespace fastertransformer {
 enum class QuantType {
     INT8_WEIGHT_ONLY,

@@ -29,9 +29,9 @@
 
 #pragma GCC diagnostic pop
 
-#include "src/cutlass_kernels/cutlass_heuristic.h"
-#include "src/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm.h"
-#include "src/utils/cuda_utils.h"
+#include "cutlass_kernels/cutlass_heuristic.h"
+#include "cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm.h"
+#include "utils/cuda_utils.h"
 
 namespace fastertransformer {
 

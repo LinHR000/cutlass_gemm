@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "src/utils/cuda_bf16_wrapper.h"
+#include "utils/cuda_bf16_wrapper.h"
 #include <cuda_fp16.h>
 
 namespace fastertransformer {

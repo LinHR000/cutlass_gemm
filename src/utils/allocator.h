@@ -41,7 +41,7 @@
 #include <memory>
 #endif
 
-#include "src/utils/logger.h"
+#include "utils/logger.h"
 
 #if defined(CUDART_VERSION) && CUDART_VERSION < 11020
 #define CUDA_MEMORY_POOL_DISABLED

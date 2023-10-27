@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/cutlass_kernels/int8_gemm/int8_gemm_template.h"
+#include "cutlass_kernels/int8_gemm/int8_gemm_template.h"
 
 namespace fastertransformer {
 #ifdef ENABLE_BF16

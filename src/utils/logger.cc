@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/utils/logger.h"
+#include "utils/logger.h"
 #include <cuda_runtime.h>
 
 namespace fastertransformer {

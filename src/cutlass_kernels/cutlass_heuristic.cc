@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "src/cutlass_kernels/cutlass_heuristic.h"
-#include "src/utils/cuda_bf16_wrapper.h"
+#include "cutlass_heuristic.h"
+#include "utils/cuda_bf16_wrapper.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
