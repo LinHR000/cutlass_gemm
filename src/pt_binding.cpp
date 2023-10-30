@@ -50,8 +50,8 @@ Tensor gemm_in8_w8_ofp16_per_token(Tensor         input,
                                 int64_t           n,
                                 int64_t           k,
                                 std::string       tile_config,
-                                int               stages,
-                                int               splitK,
+                                const int               stages,
+                                const int               splitK,
                                 char*             workspace_ptr,
                                 const size_t      workspace_bytes);
 
@@ -63,8 +63,8 @@ Tensor gemm_in8_w8_o8_per_token(Tensor         input,
                                 int64_t           n,
                                 int64_t           k,
                                 std::string       tile_config,
-                                int               stages,
-                                int               splitK,
+                                const int               stages,
+                                const int               splitK,
                                 char*             workspace_ptr,
                                 const size_t      workspace_bytes);
 
@@ -76,8 +76,8 @@ Tensor gemm_in8_w8_o32_per_token(Tensor         input,
                                 int64_t           n,
                                 int64_t           k,
                                 std::string       tile_config,
-                                int               stages,
-                                int               splitK,
+                                const int               stages,
+                                const int               splitK,
                                 char*             workspace_ptr,
                                 const size_t      workspace_bytes);                                                            
 
