@@ -4,7 +4,6 @@
 #include <torch/custom_class.h>
 #include <torch/script.h>
 #include "cutlass_kernels/cutlass_preprocessors.h"
-#include "cutlass_kernels/int8_gemm_raw/int8_gemm_raw.h"
 using torch::Tensor;
 enum class QuantType {
     INT8_WEIGHT_ONLY,
@@ -43,6 +42,44 @@ Tensor gemm_infp16_w8_ofp16_bias_act(
                              std::string activation_type_str);
 std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight,
                                                                     int quant_mode);
+Tensor gemm_in8_w8_ofp16_per_token(Tensor         input,
+                                Tensor            weight,
+                                float             alpha, 
+                                float             beta,
+                                int64_t           m,
+                                int64_t           n,
+                                int64_t           k,
+                                std::string       tile_config,
+                                int               stages,
+                                int               splitK,
+                                char*             workspace_ptr,
+                                const size_t      workspace_bytes);
+
+Tensor gemm_in8_w8_o8_per_token(Tensor         input,
+                                Tensor            weight,
+                                float             alpha, 
+                                float             beta,
+                                int64_t           m,
+                                int64_t           n,
+                                int64_t           k,
+                                std::string       tile_config,
+                                int               stages,
+                                int               splitK,
+                                char*             workspace_ptr,
+                                const size_t      workspace_bytes);
+
+Tensor gemm_in8_w8_o32_per_token(Tensor         input,
+                                Tensor            weight,
+                                float             alpha, 
+                                float             beta,
+                                int64_t           m,
+                                int64_t           n,
+                                int64_t           k,
+                                std::string       tile_config,
+                                int               stages,
+                                int               splitK,
+                                char*             workspace_ptr,
+                                const size_t      workspace_bytes);                                                            
 
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -76,14 +113,14 @@ m.def(
     "Compute the attention between an input query and the cached key/value tensors");
 m.def(
     "gemm_in8_w8_ofp16_per_token",
-    &fastertransformer::cutlass_int8_gemm_per_tensor<__half>,
+    &gemm_in8_w8_ofp16_per_token,
     "Compute the attention between an input query and the cached key/value tensors");
-m.def(
-    "gemm_in8_w8_o8_per_token",
-    &fastertransformer::cutlass_int8_gemm_per_tensor<int8_t>,
-    "Compute the attention between an input query and the cached key/value tensors");
-m.def(
-    "gemm_in8_w8_o32_per_token",
-    &fastertransformer::cutlass_int8_gemm_per_tensor<int32_t>,
-    "Compute the attention between an input query and the cached key/value tensors");
+// m.def(
+//     "gemm_in8_w8_o8_per_token",
+//     &gemm_in8_w8_o8_per_token,
+//     "Compute the attention between an input query and the cached key/value tensors");
+// m.def(
+//     "gemm_in8_w8_o32_per_token",
+//     &gemm_in8_w8_o32_per_token,
+//     "Compute the attention between an input query and the cached key/value tensors");
 }

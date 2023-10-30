@@ -35,6 +35,7 @@ void cutlass_int8_gemm_per_tensor(const int8_t*     A,
                                   int               stages,
                                   int               splitK,
                                   char*             workspace_ptr,
-                                  const size_t      workspace_bytes);
+                                  const size_t      workspace_bytes,
+                                  cudaStream_t      stream);
 
 }  // namespace fastertransformer

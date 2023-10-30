@@ -32,6 +32,7 @@
 
 #pragma GCC diagnostic pop
 #include <string>
+#include "cutlass_kernels/int8_gemm_raw/int8_gemm_raw.h"
 #include "utils/cuda_utils.h"
 
 namespace fastertransformer {
@@ -319,7 +320,8 @@ void cutlass_int8_gemm_per_tensor(const int8_t*     A,
                                   int               stages,
                                   int               splitK,
                                   char*             workspace_ptr,
-                                  const size_t      workspace_bytes)
+                                  const size_t      workspace_bytes,
+                                  cudaStream_t      stream)
 {
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
     auto stream = at::cuda::getCurrentCUDAStream().stream();
