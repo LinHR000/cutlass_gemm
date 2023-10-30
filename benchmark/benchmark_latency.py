@@ -2,17 +2,20 @@ import torch
 from cutlass_gemm import gemm_op
 import argparse
 import time
+import torch.nn as nn
 
 def main(args):
     # prepare data for test
     symmetric_quantizer = gemm_op.symmetric_quantize_last_axis_of_batched_matrix
-    for m in range(1,32,args.m):
+    for m in range(1,args.m,31):
         n,k = args.n,args.k
         input = torch.randint(low=-127, high=127, size=(m,k),dtype=torch.int8).cuda()
         weight = torch.randint(low=-127, high=127, size=(n,k),dtype=torch.int8).cuda()
         input_f = input.half()
         weight_t = weight.t().contiguous()
-        _,weight_mix,weight_mix_scale = symmetric_quantizer(weight_t.cpu(),torch.int8)
+        weight_t_half = weight_t.half()
+        _,weight_mix,weight_mix_scale = symmetric_quantizer(weight_t_half.cpu(),0)
+        # symmetric_quantizer(weight_t_half.cpu(),0)
         weight_mix  = weight_mix.cuda()
         weight_mix_scale = weight_mix_scale.cuda()
 
@@ -99,11 +102,11 @@ def main(args):
         func = nn.Linear(k, n,bias=True,dtype=torch.float16).cuda()
         func.weight.data.copy_(weight.half())
         func.bias.data.copy_(bias_fp16)
-        output = func(a_f16)
+        output = func(input_f)
         for i in range(args.num_iters):
             torch.cuda.synchronize()
             time_start = time.time()
-            output = func(a_f16)
+            output = func(input_f)
             torch.cuda.synchronize()
             time_end = time.time()
             total_time_linear+=time_end-time_start

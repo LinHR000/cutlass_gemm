@@ -230,8 +230,10 @@ std::vector<Tensor> symmetric_quantize_last_axis_of_batched_matrix(Tensor weight
 // Same as symmetric_quantize_last_axis_of_batched_matrix but returns a tuple of:
 // (unprocessed_quantized_weights, preprocessed_quantized_weights, scales)
 // Exposed mainly for testing, so that the unprocessed weights can be passed to torch functions.
-std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight, torch::ScalarType quant_type)
-{
+// std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight, torch::ScalarType quant_type)
+std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight, int quant_mode)
+{   
+    torch::ScalarType quant_type = (quant_mode == 0) ?  torch::kInt8 : at::ScalarType::QUInt4x2;
     return symmetric_quantize_helper(weight, quant_type, true);
 }
 

@@ -41,7 +41,7 @@ Tensor gemm_infp16_w8_ofp16_bias_act(
                              Tensor bias, 
                              std::string activation_type_str);
 std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight,
-                                                                    torch::ScalarType quant_type);
+                                                                    int quant_mode);
 
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
