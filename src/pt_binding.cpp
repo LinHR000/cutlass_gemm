@@ -4,13 +4,14 @@
 #include <torch/custom_class.h>
 #include <torch/script.h>
 #include "cutlass_kernels/cutlass_preprocessors.h"
+#include "cutlass_kernels/int8_gemm_raw/int8_gemm_raw.h"
 using torch::Tensor;
 enum class QuantType {
     INT8_WEIGHT_ONLY,
     PACKED_INT4_WEIGHT_ONLY
 };
 // using fastertransformer;
-Tensor gemm_in8_w8_ofp16_pt(Tensor input, //int8 * int8 -> fp16 per tensor 量化
+Tensor gemm_in8_w8_ofp16_pt(Tensor input, //int8 * int8 -> fp16 per token 量化
                             Tensor weight,
                             Tensor alpha_col, 
                             Tensor alpha_row,
@@ -72,5 +73,17 @@ m.def(
 m.def(
     "symmetric_quantize_last_axis_of_batched_matrix",
     &_symmetric_quantize_last_axis_of_batched_matrix,
+    "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "gemm_in8_w8_ofp16_per_token",
+    &fastertransformer::cutlass_int8_gemm_per_tensor<__half>,
+    "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "gemm_in8_w8_o8_per_token",
+    &fastertransformer::cutlass_int8_gemm_per_tensor<int8_t>,
+    "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "gemm_in8_w8_o32_per_token",
+    &fastertransformer::cutlass_int8_gemm_per_tensor<int32_t>,
     "Compute the attention between an input query and the cached key/value tensors");
 }
