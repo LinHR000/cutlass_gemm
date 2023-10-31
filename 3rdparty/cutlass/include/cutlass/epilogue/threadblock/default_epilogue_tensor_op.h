@@ -241,11 +241,11 @@ struct DefaultIteratorsTensorOp<
   InstructionShape, 
   ThreadMap> {
 
-  static_assert(platform::is_same<ElementOutput, cutlass::int4b_t>::value ||
-                platform::is_same<ElementOutput, cutlass::uint4b_t>::value ||
-                platform::is_same<ElementOutput, int8_t>::value ||
-                platform::is_same<ElementOutput, uint8_t>::value,
-                "ElementOutput needs to be 4 or 8 bit (unsigned) int.");
+  // static_assert(platform::is_same<ElementOutput, cutlass::int4b_t>::value ||
+  //               platform::is_same<ElementOutput, cutlass::uint4b_t>::value ||
+  //               platform::is_same<ElementOutput, int8_t>::value ||
+  //               platform::is_same<ElementOutput, uint8_t>::value,
+  //               "ElementOutput needs to be 4 or 8 bit (unsigned) int.");
 
    static_assert((ElementsPerAccess == 16 || ElementsPerAccess == 8),
                 "ElementsPerAccess needs to be 16 or 8.");

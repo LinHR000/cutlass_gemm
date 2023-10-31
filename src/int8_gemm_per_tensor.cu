@@ -19,39 +19,39 @@ using torch::Tensor;
 using torch_ext::get_ptr;
 
 namespace ft = fastertransformer;
-Tensor gemm_in8_w8_ofp16_per_token(Tensor         input,
-                                Tensor            weight,
-                                float             alpha, 
-                                float             beta,
-                                int64_t           m,
-                                int64_t           n,
-                                int64_t           k,
-                                std::string       tile_config,
-                                const int               stages,
-                                const int               splitK,
-                                char*             workspace_ptr,
-                                const size_t      workspace_bytes){
-    at::ScalarType output_data_type = at::ScalarType::Half;
-    Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    auto stream = at::cuda::getCurrentCUDAStream().stream();
-    int sm = 80;
-    ft::cutlass_int8_gemm_per_tensor<half>(get_ptr<int8_t>(input),
-                                        get_ptr<int8_t>(weight),
-                                        alpha,
-                                        beta,
-                                        get_ptr<half>(output),
-                                        m,
-                                        n,
-                                        k,
-                                        tile_config,
-                                        stages,
-                                        splitK,
-                                        workspace_ptr,
-                                        workspace_bytes,
-                                        sm,
-                                        stream);
-    return output;
-}
+// Tensor gemm_in8_w8_ofp16_per_token(Tensor         input,
+//                                 Tensor            weight,
+//                                 float             alpha, 
+//                                 float             beta,
+//                                 int64_t           m,
+//                                 int64_t           n,
+//                                 int64_t           k,
+//                                 std::string       tile_config,
+//                                 const int               stages,
+//                                 const int               splitK,
+//                                 char*             workspace_ptr,
+//                                 const size_t      workspace_bytes){
+//     at::ScalarType output_data_type = at::ScalarType::Half;
+//     Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+//     auto stream = at::cuda::getCurrentCUDAStream().stream();
+//     int sm = 80;
+//     ft::cutlass_int8_fp16_gemm_per_tensor(get_ptr<int8_t>(input),
+//                                         get_ptr<int8_t>(weight),
+//                                         alpha,
+//                                         beta,
+//                                         get_ptr<__half>(output),
+//                                         m,
+//                                         n,
+//                                         k,
+//                                         tile_config,
+//                                         stages,
+//                                         splitK,
+//                                         workspace_ptr,
+//                                         workspace_bytes,
+//                                         sm,
+//                                         stream);
+//     return output;
+// }
 
 Tensor gemm_in8_w8_o8_per_token(Tensor         input,
                                 Tensor            weight,
@@ -69,7 +69,7 @@ Tensor gemm_in8_w8_o8_per_token(Tensor         input,
     Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
-    ft::cutlass_int8_gemm_per_tensor<int8_t>(get_ptr<int8_t>(input),
+    ft::cutlass_int8_int8_gemm_per_tensor(get_ptr<int8_t>(input),
                                         get_ptr<int8_t>(weight),
                                         alpha,
                                         beta,
@@ -102,7 +102,7 @@ Tensor gemm_in8_w8_o32_per_token(Tensor         input,
     Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm=80;
-    ft::cutlass_int8_gemm_per_tensor<int32_t>(get_ptr<int8_t>(input),
+    ft::cutlass_int8_int32_gemm_per_tensor(get_ptr<int8_t>(input),
                                         get_ptr<int8_t>(weight),
                                         alpha,
                                         beta,

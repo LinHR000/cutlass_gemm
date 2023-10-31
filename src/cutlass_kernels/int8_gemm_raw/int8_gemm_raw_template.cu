@@ -51,7 +51,6 @@ void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
                                           int               k,
                                           char*             workspace,
                                           size_t            workspace_bytes,
-                                          const int         stages_placeholder,
                                           const int         splitK,
                                           cudaStream_t      stream)
 {
@@ -60,7 +59,8 @@ void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
     using ElementInput = int8_t;
 
     using ElementOutput_ =
-        typename cutlass::platform::conditional<cutlass::platform::is_same<T, half>::value, cutlass::half_t, T>::type;
+        // typename cutlass::platform::conditional<cutlass::platform::is_same<T, half>::value, cutlass::half_t, T>::type;
+        typename cutlass::platform::conditional<cutlass::platform::is_same<T, half>::value, __half, T>::type;
 #ifdef ENABLE_BF16
     using ElementOutput =
         typename cutlass::platform::conditional<cutlass::platform::is_same<ElementOutput_, __nv_bfloat16>::value,
@@ -85,6 +85,7 @@ void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
                                                                          128 / cutlass::sizeof_bits<ElementOutput>::value,
                                                                          ElementAccumulator,
                                                                          ElementCompute>;
+    // using EpilogueOp       = typename DefaultGemmConf::EpilogueOutputOp;                                                                  
 
     using Gemm = cutlass::gemm::device::Gemm<ElementInput,                           // Element type for A matrix operand
                                             cutlass::layout::RowMajor,              // Layout type for A matrix operand
@@ -105,19 +106,19 @@ void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
                                             DefaultGemmConf::kAlignmentB,           // Access granularity of B matrix in units of elements
                                             true>;                                  // If true, kernel supports split-K with serial reduction
 
-
-    typename Gemm::Arguments args{{m, n, k},
-                                  {reinterpret_cast<ElementInput*>(const_cast<ElementInput*>(A)), k},
-                                  {reinterpret_cast<ElementInput*>(const_cast<ElementInput*>(B)), k},
-                                  {nullptr, 0},
-                                  {reinterpret_cast<ElementOutput*>(C), n},
-                                  {alpha,beta}
+    cutlass::gemm::GemmCoord problem_size(m, n, k);
+    typename Gemm::Arguments args{problem_size,
+                                    {A, k},    // <- reference to matrix A on device
+                                    {B, k},   // <- reference to matrix B on device
+                                    {nullptr, 0},      // <- reference to matrix C on device
+                                    {C, n},   
+                                  {alpha,beta},
                                   splitK}; // TODO 确认split K从哪里传入
 
-    Gemm gemm;
+    Gemm gemm_op;
 
     // 申请workspace
-    size_t workspace_size_ = Gemm::get_workspace_size(arguments);
+    size_t workspace_size_ = Gemm::get_workspace_size(args);
 
     if (workspace){
         if (workspace_size_ > workspace_bytes){
@@ -130,32 +131,31 @@ void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
     }
     
     // TODO(mseznec): handle that
-    if (gemm.get_workspace_size(args) > workspace_bytes) {
-        FT_LOG_WARNING(
-            "Requested split-k but workspace size insufficient. Falling back to non-split-k implementation.");
-        // If requested split-k factor will require more workspace bytes, revert to standard gemm.
-        args.batch_count = 1;
+    // if (gemm.get_workspace_size(args) > workspace_bytes) {
+    //     FT_LOG_WARNING(
+    //         "Requested split-k but workspace size insufficient. Falling back to non-split-k implementation.");
+    //     // If requested split-k factor will require more workspace bytes, revert to standard gemm.
+    //     args.batch_count = 1;
+    // }
+
+        // Check the problem size is supported or not
+    cutlass::Status status = gemm_op.can_implement(args);
+    if (status != cutlass::Status::kSuccess) {
+        throw std::runtime_error("cutlass cannot implement, status: " +
+                                 std::to_string((int) status));
     }
 
-    auto can_implement = gemm.can_implement(args);
-    if (can_implement != cutlass::Status::kSuccess) {
-        std::string err_msg = "int8gemm cutlass kernel will fail for params. Error: "
-                              + std::string(cutlassGetStatusString(can_implement));
-        throw std::runtime_error("[FT Error][int8gemm Runner] " + err_msg);
+    // Initialize CUTLASS kernel with arguments and workspace pointer
+    auto init_status = gemm_op.initialize(args, workspace, stream);
+    if (status != cutlass::Status::kSuccess) {
+        throw std::runtime_error("cutlass cannot initialize, status: " +
+                                 std::to_string((int) status));
     }
 
-    auto init_status = gemm.initialize(args, workspace, stream);
-    if (init_status != cutlass::Status::kSuccess) {
-        std::string err_msg =
-            "Failed to initialize cutlass int8 gemm. Error: " + std::string(cutlassGetStatusString(init_status));
-        throw std::runtime_error("[FT Error][int8gemm Runner] " + err_msg);
-    }
-
-    auto run_status = gemm.run(stream);
-    if (run_status != cutlass::Status::kSuccess) {
-        std::string err_msg =
-            "Failed to run cutlass int8 gemm. Error: " + std::string(cutlassGetStatusString(run_status));
-        throw std::runtime_error("[FT Error][int8gemm Runner] " + err_msg);
+    status = gemm_op();
+    if (status != cutlass::Status::kSuccess) {
+        throw std::runtime_error("cutlass cannot run, status: " +
+                                 std::to_string((int) status));
     }
 }
 
@@ -171,7 +171,6 @@ struct dispatch_stages {
                         int               k,
                         char*             workspace,
                         size_t            workspace_bytes,
-                        const int         stages,
                         const int         splitK,
                         cudaStream_t      stream)
     {
@@ -196,12 +195,11 @@ struct dispatch_stages<T, arch, ThreadblockShape, WarpShape, 2> {
                         int               k,
                         char*             workspace,
                         size_t            workspace_bytes,
-                        const int         stages,
                         const int         splitK,
                         cudaStream_t      stream)
     {
         FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-        generic_int8_gemm_kernelLauncher<T, arch, ThreadblockShape, WarpShape, 2>(A, 
+        generic_int8_gemm_raw_kernelLauncher<T, arch, ThreadblockShape, WarpShape, 2>(A, 
                                                                                   B, 
                                                                                   alpha,
                                                                                   beta, 
@@ -211,7 +209,6 @@ struct dispatch_stages<T, arch, ThreadblockShape, WarpShape, 2> {
                                                                                   k, 
                                                                                   workspace, 
                                                                                   workspace_bytes, 
-                                                                                  stages,
                                                                                   splitK, 
                                                                                   stream);
     }
@@ -234,13 +231,12 @@ struct dispatch_stages<T,
                         int               k,
                         char*             workspace,
                         size_t            workspace_bytes,
-                        const int         stages,
                         const int         splitK,
                         cudaStream_t      stream)
     {
 
         FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-        generic_int8_gemm_kernelLauncher<T, cutlass::arch::Sm80, ThreadblockShape, WarpShape, Stages>(A, 
+        generic_int8_gemm_raw_kernelLauncher<T, cutlass::arch::Sm80, ThreadblockShape, WarpShape, Stages>(A, 
                                                                                                     B, 
                                                                                                     alpha,
                                                                                                     beta, 
@@ -250,7 +246,6 @@ struct dispatch_stages<T,
                                                                                                     k, 
                                                                                                     workspace, 
                                                                                                     workspace_bytes, 
-                                                                                                    stages,
                                                                                                     splitK, 
                                                                                                     stream);
     }
@@ -286,7 +281,6 @@ void dispatch_gemm_config(const int8_t*     A,
                                         k, 
                                         workspace, 
                                         workspace_bytes, 
-                                        stages,
                                         splitK, 
                                         stream);
             break;
@@ -302,7 +296,6 @@ void dispatch_gemm_config(const int8_t*     A,
                                         k, 
                                         workspace, 
                                         workspace_bytes, 
-                                        stages,
                                         splitK, 
                                         stream);
             break;
@@ -318,12 +311,11 @@ void dispatch_gemm_config(const int8_t*     A,
                                         k, 
                                         workspace, 
                                         workspace_bytes, 
-                                        stages,
                                         splitK, 
                                         stream);
             break;
         default:
-            std::string err_msg = "dispatch_gemm_config does not support stages " + std::to_string(gemm_config.stages);
+            std::string err_msg = "dispatch_gemm_config does not support stages " + std::to_string(stages);
             throw std::runtime_error("[FT Error][dispatch_gemm_config] " + err_msg);
             break;
     }
@@ -354,132 +346,297 @@ void dispatch_gemm_to_cutlass(const int8_t*     A,
     // for mixed type gemms.
     // dispatch_gemm_config<T, arch, cutlass::gemm::GemmShape<32, 128, 64>, cutlass::gemm::GemmShape<32, 32, 64>>(
         // A, B, quant_mode, alpha_col, alpha_row, C, m, n, k, gemm_config, workspace, workspace_bytes, stream, occupancy);
-    if (tile_config == "CtaShape128x256x128_WarpShape64x64x128"){
-            dispatch_gemm_config<T, 
-                                arch, 
-                                cutlass::gemm::GemmShape<128, 256, 128>, 
-                                cutlass::gemm::GemmShape<64, 64, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    } else if (tile_config == "CtaShape256x128x128_WarpShape64x64x128"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<256, 128, 128>, 
-                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape128x128x128_WarpShape64x64x128"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<128, 128, 128>,
-                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape256x64x128_WarpShape64x64x128"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<256, 64, 128>,
-                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config== "CtaShape64x256x128_WarpShape64x64x128"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<64, 256, 128>,
-                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape64x128x128_WarpShape32x64x128"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<64, 128, 128>,
-                                 cutlass::gemm::GemmShape<32, 64, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config =="CtaShape128x64x128_WarpShape64x32x128" ){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<128, 64, 128>,
-                                 cutlass::gemm::GemmShape<64, 32, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape64x64x128_WarpShape32x32x128"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<64, 64, 128>,
-                                 cutlass::gemm::GemmShape<32, 32, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape128x256x64_WarpShape64x64x64"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<128, 256, 64>,
-                                 cutlass::gemm::GemmShape<64, 64, 64>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape256x128x64_WarpShape64x64x64"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<256, 128, 64>,
-                                 cutlass::gemm::GemmShape<64, 64, 64>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape128x128x64_WarpShape64x64x64"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<128, 128, 64>,
-                                 cutlass::gemm::GemmShape<64, 64, 64>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape256x64x64_WarpShape64x64x64"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<256, 64, 64>,
-                                 cutlass::gemm::GemmShape<64, 64, 64>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape64x256x64_WarpShape64x64x64"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<64, 256, 64>,
-                                 cutlass::gemm::GemmShape<64, 64, 64>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape64x128x64_WarpShape32x64x64"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<64, 128, 64>,
-                                 cutlass::gemm::GemmShape<32, 64, 64>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape128x64x64_WarpShape64x32x64"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<128, 64, 64>,
-                                 cutlass::gemm::GemmShape<64, 32, 64>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
-    }else if (tile_config == "CtaShape64x64x64_WarpShape32x32x64"){
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<64, 64, 64>,
-                                 cutlass::gemm::GemmShape<32, 32, 64>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+    if (std::is_same<T, int8_t>::value){
+        if (tile_config == "CtaShape128x256x128_WarpShape64x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 256, 128>, 
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        } else if (tile_config == "CtaShape256x128x128_WarpShape64x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 128, 128>, 
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x128x128_WarpShape64x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 128, 128>,
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape256x64x128_WarpShape64x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 64, 128>,
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config== "CtaShape64x256x128_WarpShape64x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 256, 128>,
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x128x128_WarpShape32x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 128, 128>,
+                                    cutlass::gemm::GemmShape<32, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        // }else if (tile_config =="CtaShape128x64x128_WarpShape64x32x128" ){
+        //         dispatch_gemm_config<T, 
+        //                              arch, 
+        //                              cutlass::gemm::GemmShape<128, 64, 128>,
+        //                              cutlass::gemm::GemmShape<64, 32, 128>>( 
+        //             A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        // }else if (tile_config == "CtaShape64x64x128_WarpShape32x32x128"){
+        //         dispatch_gemm_config<T, 
+        //                              arch, 
+        //                              cutlass::gemm::GemmShape<64, 64, 128>,
+        //                              cutlass::gemm::GemmShape<32, 32, 128>>( 
+        //             A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x256x64_WarpShape64x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 256, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape256x128x64_WarpShape64x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 128, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x128x64_WarpShape64x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 128, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape256x64x64_WarpShape64x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 64, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x256x64_WarpShape64x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 256, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x128x64_WarpShape32x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 128, 64>,
+                                    cutlass::gemm::GemmShape<32, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        // }else if (tile_config == "CtaShape128x64x64_WarpShape64x32x64"){
+        //         dispatch_gemm_config<T, 
+        //                              arch, 
+        //                              cutlass::gemm::GemmShape<128, 64, 64>,
+        //                              cutlass::gemm::GemmShape<64, 32, 64>>( 
+        //             A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        // }else if (tile_config == "CtaShape64x64x64_WarpShape32x32x64"){
+        //         dispatch_gemm_config<T, 
+        //                              arch, 
+        //                              cutlass::gemm::GemmShape<64, 64, 64>,
+        //                              cutlass::gemm::GemmShape<32, 32, 64>>( 
+        //             A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else{
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 256, 128>, 
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }
+    }else if(std::is_same<T,int32_t>::value){
+        if (tile_config == "CtaShape128x256x128_WarpShape64x64x128"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 256, 128>, 
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        } else if (tile_config == "CtaShape256x128x128_WarpShape64x64x128"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 128, 128>, 
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x128x128_WarpShape64x64x128"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 128, 128>,
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape256x64x128_WarpShape64x64x128"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 64, 128>,
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config== "CtaShape64x256x128_WarpShape64x64x128"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 256, 128>,
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x128x128_WarpShape32x64x128"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 128, 128>,
+                                    cutlass::gemm::GemmShape<32, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config =="CtaShape128x64x128_WarpShape64x32x128" ){
+                dispatch_gemm_config<int32_t, 
+                                     arch, 
+                                     cutlass::gemm::GemmShape<128, 64, 128>,
+                                     cutlass::gemm::GemmShape<64, 32, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x64x128_WarpShape32x32x128"){
+                dispatch_gemm_config<int32_t, 
+                                     arch, 
+                                     cutlass::gemm::GemmShape<64, 64, 128>,
+                                     cutlass::gemm::GemmShape<32, 32, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x256x64_WarpShape64x64x64"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 256, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape256x128x64_WarpShape64x64x64"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 128, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x128x64_WarpShape64x64x64"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 128, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape256x64x64_WarpShape64x64x64"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 64, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x256x64_WarpShape64x64x64"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 256, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x128x64_WarpShape32x64x64"){
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 128, 64>,
+                                    cutlass::gemm::GemmShape<32, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x64x64_WarpShape64x32x64"){
+                dispatch_gemm_config<int32_t, 
+                                     arch, 
+                                     cutlass::gemm::GemmShape<128, 64, 64>,
+                                     cutlass::gemm::GemmShape<64, 32, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x64x64_WarpShape32x32x64"){
+                dispatch_gemm_config<int32_t, 
+                                     arch, 
+                                     cutlass::gemm::GemmShape<64, 64, 64>,
+                                     cutlass::gemm::GemmShape<32, 32, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else{
+                dispatch_gemm_config<int32_t, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 256, 128>, 
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }
+    }else if(std::is_same<T,half>::value){
+        if (tile_config == "CtaShape128x256x128_WarpShape64x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 256, 128>, 
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x128x128_WarpShape64x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 128, 128>,
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config== "CtaShape64x256x128_WarpShape64x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 256, 128>,
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x128x128_WarpShape32x64x128"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 128, 128>,
+                                    cutlass::gemm::GemmShape<32, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape256x128x64_WarpShape64x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<256, 128, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape128x128x64_WarpShape64x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 128, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+
+        }else if (tile_config == "CtaShape64x256x64_WarpShape64x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 256, 64>,
+                                    cutlass::gemm::GemmShape<64, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else if (tile_config == "CtaShape64x128x64_WarpShape32x64x64"){
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<64, 128, 64>,
+                                    cutlass::gemm::GemmShape<32, 64, 64>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }else{
+                dispatch_gemm_config<T, 
+                                    arch, 
+                                    cutlass::gemm::GemmShape<128, 256, 128>, 
+                                    cutlass::gemm::GemmShape<64, 64, 128>>( 
+                    A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        }
     }else{
-            dispatch_gemm_config<T, 
-                                 arch, 
-                                 cutlass::gemm::GemmShape<128, 256, 128>, 
-                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
-                A, B, alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
+        throw std::runtime_error("not supported type" );
     }
 
 }
 
 template<typename T>
-void cutlass_int8_gemm_per_tensor(const int8_t*     A,
-                                  const int8_t*     B,
-                                  const float       alpha,
-                                  const float       beta,
-                                  T*                C,
-                                  int               m,
-                                  int               n,
-                                  int               k,
-                                  std::string       tile_config,
-                                  const int         stages,
-                                  const int         splitK,
-                                  char*             workspace_ptr,
-                                  const size_t      workspace_bytes,
-                                  int               sm_,
-                                  cudaStream_t      stream)
+void cutlass_int8_int8_gemm_per_tensor(const int8_t*     A,
+                                    const int8_t*     B,
+                                    const float       alpha,
+                                    const float       beta,
+                                    int8_t*           C,
+                                    int               m,
+                                    int               n,
+                                    int               k,
+                                    std::string       tile_config,
+                                    const int         stages,
+                                    const int         splitK,
+                                    char*             workspace_ptr,
+                                    const size_t      workspace_bytes,
+                                    int               sm_,
+                                    cudaStream_t      stream)
 {
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
     if (sm_ >= 80 && sm_ < 90) {
-        dispatch_gemm_to_cutlass<T, cutlass::arch::Sm80>(A,
+        dispatch_gemm_to_cutlass<int8_t, cutlass::arch::Sm80>(A,
                                                          B,
                                                          alpha,
                                                          beta,
@@ -490,7 +647,8 @@ void cutlass_int8_gemm_per_tensor(const int8_t*     A,
                                                          workspace_ptr,
                                                          workspace_bytes,
                                                          tile_config,
-                                                         stages,splitK,
+                                                         stages,
+                                                         splitK,
                                                          stream);
     }
     else {
@@ -498,55 +656,6 @@ void cutlass_int8_gemm_per_tensor(const int8_t*     A,
             "[FT Error][CutlassInt8GemmRunner][GEMM Dispatch] Arch unsupported for CUTLASS int8 GEMM");
     }
 }
-
-template void cutlass_int8_gemm_per_tensor<int32_t>(const int8_t* A,
-                                                    const int8_t* B,
-                                                    const float alpha,
-                                                    const float beta,
-                                                    int32_t* C,
-                                                    int m,
-                                                    int n,
-                                                    int k,
-                                                    std::string tile_config,
-                                                    const int stages,
-                                                    const int splitK,
-                                                    char* workspace_ptr,
-                                                    const size_t workspace_bytes,
-                                                     int               sm_,
-                                                    cudaStream_t      stream);
-
-template void cutlass_int8_gemm_per_tensor<half>(const int8_t* A,
-                                                    const int8_t* B,
-                                                    const float alpha,
-                                                    const float beta,
-                                                    half* C,
-                                                    int m,
-                                                    int n,
-                                                    int k,
-                                                    std::string tile_config,
-                                                    const int stages,
-                                                    const int splitK,
-                                                    char* workspace_ptr,
-                                                    const size_t workspace_bytes,
-                                                     int               sm_,
-                                                    cudaStream_t      stream);
-template void cutlass_int8_gemm_per_tensor<int8_t>(const int8_t* A,
-                                                    const int8_t* B,
-                                                    const float alpha,
-                                                    const float beta,
-                                                    int8_t* C,
-                                                    int m,
-                                                    int n,
-                                                    int k,
-                                                    std::string tile_config,
-                                                    const int stages,
-                                                    const int splitK,
-                                                    char* workspace_ptr,
-                                                    const size_t workspace_bytes,
-                                                     int               sm_,
-                                                    cudaStream_t      stream);
-
-
 
 
 }  // namespace fastertransformer
