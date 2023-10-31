@@ -3,11 +3,16 @@ from cutlass_gemm import gemm_op
 import argparse
 import time
 import torch.nn as nn
-
+import json
 def main(args):
     # prepare data for test
+    with open("/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best.json",'r') as r:
+        config_dict = json.load(r)
     symmetric_quantizer = gemm_op.symmetric_quantize_last_axis_of_batched_matrix
     for m in range(1,args.m,31):
+        for key,config_dict_best in config_dict.items():
+            if m < int(key):
+                break
         n,k = args.n,args.k
         input = torch.randint(low=-127, high=127, size=(m,k),dtype=torch.int8).cuda()
         weight = torch.randint(low=-127, high=127, size=(n,k),dtype=torch.int8).cuda()
@@ -97,6 +102,18 @@ def main(args):
             gemm_infp16_w8_ofp16_bias_act_time+=time_end-time_start
         gemm_infp16_w8_ofp16_bias_act_time = gemm_infp16_w8_ofp16_bias_act_time * 1000 / args.num_iters
 
+        gemm_in8_w8_ofp16_per_tensor = gemm_op.gemm_in8_w8_ofp16_per_tensor
+        gemm_in8_w8_ofp16_per_tensor(input,weight,1.0,0.0,m,n,k,config_dict_best['config'],config_dict_best['stages'],config_dict_best['splitk'])
+        gemm_in8_w8_ofp16_per_tensor_time = 0
+        for i in range(args.num_iters):
+            torch.cuda.synchronize()
+            time_start = time.time()
+            gemm_in8_w8_ofp16_per_tensor(input,weight,1.0,0.0,m,n,k,config_dict_best['config'],config_dict_best['stages'],config_dict_best['splitk'])
+            torch.cuda.synchronize()
+            time_end = time.time()
+            gemm_in8_w8_ofp16_per_tensor_time+=time_end-time_start
+        gemm_in8_w8_ofp16_per_tensor_time = gemm_in8_w8_ofp16_per_tensor_time * 1000 / args.num_iters
+
         # linear
         total_time_linear = 0
         func = nn.Linear(k, n,bias=True,dtype=torch.float16).cuda()
@@ -115,6 +132,7 @@ def main(args):
 
 
         print("="*10+"M={}".format(m)+"="*10)
+        print("TIME INT8 * INT8 -> FP16 (per tensor):",gemm_in8_w8_ofp16_per_tensor_time)
         print("TIME INT8 * INT8 -> FP16 (per token):",gemm_in8_w8_ofp16_pt_time)
         print("TIME INT8 * INT8 -> FP16 (per channel)",gemm_in8_w8_ofp16_pc_time )
         print("TIME INT8 * INT8 -> FP16 (per token per channel):",gemm_in8_w8_ofp16_ptpc_time)
@@ -122,6 +140,7 @@ def main(args):
         print("TIME INT8 * FP16 -> Fp16 (WI bias):",gemm_infp16_w8_ofp16_bias_act_time)
         print("TIME Linear:",total_time_linear)
 
+        print("Speed Up INT8 * INT8 -> FP16 (per tensor):{}%".format(round((total_time_linear-gemm_in8_w8_ofp16_per_tensor_time)/total_time_linear*100,2)))
         print("Speed Up INT8 * INT8 -> FP16 (per token):{}%".format(round((total_time_linear-gemm_in8_w8_ofp16_pt_time)/total_time_linear*100,2)))
         print("Speed Up INT8 * INT8 -> FP16 (per channel):{}%".format(round((total_time_linear-gemm_in8_w8_ofp16_pc_time)/total_time_linear*100,2)))
         print("Speed Up INT8 * INT8 -> FP16 (per token per channel):{}%".format(round((total_time_linear-gemm_in8_w8_ofp16_ptpc_time)/total_time_linear*100,2)))
@@ -132,7 +151,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark the latency of processing a single gemm.')
-    parser.add_argument('--m', type=int, default=2048)
+    parser.add_argument('--m', type=int, default=4096)
     parser.add_argument('--n', type=int, default=2048)
     parser.add_argument('--k', type=int, default=8192)
     parser.add_argument('--num-iters', type=int, default=10,

@@ -335,7 +335,6 @@ void dispatch_gemm_to_cutlass_fp16(const int8_t*     A,
 {
 
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-
     if (tile_config == "CtaShape128x256x128_WarpShape64x64x128"){
             dispatch_gemm_config<__half, 
                                 cutlass::arch::Sm80, 

@@ -47,7 +47,7 @@ Tensor gemm_infp16_w8_ofp16_bias_act(
                              std::string activation_type_str);
 std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight,
                                                                     int quant_mode);
-Tensor gemm_in8_w8_ofp16_per_token(Tensor         input,
+Tensor gemm_in8_w8_ofp16_per_tensor(Tensor         input,
                                 Tensor            weight,
                                 float             alpha, 
                                 float             beta,
@@ -56,9 +56,7 @@ Tensor gemm_in8_w8_ofp16_per_token(Tensor         input,
                                 int64_t           k,
                                 std::string       tile_config,
                                 const int               stages,
-                                const int               splitK,
-                                char*             workspace_ptr,
-                                const size_t      workspace_bytes){
+                                const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Half;
     Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
@@ -74,13 +72,14 @@ Tensor gemm_in8_w8_ofp16_per_token(Tensor         input,
                                         tile_config,
                                         stages,
                                         splitK,
-                                        workspace_ptr,
-                                        workspace_bytes,
+                                        nullptr,
+                                        0,
                                         sm,
                                         stream);
-                                }
+    return output;
+}
 
-Tensor gemm_in8_w8_o8_per_token(Tensor         input,
+Tensor gemm_in8_w8_o8_per_tensor(Tensor         input,
                                 Tensor            weight,
                                 float             alpha, 
                                 float             beta,
@@ -89,9 +88,7 @@ Tensor gemm_in8_w8_o8_per_token(Tensor         input,
                                 int64_t           k,
                                 std::string       tile_config,
                                 const int               stages,
-                                const int               splitK,
-                                char*             workspace_ptr,
-                                const size_t      workspace_bytes){
+                                const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Char;
     Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
@@ -107,13 +104,14 @@ Tensor gemm_in8_w8_o8_per_token(Tensor         input,
                                         tile_config,
                                         stages,
                                         splitK,
-                                        workspace_ptr,
-                                        workspace_bytes,
+                                        nullptr,
+                                        0,
                                         sm,
-                                        stream);                                
-                                }
+                                        stream); 
+    return output;                               
+ }
 
-Tensor gemm_in8_w8_o32_per_token(Tensor         input,
+Tensor gemm_in8_w8_o32_per_tensor(Tensor         input,
                                 Tensor            weight,
                                 float             alpha, 
                                 float             beta,
@@ -122,9 +120,7 @@ Tensor gemm_in8_w8_o32_per_token(Tensor         input,
                                 int64_t           k,
                                 std::string       tile_config,
                                 const int               stages,
-                                const int               splitK,
-                                char*             workspace_ptr,
-                                const size_t      workspace_bytes){
+                                const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Int;
     Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
@@ -140,11 +136,12 @@ Tensor gemm_in8_w8_o32_per_token(Tensor         input,
                                         tile_config,
                                         stages,
                                         splitK,
-                                        workspace_ptr,
-                                        workspace_bytes,
+                                        nullptr,
+                                        0,
                                         sm,
-                                        stream);                                   
-                                }                                                         
+                                        stream);
+    return output;                                
+}                                                         
 
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -177,15 +174,15 @@ m.def(
     &_symmetric_quantize_last_axis_of_batched_matrix,
     "Compute the attention between an input query and the cached key/value tensors");
 m.def(
-    "gemm_in8_w8_ofp16_per_token",
-    &gemm_in8_w8_ofp16_per_token,
+    "gemm_in8_w8_ofp16_per_tensor",
+    &gemm_in8_w8_ofp16_per_tensor,
     "Compute the attention between an input query and the cached key/value tensors");
 m.def(
-    "gemm_in8_w8_o8_per_token",
-    &gemm_in8_w8_o8_per_token,
+    "gemm_in8_w8_o8_per_tensor",
+    &gemm_in8_w8_o8_per_tensor,
     "Compute the attention between an input query and the cached key/value tensors");
 m.def(
-    "gemm_in8_w8_o32_per_token",
-    &gemm_in8_w8_o32_per_token,
+    "gemm_in8_w8_o32_per_tensor",
+    &gemm_in8_w8_o32_per_tensor,
     "Compute the attention between an input query and the cached key/value tensors");
 }
