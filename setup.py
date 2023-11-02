@@ -10,7 +10,6 @@ import torch
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME
 
 ROOT_DIR = os.path.dirname(__file__)
-
 # Compiler flags.
 CXX_FLAGS = ["-g", "-O2", "-std=c++17"]
 # TODO(woosuk): Should we use -O3?
@@ -111,9 +110,9 @@ cutlass_gemm_extension = CUDAExtension(
              "src/cutlass_kernels/cutlass_preprocessors.cc",
              "src/cutlass_kernels/WeightOnlyQuantOps.cc",
             #  "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template.cu",
-             "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_fp16.cu",
-             "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int8.cu",
-             "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int32.cu",
+            #  "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_fp16.cu",
+            #  "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int8.cu",
+            #  "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int32.cu",
              "src/utils/th_utils.cu",
              "src/utils/cuda_utils.cc",
              "src/utils/logger.cc",
@@ -132,6 +131,48 @@ cutlass_gemm_extension = CUDAExtension(
     extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS},
 )
 ext_modules.append(cutlass_gemm_extension)
+
+cutlass_gemm_extension_int8 = CUDAExtension(
+    name="cutlass_gemm.gemm_op_int8",
+    sources=["src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_fp16.cu",
+             "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int8.cu",
+             "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int32.cu",
+             "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_fp16_splitk.cu",
+             "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int32_splitk.cu",
+             "src/utils/th_utils.cu",
+             "src/utils/cuda_utils.cc",
+             "src/utils/logger.cc",
+             "src/utils/Tensor.cc",
+             'src/pt_binding_int8.cpp'],
+    include_dirs=[os.path.join(ROOT_DIR,"3rdparty/cutlass_int8/include"),
+                  os.path.join(ROOT_DIR,"3rdparty/cutlass_int8/tools/util/include"),
+                  os.path.join(ROOT_DIR,"3rdparty"),
+                  os.path.join(ROOT_DIR,"src")],
+    extra_link_args=['-lcublas_static', '-lcublasLt_static',
+                             '-lculibos', '-lcudart', '-lcudart_static',
+                             '-lrt', '-lpthread', '-ldl', '-L/usr/lib/x86_64-linux-gnu/'],
+    extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS},
+)
+ext_modules.append(cutlass_gemm_extension_int8)
+
+# cutlass_gemm_extension_fp16 = CUDAExtension(
+#     name="cutlass_gemm.gemm_op_fp16",
+#     sources=["src/cutlass_kernels/fp16_gemm/fp16_gemm_template_fp16.cu",
+#              "src/utils/th_utils.cu",
+#              "src/utils/cuda_utils.cc",
+#              "src/utils/logger.cc",
+#              "src/utils/Tensor.cc",
+#              'src/pt_binding_fp16.cpp'],
+#     include_dirs=[os.path.join(ROOT_DIR,"3rdparty/cutlass/include"),
+#                   os.path.join(ROOT_DIR,"3rdparty/cutlass/tools/util/include"),
+#                   os.path.join(ROOT_DIR,"3rdparty"),
+#                   os.path.join(ROOT_DIR,"src")],
+#     extra_link_args=['-lcublas_static', '-lcublasLt_static',
+#                              '-lculibos', '-lcudart', '-lcudart_static',
+#                              '-lrt', '-lpthread', '-ldl', '-L/usr/lib/x86_64-linux-gnu/'],
+#     extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS},
+# )
+# ext_modules.append(cutlass_gemm_extension_fp16)
 
 
 def get_path(*filepath) -> str:

@@ -147,7 +147,7 @@ void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
 
     status = gemm_op();
     if (status != cutlass::Status::kSuccess) {
-        throw std::runtime_error("cutlass cannot run, status: " +
+        throw std::runtime_error("cutlass cannot run, status: kkk" +
                                  std::to_string((int) status));
     }
 }

@@ -1,10 +1,10 @@
 import torch
-from cutlass_gemm import gemm_op
+from cutlass_gemm import gemm_op,gemm_op_int8
 import torch.nn as nn
 from icecream import ic
 symmetric_quantizer = gemm_op.symmetric_quantize_last_axis_of_batched_matrix
 
-m,n,k = 16,64,64
+m,n,k = 128,256,8192
 input = torch.randint(low=-5, high=5, size=(m,k),dtype=torch.int8).cuda()
 input_f = input.half()
 weight = torch.randint(low=-5, high=5, size=(n,k),dtype=torch.int8).cuda()
@@ -28,7 +28,7 @@ ref_output = func(input_f)
 
 # test int8 * int8 -> fp16 per tensor
 tile_config = ""                             
-gemm_in8_w8_ofp16_per_tensor_result = gemm_op.gemm_in8_w8_ofp16_per_tensor(input,           # input
+gemm_in8_w8_ofp16_per_tensor_result = gemm_op_int8.gemm_in8_w8_ofp16_per_tensor(input,           # input
                                                                         weight,          # weight
                                                                         1.0,             # alpha
                                                                         0.0,             # beta
@@ -39,6 +39,30 @@ gemm_in8_w8_ofp16_per_tensor_result = gemm_op.gemm_in8_w8_ofp16_per_tensor(input
                                                                         3,               # stages
                                                                         1)               # workspeace bytes
 ic((ref_output - gemm_in8_w8_ofp16_per_tensor_result).pow(2).mean() / ref_output.pow(2).mean())
+
+# gemm_in8_w8_o32_per_tensor_splitk_result = gemm_op_int8.gemm_in8_w8_o32_per_tensor_splitk(input,           # input
+#                                                                                             weight,          # weight
+#                                                                                             1.0,             # alpha
+#                                                                                             0.0,             # beta
+#                                                                                             m,               # m
+#                                                                                             n,               # n
+#                                                                                             k,               # k
+#                                                                                             "CtaShape256x128x64_WarpShape64x64x64",     # tile config
+#                                                                                             3,               # stages
+#                                                                                             2)               # workspeace bytes
+# ic((ref_output - gemm_in8_w8_o32_per_tensor_splitk_result).pow(2).mean() / ref_output.pow(2).mean())
+
+gemm_in8_w8_ofp16_per_tensor_splitk_result = gemm_op_int8.gemm_in8_w8_ofp16_per_tensor_splitk(input,           # input
+                                                                                            weight,          # weight
+                                                                                            1.0,             # alpha
+                                                                                            0.0,             # beta
+                                                                                            m,               # m
+                                                                                            n,               # n
+                                                                                            k,               # k
+                                                                                            tile_config,     # tile config
+                                                                                            3,               # stages
+                                                                                            2)               # workspeace bytes
+ic((ref_output - gemm_in8_w8_ofp16_per_tensor_splitk_result).pow(2).mean() / ref_output.pow(2).mean())
 
 # test gemm_in8_w8_ofp16 per token
 gemm_in8_w8_ofp16_pt = gemm_op.gemm_in8_w8_ofp16_pt
