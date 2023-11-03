@@ -1,5 +1,6 @@
 #include <torch/extension.h>
 #include <c10/util/Optional.h>
+#include <ATen/cuda/CUDAContext.h>
 #include "torch/csrc/cuda/Stream.h"
 #include <torch/custom_class.h>
 #include <torch/script.h>
@@ -9,8 +10,9 @@ using torch::Tensor;
 using torch_ext::get_ptr;
 
 namespace ft = fastertransformer;
-Tensor gemm_in8_w8_ofp16_per_tensor(Tensor         input,
-                                Tensor            weight,
+Tensor gemm_in8_w8_ofp16_per_tensor(Tensor&         input,
+                                Tensor&            weight,
+                                c10::optional<torch::Tensor>&            bias,
                                 float             alpha, 
                                 float             beta,
                                 int64_t           m,
@@ -23,8 +25,15 @@ Tensor gemm_in8_w8_ofp16_per_tensor(Tensor         input,
     Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
+    // auto bias_ptr = bias ? get_ptr<__half>(bias) : nullptr;
+    // const __half* bias_ptr = bias ? get_ptr<__half>(bias):nullptr;
+    const __half* bias_ptr = bias ?
+    reinterpret_cast<const __half*>(bias.value().data_ptr())
+    : nullptr;
+
     ft::cutlass_int8_fp16_gemm_per_tensor(get_ptr<int8_t>(input),
                                         get_ptr<int8_t>(weight),
+                                        bias_ptr,
                                         alpha,
                                         beta,
                                         get_ptr<__half>(output),

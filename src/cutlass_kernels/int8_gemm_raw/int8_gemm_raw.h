@@ -42,6 +42,7 @@ void cutlass_int8_int8_gemm_per_tensor(const int8_t*     A,
 
 void cutlass_int8_fp16_gemm_per_tensor(const int8_t*     A,
                                     const int8_t*     B,
+                                    const __half*           bias,
                                     const float       alpha,
                                     const float       beta,
                                     __half*           C,
