@@ -4,6 +4,7 @@ import argparse
 import time
 import torch.nn as nn
 import json
+
 def main(args):
     # prepare data for test
     with open("/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_choose.json",'r') as r:
@@ -168,8 +169,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark the latency of processing a single gemm.')
     parser.add_argument('--m', type=int, default=4096)
-    parser.add_argument('--n', type=int, default=int(8192/4 * 3))
-    parser.add_argument('--k', type=int, default=8192)
+    parser.add_argument('--n', type=int, default=3840)
+    parser.add_argument('--k', type=int, default=1280)
     parser.add_argument('--num-iters', type=int, default=10,
                         help='Number of iterations to run.')
     args = parser.parse_args()

@@ -1,29 +1,22 @@
 import torch
-from cutlass_gemm import gemm_op,gemm_op_int8,gemm_op_fp16
+# from cutlass_gemm import gemm_op,gemm_op_int8,gemm_op_fp16
+from cutlass_gemm import CutlassGemm
 import torch.nn as nn
 from icecream import ic
 
-m,n,k = 16,1024,64
-input = torch.randn(size=(m,k),dtype=torch.float16).cuda()
-weight = torch.randint(size=(n,k),dtype=torch.float16).cuda()
 
 
-# ref
+m,n,k = 128,256,8192
+input = torch.randint(low=-5, high=5, size=(m,k),dtype=torch.int8).cuda()
+input_f = input.half()
+weight = torch.randint(low=-5, high=5, size=(n,k),dtype=torch.int8).cuda()
+weight_f = weight.half()
+weight_t = weight.t().contiguous()
+weight_t_half = weight_t.half()
 
-func = nn.Linear(k, n,bias=False,dtype=torch.float16).cuda()
-func.weight.data.copy_(weight)
-ref_output = func(input)
+cg_instance = CutlassGemm("/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_one.json")
+output = cg_instance.gemm_in8_w8_ofp16_per_tensor(input, weight, 1.0, 0.0, m, n, k)
+print(output)
 
-# test int8 * int8 -> fp16 per tensor
-tile_config = ""                             
-cutlass_fp16_ofp16_gemm_reuslt = gemm_op_fp16.cutlass_fp16_ofp16_gemm(input,           # input
-                                                                        weight,          # weight
-                                                                        1.0,             # alpha
-                                                                        0.0,             # beta
-                                                                        m,               # m
-                                                                        n,               # n
-                                                                        k,               # k
-                                                                        tile_config,     # tile config
-                                                                        3,               # stages
-                                                                        2)               # workspeace bytes
-ic((ref_output - gemm_in8_w8_ofp16_per_tensor_result).pow(2).mean() / ref_output.pow(2).mean())
+output = cg_instance.gemm_in8_w8_ofp16_per_tensor_splitk(input, weight, 1.0, 0.0, m, n, k,splitk=2)
+print(output)

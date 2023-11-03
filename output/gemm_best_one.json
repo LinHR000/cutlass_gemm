@@ -1,0 +1,11 @@
+{
+    "1": "CtaShape64x128x128_WarpShape32x64x128#4#1",
+    "391": "CtaShape64x128x64_WarpShape32x64x64#3#1",
+    "1291": "CtaShape128x128x64_WarpShape64x64x64#3#1",
+    "1666": "CtaShape64x256x64_WarpShape64x64x64#3#1",
+    "1741": "CtaShape64x128x64_WarpShape32x64x64#4#1",
+    "2116": "CtaShape128x128x64_WarpShape64x64x64#3#1",
+    "2446": "CtaShape64x128x64_WarpShape32x64x64#4#1",
+    "2566": "CtaShape128x128x64_WarpShape64x64x64#3#1"
+   
+}
