@@ -134,6 +134,7 @@ cutlass_gemm_extension_int8 = CUDAExtension(
              "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int8.cu",
              "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_int32.cu",
              "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_fp16_splitk.cu",
+             "src/cutlass_kernels/int8_gemm_raw/int8_gemm_raw_template_act_fp16.cu",
              "src/utils/th_utils.cu",
              "src/utils/cuda_utils.cc",
              "src/utils/logger.cc",
