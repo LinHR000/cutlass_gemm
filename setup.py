@@ -84,6 +84,9 @@ if nvcc_cuda_version >= Version("11.2"):
     num_threads = min(os.cpu_count(), 8)
     NVCC_FLAGS += ["--threads", str(num_threads)]
 
+define_macros = []
+define_macros.append(('ENABLE_BF16', None))
+
 ext_modules = []
 
 # Cache operations.
@@ -125,6 +128,7 @@ cutlass_gemm_extension = CUDAExtension(
                              '-lculibos', '-lcudart', '-lcudart_static',
                              '-lrt', '-lpthread', '-ldl', '-L/usr/lib/x86_64-linux-gnu/'],
     extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS},
+    define_macros=define_macros
 )
 ext_modules.append(cutlass_gemm_extension)
 
@@ -148,6 +152,7 @@ cutlass_gemm_extension_int8 = CUDAExtension(
                              '-lculibos', '-lcudart', '-lcudart_static',
                              '-lrt', '-lpthread', '-ldl', '-L/usr/lib/x86_64-linux-gnu/'],
     extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS},
+    define_macros=define_macros
 )
 ext_modules.append(cutlass_gemm_extension_int8)
 

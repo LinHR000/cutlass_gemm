@@ -29,9 +29,19 @@ Tensor fused_gemm_dq_helper(
     Tensor input_activations, Tensor weight, Tensor scales)
 {
     const at::ScalarType _st    = input_activations.scalar_type();
-    const int            m      = input_activations.size(0);
+    int m_ = 1;
+    
+    if (input_activations.dim() == 2){
+        m_ = input_activations.size(0);
+    }else if (input_activations.dim() == 3){
+        m_ = input_activations.size(0) * input_activations.size(1);
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+
+    const int            m      = m_;
     const int            n      = scales.size(0);
-    const int            k      = input_activations.size(1);
+    const int            k      = weight.size(0);
     auto                 stream = at::cuda::getCurrentCUDAStream().stream();
 
     const T*          input_act_ptr = get_ptr<const T>(input_activations);
@@ -40,8 +50,14 @@ Tensor fused_gemm_dq_helper(
 
     fastertransformer::CutlassFpAIntBGemmRunner<T, WeightType> fused_gemm_dq_runner;
     const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
-
-    auto output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    Tensor output_tensor;
+    if (input_activations.dim() == 2){
+        output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    }else if (input_activations.dim() == 3){
+        output_tensor = torch::empty({input_activations.size(0),input_activations.size(1), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
     auto ws_tensor     = torch::empty({ws_bytes}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
 
     T*   output_tensor_ptr = get_ptr<T>(output_tensor);
@@ -58,15 +74,15 @@ _fused_gemm_dq(Tensor input_activations, Tensor weight, Tensor scales)
     const at::ScalarType _st = input_activations.scalar_type();
     CHECK_INPUT(scales, _st);
 
-    TORCH_CHECK(input_activations.dim() == 2, "Invalid rank for activations");
+    // TORCH_CHECK(input_activations.dim() == 2, "Invalid rank for activations");
     TORCH_CHECK(weight.dim() == 2, "Invalid rank for weight");
     TORCH_CHECK(scales.dim() == 1, "Invalid rank for scales");
 
-    const int m = input_activations.size(0);
-    const int n = scales.size(0);
-    const int k = input_activations.size(1);
+    // const int m = input_activations.size(0);
+    // const int n = scales.size(0);
+    // const int k = input_activations.size(1);
 
-    TORCH_CHECK(input_activations.size(1) == weight.size(0), "dim 1 of act and dim 0 of weight must be equal");
+    // TORCH_CHECK(input_activations.size(1) == weight.size(0), "dim 1 of act and dim 0 of weight must be equal");
 
     // We signal int4 by having the last weight dim be half the size of the scales.
     // This is because int4 elements are packed into a single byte.
@@ -146,7 +162,16 @@ Tensor fused_gemm_dq_bias_act_helper(
     Tensor input_activations, Tensor weight, Tensor scales, Tensor bias, ft::ActivationType activation_type)
 {
     const at::ScalarType _st    = input_activations.scalar_type();
-    const int            m      = input_activations.size(0);
+    int m_ = 1;
+    
+    if (input_activations.dim() == 2){
+        m_ = input_activations.size(0);
+    }else if (input_activations.dim() == 3){
+        m_ = input_activations.size(0) * input_activations.size(1);
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+    const int            m      = m_;
     const int            n      = scales.size(0);
     const int            k      = input_activations.size(1);
     auto                 stream = at::cuda::getCurrentCUDAStream().stream();
@@ -158,8 +183,14 @@ Tensor fused_gemm_dq_bias_act_helper(
 
     fastertransformer::CutlassFpAIntBGemmRunner<T, WeightType> fused_gemm_dq_runner;
     const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
-
-    auto output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    Tensor output_tensor;
+if (input_activations.dim() == 2){
+        output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    }else if (input_activations.dim() == 3){
+        output_tensor = torch::empty({input_activations.size(0),input_activations.size(1), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
     auto ws_tensor     = torch::empty({ws_bytes}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
 
     T*   output_tensor_ptr = get_ptr<T>(output_tensor);
@@ -188,17 +219,26 @@ Tensor gemm_infp16_w8_ofp16_bias_act(
     CHECK_INPUT(scales, _st);
     CHECK_INPUT(bias, _st);
 
-    TORCH_CHECK(input_activations.dim() == 2, "Invalid rank for activations");
+    // TORCH_CHECK(input_activations.dim() == 2, "Invalid rank for activations");
     TORCH_CHECK(weight.dim() == 2, "Invalid rank for weight");
     TORCH_CHECK(scales.dim() == 1, "Invalid rank for scales");
     TORCH_CHECK(bias.dim() == 1, "Invalid rank for bias");
+    // int m_ = 1;
+    // if (input_activations.dim() == 2){
+    //     m = input_activations.size(0);
+    // }else if (input_activations.dim() == 3){
+    //     m = input_activations.size(0) * input_activations.size(1);
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
 
-    const int m = input_activations.size(0);
-    const int n = scales.size(0);
-    const int k = input_activations.size(1);
 
-    TORCH_CHECK(bias.size(0) == n, "Must have 1 bias value for each output column");
-    TORCH_CHECK(input_activations.size(1) == weight.size(0), "dim 1 of act and dim 0 of weight must be equal");
+    // const int m = input_activations.size(0);
+    // const int n = scales.size(0);
+    // const int k = weight.size(0);
+
+    // TORCH_CHECK(bias.size(0) == n, "Must have 1 bias value for each output column");
+    // TORCH_CHECK(input_activations.size(1) == weight.size(0), "dim 1 of act and dim 0 of weight must be equal");
 
     // We signal int4 by having the last weight dim be half the size of the scales.
     // This is because int4 elements are packed into a single byte.

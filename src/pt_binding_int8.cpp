@@ -27,8 +27,8 @@ Tensor gemm_in8_w8_ofp16_per_tensor(Tensor&         input,
     int sm = 80;
     // auto bias_ptr = bias ? get_ptr<__half>(bias) : nullptr;
     // const __half* bias_ptr = bias ? get_ptr<__half>(bias):nullptr;
-    const __half* bias_ptr = bias ?
-    reinterpret_cast<const __half*>(bias.value().data_ptr())
+    __half* bias_ptr = bias ?
+    reinterpret_cast<__half*>(bias.value().data_ptr())
     : nullptr;
 
     ft::cutlass_int8_fp16_gemm_per_tensor(get_ptr<int8_t>(input),

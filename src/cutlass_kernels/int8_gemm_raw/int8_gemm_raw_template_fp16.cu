@@ -43,7 +43,7 @@ template<typename T,
          int stages>
 void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
                                           const int8_t*     B,
-                                          const T*          bias,
+                                          T*          bias,
                                           const float       alpha,
                                           const float       beta,
                                           T*                C,
@@ -60,13 +60,16 @@ void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
     using ElementInput = int8_t;
 
     using ElementOutput_ =
-        // typename cutlass::platform::conditional<cutlass::platform::is_same<T, half>::value, cutlass::half_t, T>::type;
-        typename cutlass::platform::conditional<cutlass::platform::is_same<T, half>::value, __half, T>::type;
+        typename cutlass::platform::conditional<cutlass::platform::is_same<T, half>::value, cutlass::half_t, T>::type;
+        // typename cutlass::platform::conditional<cutlass::platform::is_same<T, half>::value, __half, T>::type;
 #ifdef ENABLE_BF16
     using ElementOutput =
         typename cutlass::platform::conditional<cutlass::platform::is_same<ElementOutput_, __nv_bfloat16>::value,
                                                 cutlass::bfloat16_t,
                                                 ElementOutput_>::type;
+        // typename cutlass::platform::conditional<cutlass::platform::is_same<ElementOutput_, __nv_bfloat16>::value,
+        //                                         __nv_bfloat16,
+        //                                         ElementOutput_>::type;
 #else
     using ElementOutput = ElementOutput_;
 #endif
@@ -111,8 +114,8 @@ void generic_int8_gemm_raw_kernelLauncher(const int8_t*     A,
     typename Gemm::Arguments args{problem_size,
                                     {A, k},    // <- reference to matrix A on device
                                     {B, k},   // <- reference to matrix B on device
-                                    {bias, 0},      // <- reference to matrix C on device
-                                    {C, n},   
+                                    {reinterpret_cast<ElementOutput*>(bias), 0},      // <- reference to matrix C on device
+                                    {reinterpret_cast<ElementOutput*>(C), n},   
                                   {alpha,beta},
                                   splitK}; // TODO 确认split K从哪里传入
 
@@ -161,7 +164,7 @@ template<typename T, typename arch, typename ThreadblockShape, typename WarpShap
 struct dispatch_stages {
     static void dispatch(const int8_t*     A,
                         const int8_t*     B,
-                        const T*          bias,
+                        T*          bias,
                         const float       alpha,
                         const float       beta,
                         T*                C,
@@ -186,7 +189,7 @@ template<typename T, typename arch, typename ThreadblockShape, typename WarpShap
 struct dispatch_stages<T, arch, ThreadblockShape, WarpShape, 2> {
     static void dispatch(const int8_t*     A,
                         const int8_t*     B,
-                        const T*          bias,
+                        T*          bias,
                         const float       alpha,
                         const float       beta,
                         T*                C,
@@ -224,7 +227,7 @@ struct dispatch_stages<T,
                        typename std::enable_if<(Stages > 2)>::type> {
     static void dispatch(const int8_t*     A,
                         const int8_t*     B,
-                        const T*          bias,
+                        T*          bias,
                         const float       alpha,
                         const float       beta,
                         T*                C,
@@ -257,7 +260,7 @@ struct dispatch_stages<T,
 template<typename T, typename arch, typename ThreadblockShape, typename WarpShape>
 void dispatch_gemm_config(const int8_t*     A,
                         const int8_t*     B,
-                        const T*          bias,
+                        T*          bias,
                         const float       alpha,
                         const float       beta,
                         T*                C,
@@ -327,13 +330,13 @@ void dispatch_gemm_config(const int8_t*     A,
             break;
     }
 }
-
+template<typename T>
 void dispatch_gemm_to_cutlass_fp16(const int8_t*     A,
                               const int8_t*     B,
-                              const __half*          bias,
+                              T*          bias,
                               const float       alpha,
                               const float       beta,
-                              __half*           C,
+                              T*           C,
                               int               m,
                               int               n,
                               int               k,
@@ -347,56 +350,56 @@ void dispatch_gemm_to_cutlass_fp16(const int8_t*     A,
 
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
     if (tile_config == "CtaShape128x256x128_WarpShape64x64x128"){
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<128, 256, 128>, 
                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
                 A, B, bias,alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
     }else if (tile_config == "CtaShape128x128x128_WarpShape64x64x128"){
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<128, 128, 128>,
                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
                 A, B, bias,alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
     }else if (tile_config== "CtaShape64x256x128_WarpShape64x64x128"){
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<64, 256, 128>,
                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
                 A, B, bias,alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
     }else if (tile_config == "CtaShape64x128x128_WarpShape32x64x128"){
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<64, 128, 128>,
                                 cutlass::gemm::GemmShape<32, 64, 128>>( 
                 A, B, bias,alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
     }else if (tile_config == "CtaShape256x128x64_WarpShape64x64x64"){
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<256, 128, 64>,
                                 cutlass::gemm::GemmShape<64, 64, 64>>( 
                 A, B, bias,alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
     }else if (tile_config == "CtaShape128x128x64_WarpShape64x64x64"){
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<128, 128, 64>,
                                 cutlass::gemm::GemmShape<64, 64, 64>>( 
                 A, B, bias,alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
 
     }else if (tile_config == "CtaShape64x256x64_WarpShape64x64x64"){
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<64, 256, 64>,
                                 cutlass::gemm::GemmShape<64, 64, 64>>( 
                 A, B, bias,alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
     }else if (tile_config == "CtaShape64x128x64_WarpShape32x64x64"){
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<64, 128, 64>,
                                 cutlass::gemm::GemmShape<32, 64, 64>>( 
                 A, B, bias,alpha, beta, C, m, n, k, workspace, workspace_bytes, stages, splitK, stream);
     }else{
-            dispatch_gemm_config<__half, 
+            dispatch_gemm_config<T, 
                                 cutlass::arch::Sm80, 
                                 cutlass::gemm::GemmShape<128, 256, 128>, 
                                 cutlass::gemm::GemmShape<64, 64, 128>>( 
@@ -409,7 +412,7 @@ void dispatch_gemm_to_cutlass_fp16(const int8_t*     A,
 
 void cutlass_int8_fp16_gemm_per_tensor(const int8_t*     A,
                                     const int8_t*     B,
-                                    const __half*           bias,
+                                    __half*           bias,
                                     const float       alpha,
                                     const float       beta,
                                     __half*           C,
@@ -426,7 +429,7 @@ void cutlass_int8_fp16_gemm_per_tensor(const int8_t*     A,
 {
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
     if (sm_ >= 80 && sm_ < 90) {
-        dispatch_gemm_to_cutlass_fp16(A,
+        dispatch_gemm_to_cutlass_fp16<__half>(A,
                                     B,
                                     bias,
                                     alpha,
@@ -449,5 +452,45 @@ void cutlass_int8_fp16_gemm_per_tensor(const int8_t*     A,
 }
 
 
+void cutlass_int8_bf16_gemm_per_tensor(const int8_t*     A,
+                                    const int8_t*     B,
+                                    __nv_bfloat16*           bias,
+                                    const float       alpha,
+                                    const float       beta,
+                                    __nv_bfloat16*           C,
+                                    int               m,
+                                    int               n,
+                                    int               k,
+                                    std::string       tile_config,
+                                    const int         stages,
+                                    const int         splitK,
+                                    char*             workspace_ptr,
+                                    const size_t      workspace_bytes,
+                                    int               sm_,
+                                    cudaStream_t      stream)
+{
+    FT_LOG_DEBUG(__PRETTY_FUNCTION__);
+    if (sm_ >= 80 && sm_ < 90) {
+        dispatch_gemm_to_cutlass_fp16<__nv_bfloat16>(A,
+                                    B,
+                                    bias,
+                                    alpha,
+                                    beta,
+                                    C,
+                                    m,
+                                    n,
+                                    k,
+                                    workspace_ptr,
+                                    workspace_bytes,
+                                    tile_config,
+                                    stages,
+                                    splitK,
+                                    stream);
+    }
+    else {
+        throw std::runtime_error(
+            "[FT Error][CutlassInt8GemmRunner][GEMM Dispatch] Arch unsupported for CUTLASS int8 GEMM");
+    }
+}
 
 }  // namespace fastertransformer
