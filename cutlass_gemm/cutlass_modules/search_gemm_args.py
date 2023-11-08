@@ -190,22 +190,22 @@ class CutlassGemm(object):
                                                             splitk)               # workspeace bytes
         return output
 
-    def gemm_in8_w8_ofp16_gelu_per_tensor(self, input,weight,bias, alpha,beta,m,n,k,tile_config = '',stages=3,splitk=1):
-        if len(self.config_dict) >0 :
-            config_dict_ = self.config_dict[m]
-            tile_config,stages,splitk = config_dict_['tile_config'],config_dict_['stages'],config_dict_['splitk']
-        output = gemm_op_int8.gemm_in8_w8_ofp16_gelu_per_tensor(input,           # input
-                                                            weight,          # weight
-                                                            bias,
-                                                            alpha,             # alpha
-                                                            beta,             # beta
-                                                            m,               # m
-                                                            n,               # n
-                                                            k,               # k
-                                                            tile_config,     # tile config
-                                                            stages,               # stages
-                                                            splitk)               # workspeace bytes
-        return output
+    # def gemm_in8_w8_ofp16_gelu_per_tensor(self, input,weight,bias, alpha,beta,m,n,k,tile_config = '',stages=3,splitk=1):
+    #     if len(self.config_dict) >0 :
+    #         config_dict_ = self.config_dict[m]
+    #         tile_config,stages,splitk = config_dict_['tile_config'],config_dict_['stages'],config_dict_['splitk']
+    #     output = gemm_op_int8.gemm_in8_w8_ofp16_gelu_per_tensor(input,           # input
+    #                                                         weight,          # weight
+    #                                                         bias,
+    #                                                         alpha,             # alpha
+    #                                                         beta,             # beta
+    #                                                         m,               # m
+    #                                                         n,               # n
+    #                                                         k,               # k
+    #                                                         tile_config,     # tile config
+    #                                                         stages,               # stages
+    #                                                         splitk)               # workspeace bytes
+    #     return output
 
     def gemm_in8_w8_ofp16_per_tensor_splitk(self, input,weight,alpha,beta,m,n,k,tile_config = '',stages=3,splitk=1):
         if len(self.config_dict) >0 :
@@ -222,32 +222,27 @@ class CutlassGemm(object):
                                                                     stages,               # stages
                                                                     splitk) 
         return output
-    @staticmethod
-    def gemm_in8_w8_ofp16_pt(input,weight,alpha_col,alpha_row,m,n,k):
+    def gemm_in8_w8_ofp16_pt(self, input,weight,alpha_col,alpha_row,m,n,k):
         output = gemm_op.gemm_in8_w8_ofp16_pt(input,weight,alpha_col,alpha_row,m,n,k)
         return output
-    @staticmethod
-    def gemm_in8_w8_ofp16_pc(input,weight,alpha_col,alpha_row,m,n,k):
+        
+    def gemm_in8_w8_ofp16_pc(self, input,weight,alpha_col,alpha_row,m,n,k):
         output = gemm_op.gemm_in8_w8_ofp16_pc(input,weight,alpha_col,alpha_row,m,n,k)
         return output
     
-    @staticmethod
-    def gemm_in8_w8_ofp16_ptpc(input,weight,alpha_col,alpha_row,m,n,k):
+    def gemm_in8_w8_ofp16_ptpc(self, input,weight,alpha_col,alpha_row,m,n,k):
         output = gemm_op.gemm_in8_w8_ofp16_ptpc(input,weight,alpha_col,alpha_row,m,n,k)
         return output
     
-    @staticmethod
-    def gemm_infp16_w8_ofp16(input,weight,weight_scale):
+    def gemm_infp16_w8_ofp16(self, input,weight,weight_scale):
         output = gemm_op.gemm_infp16_w8_ofp16(input,weight,weight_scale)
         return output
     
-    @staticmethod
-    def gemm_infp16_w8_ofp16_bias_act(input,weight,weight_scale,bias_fp16,act_func='gelu'):
+    def gemm_infp16_w8_ofp16_bias_act(self, input,weight,weight_scale,bias_fp16,act_func='gelu'):
         output = gemm_op.gemm_infp16_w8_ofp16_bias_act(input,weight,weight_scale,bias_fp16,act_func)
         return output
 
-    @staticmethod
-    def symmetric_quantize(weight,quant_mode=0):
+    def symmetric_quantize(self, weight,quant_mode=0):
         """
         0 fot int8
         1 for int4

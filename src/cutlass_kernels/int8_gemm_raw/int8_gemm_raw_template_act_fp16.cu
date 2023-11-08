@@ -28,7 +28,7 @@
 #include "cutlass/gemm/device/gemm_batched.h"
 #include "cuda_fp16.h"
 #include "cutlass/gemm/device/gemm_splitk_parallel.h"
-
+#include "cutlass/epilogue/thread/linear_combination_gelu.h"
 #pragma GCC diagnostic pop
 #include <string>
 #include "cutlass_kernels/int8_gemm_raw/int8_gemm_raw.h"
