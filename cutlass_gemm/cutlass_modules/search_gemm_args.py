@@ -190,6 +190,23 @@ class CutlassGemm(object):
                                                             splitk)               # workspeace bytes
         return output
 
+    def gemm_in8_w8_obf16_per_tensor(self, input,weight,bias, alpha,beta,m,n,k,tile_config = '',stages=3,splitk=1):
+        if len(self.config_dict) >0 :
+            config_dict_ = self.config_dict[m]
+            tile_config,stages,splitk = config_dict_['tile_config'],config_dict_['stages'],config_dict_['splitk']
+        output = gemm_op_int8.gemm_in8_w8_obf16_per_tensor(input,           # input
+                                                            weight,          # weight
+                                                            bias,
+                                                            alpha,             # alpha
+                                                            beta,             # beta
+                                                            m,               # m
+                                                            n,               # n
+                                                            k,               # k
+                                                            tile_config,     # tile config
+                                                            stages,               # stages
+                                                            splitk)               # workspeace bytes
+        return output
+
     # def gemm_in8_w8_ofp16_gelu_per_tensor(self, input,weight,bias, alpha,beta,m,n,k,tile_config = '',stages=3,splitk=1):
     #     if len(self.config_dict) >0 :
     #         config_dict_ = self.config_dict[m]

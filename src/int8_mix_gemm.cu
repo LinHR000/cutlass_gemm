@@ -184,7 +184,7 @@ Tensor fused_gemm_dq_bias_act_helper(
     fastertransformer::CutlassFpAIntBGemmRunner<T, WeightType> fused_gemm_dq_runner;
     const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
     Tensor output_tensor;
-if (input_activations.dim() == 2){
+    if (input_activations.dim() == 2){
         output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
     }else if (input_activations.dim() == 3){
         output_tensor = torch::empty({input_activations.size(0),input_activations.size(1), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));

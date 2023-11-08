@@ -22,7 +22,15 @@ Tensor gemm_in8_w8_ofp16_per_tensor(Tensor&         input,
                                 const int               stages,
                                 const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Half;
-    Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    Tensor output;
+    if (input.dim() == 2){
+        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else if (input.dim() == 3){
+        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+    // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
     // auto bias_ptr = bias ? get_ptr<__half>(bias) : nullptr;
@@ -37,6 +45,54 @@ Tensor gemm_in8_w8_ofp16_per_tensor(Tensor&         input,
                                         alpha,
                                         beta,
                                         get_ptr<__half>(output),
+                                        m,
+                                        n,
+                                        k,
+                                        tile_config,
+                                        stages,
+                                        splitK,
+                                        nullptr,
+                                        0,
+                                        sm,
+                                        stream);
+    return output;
+}
+
+Tensor gemm_in8_w8_obf16_per_tensor(Tensor&         input,
+                                Tensor&            weight,
+                                c10::optional<torch::Tensor>&            bias,
+                                float             alpha, 
+                                float             beta,
+                                int64_t           m,
+                                int64_t           n,
+                                int64_t           k,
+                                std::string       tile_config,
+                                const int               stages,
+                                const int               splitK){
+    at::ScalarType output_data_type = at::ScalarType::BFloat16;
+    Tensor output;
+    if (input.dim() == 2){
+        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else if (input.dim() == 3){
+        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+    // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    auto stream = at::cuda::getCurrentCUDAStream().stream();
+    int sm = 80;
+    // auto bias_ptr = bias ? get_ptr<__half>(bias) : nullptr;
+    // const __half* bias_ptr = bias ? get_ptr<__half>(bias):nullptr;
+    __nv_bfloat16* bias_ptr = bias ?
+    reinterpret_cast<__nv_bfloat16*>(bias.value().data_ptr())
+    : nullptr;
+
+    ft::cutlass_int8_bf16_gemm_per_tensor(get_ptr<int8_t>(input),
+                                        get_ptr<int8_t>(weight),
+                                        bias_ptr,
+                                        alpha,
+                                        beta,
+                                        get_ptr<__nv_bfloat16>(output),
                                         m,
                                         n,
                                         k,
@@ -102,7 +158,15 @@ Tensor gemm_in8_w8_o8_per_tensor(Tensor         input,
                                 const int               stages,
                                 const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Char;
-    Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    Tensor output;
+    if (input.dim() == 2){
+        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else if (input.dim() == 3){
+        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+    // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
     ft::cutlass_int8_int8_gemm_per_tensor(get_ptr<int8_t>(input),
@@ -134,7 +198,15 @@ Tensor gemm_in8_w8_o32_per_tensor(Tensor         input,
                                 const int               stages,
                                 const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Int;
-    Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    Tensor output;
+    if (input.dim() == 2){
+        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else if (input.dim() == 3){
+        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+    // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm=80;
     ft::cutlass_int8_int32_gemm_per_tensor(get_ptr<int8_t>(input),
@@ -166,7 +238,15 @@ Tensor gemm_in8_w8_ofp16_per_tensor_splitk(Tensor         input,
                                         const int               stages,
                                         const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Half;
-    Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    Tensor output;
+    if (input.dim() == 2){
+        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else if (input.dim() == 3){
+        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+    // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
     ft::cutlass_int8_fp16_gemm_per_tensor_splitk(get_ptr<int8_t>(input),
@@ -204,8 +284,8 @@ m.def(
     "gemm_in8_w8_ofp16_per_tensor_splitk",
     &gemm_in8_w8_ofp16_per_tensor_splitk,
     "Compute the attention between an input query and the cached key/value tensors");
-// m.def(
-//     "gemm_in8_w8_ofp16_gelu_per_tensor",
-//     &gemm_in8_w8_ofp16_gelu_per_tensor,
-//     "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "gemm_in8_w8_obf16_per_tensor",
+    &gemm_in8_w8_obf16_per_tensor,
+    "Compute the attention between an input query and the cached key/value tensors");
 }
