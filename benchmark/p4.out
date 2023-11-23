@@ -1,0 +1,1863 @@
+Namespace(m=4096, n=6144, k=8192, num_iters=10)
+==========M=1==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.07503032684326172
+TIME INT8 * INT8 -> FP16 (per token): 0.07731914520263672
+TIME INT8 * INT8 -> FP16 (per channel) 0.07236003875732422
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.0719308853149414
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.06306171417236328
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.06322860717773438
+TIME Linear: 0.115966796875
+Speed Up INT8 * INT8 -> FP16 (per tensor):35.3%
+Speed Up INT8 * INT8 -> FP16 (per token):33.33%
+Speed Up INT8 * INT8 -> FP16 (per channel):37.6%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):37.97%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):45.62%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):45.48%
+==========M=32==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.07414817810058594
+TIME INT8 * INT8 -> FP16 (per token): 0.07524490356445312
+TIME INT8 * INT8 -> FP16 (per channel) 0.07326602935791016
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.0741720199584961
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.07281303405761719
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.0692129135131836
+TIME Linear: 0.18880367279052734
+Speed Up INT8 * INT8 -> FP16 (per tensor):60.73%
+Speed Up INT8 * INT8 -> FP16 (per token):60.15%
+Speed Up INT8 * INT8 -> FP16 (per channel):61.19%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):60.71%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):61.43%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):63.34%
+==========M=63==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.07390975952148438
+TIME INT8 * INT8 -> FP16 (per token): 0.08404254913330078
+TIME INT8 * INT8 -> FP16 (per channel) 0.07526874542236328
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.07615089416503906
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.07603168487548828
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.07412433624267578
+TIME Linear: 0.12521743774414062
+Speed Up INT8 * INT8 -> FP16 (per tensor):40.97%
+Speed Up INT8 * INT8 -> FP16 (per token):32.88%
+Speed Up INT8 * INT8 -> FP16 (per channel):39.89%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):39.19%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):39.28%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):40.8%
+==========M=94==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.07586479187011719
+TIME INT8 * INT8 -> FP16 (per token): 0.09799003601074219
+TIME INT8 * INT8 -> FP16 (per channel) 0.09703636169433594
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.09725093841552734
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.10607242584228516
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.1056671142578125
+TIME Linear: 0.13549327850341797
+Speed Up INT8 * INT8 -> FP16 (per tensor):44.01%
+Speed Up INT8 * INT8 -> FP16 (per token):27.68%
+Speed Up INT8 * INT8 -> FP16 (per channel):28.38%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):28.22%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):21.71%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):22.01%
+==========M=125==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.07538795471191406
+TIME INT8 * INT8 -> FP16 (per token): 0.10013580322265625
+TIME INT8 * INT8 -> FP16 (per channel) 0.1004934310913086
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.09992122650146484
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.10776519775390625
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.1069784164428711
+TIME Linear: 0.14696121215820312
+Speed Up INT8 * INT8 -> FP16 (per tensor):48.7%
+Speed Up INT8 * INT8 -> FP16 (per token):31.86%
+Speed Up INT8 * INT8 -> FP16 (per channel):31.62%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):32.01%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):26.67%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):27.21%
+==========M=156==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.12788772583007812
+TIME INT8 * INT8 -> FP16 (per token): 0.13632774353027344
+TIME INT8 * INT8 -> FP16 (per channel) 0.1314401626586914
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.13265609741210938
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.16622543334960938
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.1661539077758789
+TIME Linear: 0.16553401947021484
+Speed Up INT8 * INT8 -> FP16 (per tensor):22.74%
+Speed Up INT8 * INT8 -> FP16 (per token):17.64%
+Speed Up INT8 * INT8 -> FP16 (per channel):20.6%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):19.86%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-0.42%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-0.37%
+==========M=187==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.12805461883544922
+TIME INT8 * INT8 -> FP16 (per token): 0.13382434844970703
+TIME INT8 * INT8 -> FP16 (per channel) 0.13120174407958984
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.1319408416748047
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.1659393310546875
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.16601085662841797
+TIME Linear: 0.16596317291259766
+Speed Up INT8 * INT8 -> FP16 (per tensor):22.84%
+Speed Up INT8 * INT8 -> FP16 (per token):19.37%
+Speed Up INT8 * INT8 -> FP16 (per channel):20.95%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):20.5%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):0.01%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-0.03%
+==========M=218==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.1058340072631836
+TIME INT8 * INT8 -> FP16 (per token): 0.16465187072753906
+TIME INT8 * INT8 -> FP16 (per channel) 0.16078948974609375
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.1617431640625
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.16605854034423828
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.16765594482421875
+TIME Linear: 0.1695871353149414
+Speed Up INT8 * INT8 -> FP16 (per tensor):37.59%
+Speed Up INT8 * INT8 -> FP16 (per token):2.91%
+Speed Up INT8 * INT8 -> FP16 (per channel):5.19%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):4.63%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):2.08%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):1.14%
+==========M=249==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.1288890838623047
+TIME INT8 * INT8 -> FP16 (per token): 0.1651763916015625
+TIME INT8 * INT8 -> FP16 (per channel) 0.16324520111083984
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.16438961029052734
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.16605854034423828
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.16689300537109375
+TIME Linear: 0.17511844635009766
+Speed Up INT8 * INT8 -> FP16 (per tensor):26.4%
+Speed Up INT8 * INT8 -> FP16 (per token):5.68%
+Speed Up INT8 * INT8 -> FP16 (per channel):6.78%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):6.13%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):5.17%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.7%
+==========M=280==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.18198490142822266
+TIME INT8 * INT8 -> FP16 (per token): 0.1695871353149414
+TIME INT8 * INT8 -> FP16 (per channel) 0.164794921875
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.1664876937866211
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.20840167999267578
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.20999908447265625
+TIME Linear: 0.23148059844970703
+Speed Up INT8 * INT8 -> FP16 (per tensor):21.38%
+Speed Up INT8 * INT8 -> FP16 (per token):26.74%
+Speed Up INT8 * INT8 -> FP16 (per channel):28.81%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):28.08%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):9.97%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):9.28%
+==========M=311==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.18093585968017578
+TIME INT8 * INT8 -> FP16 (per token): 0.1948833465576172
+TIME INT8 * INT8 -> FP16 (per channel) 0.19054412841796875
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.19414424896240234
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.1906871795654297
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.19047260284423828
+TIME Linear: 0.22885799407958984
+Speed Up INT8 * INT8 -> FP16 (per tensor):20.94%
+Speed Up INT8 * INT8 -> FP16 (per token):14.85%
+Speed Up INT8 * INT8 -> FP16 (per channel):16.74%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):15.17%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):16.68%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):16.77%
+==========M=342==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.182342529296875
+TIME INT8 * INT8 -> FP16 (per token): 0.1965045928955078
+TIME INT8 * INT8 -> FP16 (per channel) 0.19598007202148438
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.19617080688476562
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.23005008697509766
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.2313375473022461
+TIME Linear: 0.23205280303955078
+Speed Up INT8 * INT8 -> FP16 (per tensor):21.42%
+Speed Up INT8 * INT8 -> FP16 (per token):15.32%
+Speed Up INT8 * INT8 -> FP16 (per channel):15.55%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):15.46%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):0.86%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):0.31%
+==========M=373==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.1833200454711914
+TIME INT8 * INT8 -> FP16 (per token): 0.2229928970336914
+TIME INT8 * INT8 -> FP16 (per channel) 0.222015380859375
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.22275447845458984
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.2310037612915039
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.2315044403076172
+TIME Linear: 0.2321004867553711
+Speed Up INT8 * INT8 -> FP16 (per tensor):21.02%
+Speed Up INT8 * INT8 -> FP16 (per token):3.92%
+Speed Up INT8 * INT8 -> FP16 (per channel):4.35%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):4.03%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):0.47%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):0.26%
+==========M=404==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.20058155059814453
+TIME INT8 * INT8 -> FP16 (per token): 0.22704601287841797
+TIME INT8 * INT8 -> FP16 (per channel) 0.225830078125
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.22635459899902344
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.29358863830566406
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.2940177917480469
+TIME Linear: 0.2843618392944336
+Speed Up INT8 * INT8 -> FP16 (per tensor):29.46%
+Speed Up INT8 * INT8 -> FP16 (per token):20.16%
+Speed Up INT8 * INT8 -> FP16 (per channel):20.58%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):20.4%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-3.24%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-3.4%
+==========M=435==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.19071102142333984
+TIME INT8 * INT8 -> FP16 (per token): 0.25048255920410156
+TIME INT8 * INT8 -> FP16 (per channel) 0.24840831756591797
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.24967193603515625
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.2938508987426758
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.29392242431640625
+TIME Linear: 0.2852916717529297
+Speed Up INT8 * INT8 -> FP16 (per tensor):33.15%
+Speed Up INT8 * INT8 -> FP16 (per token):12.2%
+Speed Up INT8 * INT8 -> FP16 (per channel):12.93%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):12.49%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-3.0%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-3.03%
+==========M=466==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.2199411392211914
+TIME INT8 * INT8 -> FP16 (per token): 0.299072265625
+TIME INT8 * INT8 -> FP16 (per channel) 0.30045509338378906
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.2949714660644531
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.33926963806152344
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.33767223358154297
+TIME Linear: 0.28679370880126953
+Speed Up INT8 * INT8 -> FP16 (per tensor):23.31%
+Speed Up INT8 * INT8 -> FP16 (per token):-4.28%
+Speed Up INT8 * INT8 -> FP16 (per channel):-4.76%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-2.85%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-18.3%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-17.74%
+==========M=497==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.19083023071289062
+TIME INT8 * INT8 -> FP16 (per token): 0.28183460235595703
+TIME INT8 * INT8 -> FP16 (per channel) 0.2777576446533203
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.2790689468383789
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.29463768005371094
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.2945423126220703
+TIME Linear: 0.28502941131591797
+Speed Up INT8 * INT8 -> FP16 (per tensor):33.05%
+Speed Up INT8 * INT8 -> FP16 (per token):1.12%
+Speed Up INT8 * INT8 -> FP16 (per channel):2.55%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):2.09%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-3.37%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-3.34%
+==========M=528==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.19404888153076172
+TIME INT8 * INT8 -> FP16 (per token): 0.28836727142333984
+TIME INT8 * INT8 -> FP16 (per channel) 0.2862215042114258
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.2879619598388672
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.2965211868286133
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.3049135208129883
+TIME Linear: 0.4023551940917969
+Speed Up INT8 * INT8 -> FP16 (per tensor):51.77%
+Speed Up INT8 * INT8 -> FP16 (per token):28.33%
+Speed Up INT8 * INT8 -> FP16 (per channel):28.86%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):28.43%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):26.3%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):24.22%
+==========M=559==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.19714832305908203
+TIME INT8 * INT8 -> FP16 (per token): 0.2994060516357422
+TIME INT8 * INT8 -> FP16 (per channel) 0.30460357666015625
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.31669139862060547
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.29871463775634766
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.3053426742553711
+TIME Linear: 0.4020214080810547
+Speed Up INT8 * INT8 -> FP16 (per tensor):50.96%
+Speed Up INT8 * INT8 -> FP16 (per token):25.52%
+Speed Up INT8 * INT8 -> FP16 (per channel):24.23%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):21.23%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):25.7%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):24.05%
+==========M=590==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.2630949020385742
+TIME INT8 * INT8 -> FP16 (per token): 0.31585693359375
+TIME INT8 * INT8 -> FP16 (per channel) 0.31354427337646484
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.3136873245239258
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.342559814453125
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.3436088562011719
+TIME Linear: 0.40466785430908203
+Speed Up INT8 * INT8 -> FP16 (per tensor):34.98%
+Speed Up INT8 * INT8 -> FP16 (per token):21.95%
+Speed Up INT8 * INT8 -> FP16 (per channel):22.52%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):22.48%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):15.35%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):15.09%
+==========M=621==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.23472309112548828
+TIME INT8 * INT8 -> FP16 (per token): 0.32618045806884766
+TIME INT8 * INT8 -> FP16 (per channel) 0.32219886779785156
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.3220081329345703
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.34270286560058594
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.3418922424316406
+TIME Linear: 0.40564537048339844
+Speed Up INT8 * INT8 -> FP16 (per tensor):42.14%
+Speed Up INT8 * INT8 -> FP16 (per token):19.59%
+Speed Up INT8 * INT8 -> FP16 (per channel):20.57%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):20.62%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):15.52%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):15.72%
+==========M=652==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.26984214782714844
+TIME INT8 * INT8 -> FP16 (per token): 0.34720897674560547
+TIME INT8 * INT8 -> FP16 (per channel) 0.3455638885498047
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.3451824188232422
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.38268566131591797
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.3911256790161133
+TIME Linear: 0.40886402130126953
+Speed Up INT8 * INT8 -> FP16 (per tensor):34.0%
+Speed Up INT8 * INT8 -> FP16 (per token):15.08%
+Speed Up INT8 * INT8 -> FP16 (per channel):15.48%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):15.58%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):6.4%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.34%
+==========M=683==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.27523040771484375
+TIME INT8 * INT8 -> FP16 (per token): 0.3568410873413086
+TIME INT8 * INT8 -> FP16 (per channel) 0.3586769104003906
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.35631656646728516
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.3846168518066406
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.39017200469970703
+TIME Linear: 0.40543079376220703
+Speed Up INT8 * INT8 -> FP16 (per tensor):32.11%
+Speed Up INT8 * INT8 -> FP16 (per token):11.98%
+Speed Up INT8 * INT8 -> FP16 (per channel):11.53%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):12.11%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):5.13%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):3.76%
+==========M=714==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.27599334716796875
+TIME INT8 * INT8 -> FP16 (per token): 0.3829002380371094
+TIME INT8 * INT8 -> FP16 (per channel) 0.3780364990234375
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.37834644317626953
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.4296541213989258
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.4304170608520508
+TIME Linear: 0.48224925994873047
+Speed Up INT8 * INT8 -> FP16 (per tensor):42.77%
+Speed Up INT8 * INT8 -> FP16 (per token):20.6%
+Speed Up INT8 * INT8 -> FP16 (per channel):21.61%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):21.55%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):10.91%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):10.75%
+==========M=745==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.27434825897216797
+TIME INT8 * INT8 -> FP16 (per token): 0.3960847854614258
+TIME INT8 * INT8 -> FP16 (per channel) 0.3934621810913086
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.39818286895751953
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.4306316375732422
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.43222904205322266
+TIME Linear: 0.4003763198852539
+Speed Up INT8 * INT8 -> FP16 (per tensor):31.48%
+Speed Up INT8 * INT8 -> FP16 (per token):1.07%
+Speed Up INT8 * INT8 -> FP16 (per channel):1.73%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):0.55%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-7.56%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-7.96%
+==========M=776==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.27637481689453125
+TIME INT8 * INT8 -> FP16 (per token): 0.4123210906982422
+TIME INT8 * INT8 -> FP16 (per channel) 0.4099607467651367
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.40879249572753906
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.43175220489501953
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.4336118698120117
+TIME Linear: 0.5134105682373047
+Speed Up INT8 * INT8 -> FP16 (per tensor):46.17%
+Speed Up INT8 * INT8 -> FP16 (per token):19.69%
+Speed Up INT8 * INT8 -> FP16 (per channel):20.15%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):20.38%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):15.91%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):15.54%
+==========M=807==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.27544498443603516
+TIME INT8 * INT8 -> FP16 (per token): 0.4315376281738281
+TIME INT8 * INT8 -> FP16 (per channel) 0.4281044006347656
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.42989253997802734
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.4336833953857422
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.43342113494873047
+TIME Linear: 0.5233049392700195
+Speed Up INT8 * INT8 -> FP16 (per tensor):47.36%
+Speed Up INT8 * INT8 -> FP16 (per token):17.54%
+Speed Up INT8 * INT8 -> FP16 (per channel):18.19%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):17.85%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):17.13%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):17.18%
+==========M=838==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.3042459487915039
+TIME INT8 * INT8 -> FP16 (per token): 0.44748783111572266
+TIME INT8 * INT8 -> FP16 (per channel) 0.44562816619873047
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.4433870315551758
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.565791130065918
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.564885139465332
+TIME Linear: 0.49278736114501953
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.26%
+Speed Up INT8 * INT8 -> FP16 (per token):9.19%
+Speed Up INT8 * INT8 -> FP16 (per channel):9.57%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):10.02%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-14.81%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-14.63%
+==========M=869==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.3065824508666992
+TIME INT8 * INT8 -> FP16 (per token): 0.45566558837890625
+TIME INT8 * INT8 -> FP16 (per channel) 0.4523754119873047
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.4541635513305664
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.5573272705078125
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.5576848983764648
+TIME Linear: 0.4837989807128906
+Speed Up INT8 * INT8 -> FP16 (per tensor):36.63%
+Speed Up INT8 * INT8 -> FP16 (per token):5.82%
+Speed Up INT8 * INT8 -> FP16 (per channel):6.5%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):6.13%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-15.2%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-15.27%
+==========M=900==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.31075477600097656
+TIME INT8 * INT8 -> FP16 (per token): 0.4728555679321289
+TIME INT8 * INT8 -> FP16 (per channel) 0.4705190658569336
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.4704475402832031
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.5140304565429688
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.5125522613525391
+TIME Linear: 0.5451202392578125
+Speed Up INT8 * INT8 -> FP16 (per tensor):42.99%
+Speed Up INT8 * INT8 -> FP16 (per token):13.26%
+Speed Up INT8 * INT8 -> FP16 (per channel):13.69%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):13.7%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):5.7%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):5.97%
+==========M=931==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.30968189239501953
+TIME INT8 * INT8 -> FP16 (per token): 0.4805564880371094
+TIME INT8 * INT8 -> FP16 (per channel) 0.4786252975463867
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.4790782928466797
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.5086898803710938
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.5070924758911133
+TIME Linear: 0.5443096160888672
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.11%
+Speed Up INT8 * INT8 -> FP16 (per token):11.71%
+Speed Up INT8 * INT8 -> FP16 (per channel):12.07%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):11.98%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):6.54%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):6.84%
+==========M=962==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.34987926483154297
+TIME INT8 * INT8 -> FP16 (per token): 0.5053043365478516
+TIME INT8 * INT8 -> FP16 (per channel) 0.5032539367675781
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5045890808105469
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.6604671478271484
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.6582975387573242
+TIME Linear: 0.550389289855957
+Speed Up INT8 * INT8 -> FP16 (per tensor):36.43%
+Speed Up INT8 * INT8 -> FP16 (per token):8.19%
+Speed Up INT8 * INT8 -> FP16 (per channel):8.56%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):8.32%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-20.0%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-19.61%
+==========M=993==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.3497600555419922
+TIME INT8 * INT8 -> FP16 (per token): 0.5167245864868164
+TIME INT8 * INT8 -> FP16 (per channel) 0.5165338516235352
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5168914794921875
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7033109664916992
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.703120231628418
+TIME Linear: 0.5429506301879883
+Speed Up INT8 * INT8 -> FP16 (per tensor):35.58%
+Speed Up INT8 * INT8 -> FP16 (per token):4.83%
+Speed Up INT8 * INT8 -> FP16 (per channel):4.87%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):4.8%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-29.53%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-29.5%
+==========M=1024==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.36094188690185547
+TIME INT8 * INT8 -> FP16 (per token): 0.5221128463745117
+TIME INT8 * INT8 -> FP16 (per channel) 0.5162239074707031
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5185604095458984
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7098913192749023
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.714111328125
+TIME Linear: 0.5530595779418945
+Speed Up INT8 * INT8 -> FP16 (per tensor):34.74%
+Speed Up INT8 * INT8 -> FP16 (per token):5.6%
+Speed Up INT8 * INT8 -> FP16 (per channel):6.66%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):6.24%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-28.36%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-29.12%
+==========M=1055==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.35643577575683594
+TIME INT8 * INT8 -> FP16 (per token): 0.539398193359375
+TIME INT8 * INT8 -> FP16 (per channel) 0.5375146865844727
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5373477935791016
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.5933761596679688
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.5957365036010742
+TIME Linear: 0.5869865417480469
+Speed Up INT8 * INT8 -> FP16 (per tensor):39.28%
+Speed Up INT8 * INT8 -> FP16 (per token):8.11%
+Speed Up INT8 * INT8 -> FP16 (per channel):8.43%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):8.46%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-1.09%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-1.49%
+==========M=1086==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.3568887710571289
+TIME INT8 * INT8 -> FP16 (per token): 0.5533933639526367
+TIME INT8 * INT8 -> FP16 (per channel) 0.5509614944458008
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5477190017700195
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.5930423736572266
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.596928596496582
+TIME Linear: 0.5903244018554688
+Speed Up INT8 * INT8 -> FP16 (per tensor):39.54%
+Speed Up INT8 * INT8 -> FP16 (per token):6.26%
+Speed Up INT8 * INT8 -> FP16 (per channel):6.67%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):7.22%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-0.46%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-1.12%
+==========M=1117==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.3643512725830078
+TIME INT8 * INT8 -> FP16 (per token): 0.5708217620849609
+TIME INT8 * INT8 -> FP16 (per channel) 0.5654573440551758
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5720615386962891
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.5976676940917969
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.597691535949707
+TIME Linear: 0.5916357040405273
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.42%
+Speed Up INT8 * INT8 -> FP16 (per token):3.52%
+Speed Up INT8 * INT8 -> FP16 (per channel):4.42%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):3.31%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-1.02%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-1.02%
+==========M=1148==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.3682374954223633
+TIME INT8 * INT8 -> FP16 (per token): 0.5914449691772461
+TIME INT8 * INT8 -> FP16 (per channel) 0.5860090255737305
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5857229232788086
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.5941152572631836
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.5963802337646484
+TIME Linear: 0.5944967269897461
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.06%
+Speed Up INT8 * INT8 -> FP16 (per token):0.51%
+Speed Up INT8 * INT8 -> FP16 (per channel):1.43%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):1.48%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):0.06%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-0.32%
+==========M=1179==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.392913818359375
+TIME INT8 * INT8 -> FP16 (per token): 0.5893707275390625
+TIME INT8 * INT8 -> FP16 (per channel) 0.5867958068847656
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5843877792358398
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7408857345581055
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.7431268692016602
+TIME Linear: 0.6969213485717773
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.62%
+Speed Up INT8 * INT8 -> FP16 (per token):15.43%
+Speed Up INT8 * INT8 -> FP16 (per channel):15.8%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):16.15%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-6.31%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-6.63%
+==========M=1210==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.39513111114501953
+TIME INT8 * INT8 -> FP16 (per token): 0.6012439727783203
+TIME INT8 * INT8 -> FP16 (per channel) 0.5986928939819336
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.5986928939819336
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7412433624267578
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.7455825805664062
+TIME Linear: 0.6909847259521484
+Speed Up INT8 * INT8 -> FP16 (per tensor):42.82%
+Speed Up INT8 * INT8 -> FP16 (per token):12.99%
+Speed Up INT8 * INT8 -> FP16 (per channel):13.36%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):13.36%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-7.27%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-7.9%
+==========M=1241==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.4237174987792969
+TIME INT8 * INT8 -> FP16 (per token): 0.6142854690551758
+TIME INT8 * INT8 -> FP16 (per channel) 0.6097078323364258
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.6101369857788086
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.6348609924316406
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.6368637084960938
+TIME Linear: 0.6922483444213867
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.79%
+Speed Up INT8 * INT8 -> FP16 (per token):11.26%
+Speed Up INT8 * INT8 -> FP16 (per channel):11.92%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):11.86%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):8.29%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):8.0%
+==========M=1272==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.4247426986694336
+TIME INT8 * INT8 -> FP16 (per token): 0.6323575973510742
+TIME INT8 * INT8 -> FP16 (per channel) 0.6303548812866211
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.6307363510131836
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.6376266479492188
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.6379842758178711
+TIME Linear: 0.6905794143676758
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.49%
+Speed Up INT8 * INT8 -> FP16 (per token):8.43%
+Speed Up INT8 * INT8 -> FP16 (per channel):8.72%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):8.67%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):7.67%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):7.62%
+==========M=1303==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.44319629669189453
+TIME INT8 * INT8 -> FP16 (per token): 0.6453275680541992
+TIME INT8 * INT8 -> FP16 (per channel) 0.6392955780029297
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.6395339965820312
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7332801818847656
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.7467031478881836
+TIME Linear: 0.761866569519043
+Speed Up INT8 * INT8 -> FP16 (per tensor):41.83%
+Speed Up INT8 * INT8 -> FP16 (per token):15.3%
+Speed Up INT8 * INT8 -> FP16 (per channel):16.09%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):16.06%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):3.75%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):1.99%
+==========M=1334==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.4433155059814453
+TIME INT8 * INT8 -> FP16 (per token): 0.6629228591918945
+TIME INT8 * INT8 -> FP16 (per channel) 0.6594181060791016
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.661015510559082
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7337093353271484
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.7361888885498047
+TIME Linear: 0.7612705230712891
+Speed Up INT8 * INT8 -> FP16 (per tensor):41.77%
+Speed Up INT8 * INT8 -> FP16 (per token):12.92%
+Speed Up INT8 * INT8 -> FP16 (per channel):13.38%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):13.17%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):3.62%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):3.29%
+==========M=1365==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.4552125930786133
+TIME INT8 * INT8 -> FP16 (per token): 0.6797552108764648
+TIME INT8 * INT8 -> FP16 (per channel) 0.6788730621337891
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.6764650344848633
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7398843765258789
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.7534027099609375
+TIME Linear: 0.7628679275512695
+Speed Up INT8 * INT8 -> FP16 (per tensor):40.33%
+Speed Up INT8 * INT8 -> FP16 (per token):10.89%
+Speed Up INT8 * INT8 -> FP16 (per channel):11.01%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):11.33%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):3.01%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):1.24%
+==========M=1396==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.41599273681640625
+TIME INT8 * INT8 -> FP16 (per token): 0.6868600845336914
+TIME INT8 * INT8 -> FP16 (per channel) 0.6853342056274414
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.6834983825683594
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7328033447265625
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.7371425628662109
+TIME Linear: 0.7646083831787109
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.59%
+Speed Up INT8 * INT8 -> FP16 (per token):10.17%
+Speed Up INT8 * INT8 -> FP16 (per channel):10.37%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):10.61%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.16%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):3.59%
+==========M=1427==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.4465341567993164
+TIME INT8 * INT8 -> FP16 (per token): 0.7283926010131836
+TIME INT8 * INT8 -> FP16 (per channel) 0.7188081741333008
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.7200956344604492
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.9191036224365234
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.9185314178466797
+TIME Linear: 0.7802248001098633
+Speed Up INT8 * INT8 -> FP16 (per tensor):42.77%
+Speed Up INT8 * INT8 -> FP16 (per token):6.64%
+Speed Up INT8 * INT8 -> FP16 (per channel):7.87%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):7.71%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-17.8%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-17.73%
+==========M=1458==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.44438838958740234
+TIME INT8 * INT8 -> FP16 (per token): 0.7348299026489258
+TIME INT8 * INT8 -> FP16 (per channel) 0.7296085357666016
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.7316112518310547
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.7517337799072266
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.7529020309448242
+TIME Linear: 0.7830619812011719
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.25%
+Speed Up INT8 * INT8 -> FP16 (per token):6.16%
+Speed Up INT8 * INT8 -> FP16 (per channel):6.83%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):6.57%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.0%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):3.85%
+==========M=1489==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.44689178466796875
+TIME INT8 * INT8 -> FP16 (per token): 0.7541894912719727
+TIME INT8 * INT8 -> FP16 (per channel) 0.7519006729125977
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.751495361328125
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.9938240051269531
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.9912490844726562
+TIME Linear: 0.8056640625
+Speed Up INT8 * INT8 -> FP16 (per tensor):44.53%
+Speed Up INT8 * INT8 -> FP16 (per token):6.39%
+Speed Up INT8 * INT8 -> FP16 (per channel):6.67%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):6.72%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-23.35%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-23.04%
+==========M=1520==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.4478931427001953
+TIME INT8 * INT8 -> FP16 (per token): 0.7721900939941406
+TIME INT8 * INT8 -> FP16 (per channel) 0.7661581039428711
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.7692575454711914
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.8992910385131836
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.8989095687866211
+TIME Linear: 0.7844924926757812
+Speed Up INT8 * INT8 -> FP16 (per tensor):42.91%
+Speed Up INT8 * INT8 -> FP16 (per token):1.57%
+Speed Up INT8 * INT8 -> FP16 (per channel):2.34%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):1.94%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-14.63%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-14.58%
+==========M=1551==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.44639110565185547
+TIME INT8 * INT8 -> FP16 (per token): 0.7824420928955078
+TIME INT8 * INT8 -> FP16 (per channel) 0.7792472839355469
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.7795810699462891
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.8218765258789062
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.8218288421630859
+TIME Linear: 0.8595466613769531
+Speed Up INT8 * INT8 -> FP16 (per tensor):48.07%
+Speed Up INT8 * INT8 -> FP16 (per token):8.97%
+Speed Up INT8 * INT8 -> FP16 (per channel):9.34%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):9.3%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.38%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.39%
+==========M=1582==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.45044422149658203
+TIME INT8 * INT8 -> FP16 (per token): 0.801849365234375
+TIME INT8 * INT8 -> FP16 (per channel) 0.7971525192260742
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.7989645004272461
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.8208751678466797
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.8220911026000977
+TIME Linear: 0.8640527725219727
+Speed Up INT8 * INT8 -> FP16 (per tensor):47.87%
+Speed Up INT8 * INT8 -> FP16 (per token):7.2%
+Speed Up INT8 * INT8 -> FP16 (per channel):7.74%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):7.53%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):5.0%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.86%
+==========M=1613==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.447845458984375
+TIME INT8 * INT8 -> FP16 (per token): 0.8190155029296875
+TIME INT8 * INT8 -> FP16 (per channel) 0.8110284805297852
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.8112192153930664
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.8207082748413086
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.8218526840209961
+TIME Linear: 0.8604049682617188
+Speed Up INT8 * INT8 -> FP16 (per tensor):47.95%
+Speed Up INT8 * INT8 -> FP16 (per token):4.81%
+Speed Up INT8 * INT8 -> FP16 (per channel):5.74%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):5.72%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.61%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.48%
+==========M=1644==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.4494667053222656
+TIME INT8 * INT8 -> FP16 (per token): 0.8296728134155273
+TIME INT8 * INT8 -> FP16 (per channel) 0.8363962173461914
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.8283853530883789
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.8263826370239258
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.8229494094848633
+TIME Linear: 0.8620023727416992
+Speed Up INT8 * INT8 -> FP16 (per tensor):47.86%
+Speed Up INT8 * INT8 -> FP16 (per token):3.75%
+Speed Up INT8 * INT8 -> FP16 (per channel):2.97%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):3.9%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.13%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.53%
+==========M=1675==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.4622936248779297
+TIME INT8 * INT8 -> FP16 (per token): 0.8478641510009766
+TIME INT8 * INT8 -> FP16 (per channel) 0.8452177047729492
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.8436679840087891
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.8336782455444336
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.8550405502319336
+TIME Linear: 0.9445667266845703
+Speed Up INT8 * INT8 -> FP16 (per tensor):51.06%
+Speed Up INT8 * INT8 -> FP16 (per token):10.24%
+Speed Up INT8 * INT8 -> FP16 (per channel):10.52%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):10.68%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):11.74%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):9.48%
+==========M=1706==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.461578369140625
+TIME INT8 * INT8 -> FP16 (per token): 0.8648395538330078
+TIME INT8 * INT8 -> FP16 (per channel) 0.8637428283691406
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.8620262145996094
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.8359909057617188
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.8564233779907227
+TIME Linear: 0.9502172470092773
+Speed Up INT8 * INT8 -> FP16 (per tensor):51.42%
+Speed Up INT8 * INT8 -> FP16 (per token):8.99%
+Speed Up INT8 * INT8 -> FP16 (per channel):9.1%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):9.28%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):12.02%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):9.87%
+==========M=1737==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.5833864212036133
+TIME INT8 * INT8 -> FP16 (per token): 0.8444547653198242
+TIME INT8 * INT8 -> FP16 (per channel) 0.8420228958129883
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.8428573608398438
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.211404800415039
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.2006044387817383
+TIME Linear: 0.9461402893066406
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.34%
+Speed Up INT8 * INT8 -> FP16 (per token):10.75%
+Speed Up INT8 * INT8 -> FP16 (per channel):11.0%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):10.92%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-28.04%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-26.89%
+==========M=1768==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.5860805511474609
+TIME INT8 * INT8 -> FP16 (per token): 0.879216194152832
+TIME INT8 * INT8 -> FP16 (per channel) 0.8702278137207031
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.8715391159057617
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.2078046798706055
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.2004852294921875
+TIME Linear: 0.950932502746582
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.37%
+Speed Up INT8 * INT8 -> FP16 (per token):7.54%
+Speed Up INT8 * INT8 -> FP16 (per channel):8.49%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):8.35%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-27.01%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-26.24%
+==========M=1799==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.590062141418457
+TIME INT8 * INT8 -> FP16 (per token): 0.914454460144043
+TIME INT8 * INT8 -> FP16 (per channel) 0.9128332138061523
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.9118795394897461
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.9375095367431641
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.9523153305053711
+TIME Linear: 0.9585142135620117
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.44%
+Speed Up INT8 * INT8 -> FP16 (per token):4.6%
+Speed Up INT8 * INT8 -> FP16 (per channel):4.77%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):4.87%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):2.19%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):0.65%
+==========M=1830==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6017684936523438
+TIME INT8 * INT8 -> FP16 (per token): 0.9252309799194336
+TIME INT8 * INT8 -> FP16 (per channel) 0.9203433990478516
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.9222030639648438
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.9397268295288086
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.9565114974975586
+TIME Linear: 0.9593009948730469
+Speed Up INT8 * INT8 -> FP16 (per tensor):37.27%
+Speed Up INT8 * INT8 -> FP16 (per token):3.55%
+Speed Up INT8 * INT8 -> FP16 (per channel):4.06%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):3.87%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):2.04%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):0.29%
+==========M=1861==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6161689758300781
+TIME INT8 * INT8 -> FP16 (per token): 1.1376142501831055
+TIME INT8 * INT8 -> FP16 (per channel) 0.9412765502929688
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.942540168762207
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.9588479995727539
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.9578943252563477
+TIME Linear: 0.9624958038330078
+Speed Up INT8 * INT8 -> FP16 (per tensor):35.98%
+Speed Up INT8 * INT8 -> FP16 (per token):-18.19%
+Speed Up INT8 * INT8 -> FP16 (per channel):2.2%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):2.07%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):0.38%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):0.48%
+==========M=1892==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6232738494873047
+TIME INT8 * INT8 -> FP16 (per token): 0.9548664093017578
+TIME INT8 * INT8 -> FP16 (per channel) 0.9529352188110352
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.9521722793579102
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.9551763534545898
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.954747200012207
+TIME Linear: 0.9796380996704102
+Speed Up INT8 * INT8 -> FP16 (per tensor):36.38%
+Speed Up INT8 * INT8 -> FP16 (per token):2.53%
+Speed Up INT8 * INT8 -> FP16 (per channel):2.73%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):2.8%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):2.5%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):2.54%
+==========M=1923==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6250143051147461
+TIME INT8 * INT8 -> FP16 (per token): 0.9863376617431641
+TIME INT8 * INT8 -> FP16 (per channel) 0.9750604629516602
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.9716987609863281
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.9678363800048828
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.9871244430541992
+TIME Linear: 1.065969467163086
+Speed Up INT8 * INT8 -> FP16 (per tensor):41.37%
+Speed Up INT8 * INT8 -> FP16 (per token):7.47%
+Speed Up INT8 * INT8 -> FP16 (per channel):8.53%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):8.84%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):9.21%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):7.4%
+==========M=1954==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6310462951660156
+TIME INT8 * INT8 -> FP16 (per token): 0.9943008422851562
+TIME INT8 * INT8 -> FP16 (per channel) 0.9914398193359375
+TIME INT8 * INT8 -> FP16 (per token per channel): 0.9932279586791992
+TIME INT8 * FP16 -> Fp16 (WO bias): 0.9694814682006836
+TIME INT8 * FP16 -> Fp16 (WI bias): 0.9929180145263672
+TIME Linear: 1.0681390762329102
+Speed Up INT8 * INT8 -> FP16 (per tensor):40.92%
+Speed Up INT8 * INT8 -> FP16 (per token):6.91%
+Speed Up INT8 * INT8 -> FP16 (per channel):7.18%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):7.01%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):9.24%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):7.04%
+==========M=1985==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6598472595214844
+TIME INT8 * INT8 -> FP16 (per token): 1.0088920593261719
+TIME INT8 * INT8 -> FP16 (per channel) 1.0043144226074219
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.0035276412963867
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.2921333312988281
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.295614242553711
+TIME Linear: 1.06658935546875
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.13%
+Speed Up INT8 * INT8 -> FP16 (per token):5.41%
+Speed Up INT8 * INT8 -> FP16 (per channel):5.84%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):5.91%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-21.15%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-21.47%
+==========M=2016==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6636142730712891
+TIME INT8 * INT8 -> FP16 (per token): 1.0142087936401367
+TIME INT8 * INT8 -> FP16 (per channel) 1.0107755661010742
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.0091066360473633
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3155698776245117
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.316976547241211
+TIME Linear: 1.0671615600585938
+Speed Up INT8 * INT8 -> FP16 (per tensor):37.82%
+Speed Up INT8 * INT8 -> FP16 (per token):4.96%
+Speed Up INT8 * INT8 -> FP16 (per channel):5.28%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):5.44%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-23.28%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-23.41%
+==========M=2047==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6680727005004883
+TIME INT8 * INT8 -> FP16 (per token): 1.026153564453125
+TIME INT8 * INT8 -> FP16 (per channel) 1.028585433959961
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.0238170623779297
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.0425090789794922
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.0407686233520508
+TIME Linear: 1.0673761367797852
+Speed Up INT8 * INT8 -> FP16 (per tensor):37.41%
+Speed Up INT8 * INT8 -> FP16 (per token):3.86%
+Speed Up INT8 * INT8 -> FP16 (per channel):3.63%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):4.08%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):2.33%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):2.49%
+==========M=2078==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6755352020263672
+TIME INT8 * INT8 -> FP16 (per token): 1.0493755340576172
+TIME INT8 * INT8 -> FP16 (per channel) 1.0457038879394531
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.046895980834961
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.0345458984375
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.0365962982177734
+TIME Linear: 1.082301139831543
+Speed Up INT8 * INT8 -> FP16 (per tensor):37.58%
+Speed Up INT8 * INT8 -> FP16 (per token):3.04%
+Speed Up INT8 * INT8 -> FP16 (per channel):3.38%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):3.27%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.41%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.22%
+==========M=2109==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.5893468856811523
+TIME INT8 * INT8 -> FP16 (per token): 1.0679006576538086
+TIME INT8 * INT8 -> FP16 (per channel) 1.0596990585327148
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.0582685470581055
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.0419130325317383
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.0407686233520508
+TIME Linear: 1.0822534561157227
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.54%
+Speed Up INT8 * INT8 -> FP16 (per token):1.33%
+Speed Up INT8 * INT8 -> FP16 (per channel):2.08%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):2.22%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):3.73%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):3.83%
+==========M=2140==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.5897045135498047
+TIME INT8 * INT8 -> FP16 (per token): 1.0759592056274414
+TIME INT8 * INT8 -> FP16 (per channel) 1.074528694152832
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.0736703872680664
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.4024972915649414
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.406717300415039
+TIME Linear: 1.083064079284668
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.55%
+Speed Up INT8 * INT8 -> FP16 (per token):0.66%
+Speed Up INT8 * INT8 -> FP16 (per channel):0.79%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):0.87%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-29.49%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-29.88%
+==========M=2171==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.5925178527832031
+TIME INT8 * INT8 -> FP16 (per token): 1.0937690734863281
+TIME INT8 * INT8 -> FP16 (per channel) 1.0916709899902344
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.0908126831054688
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.0822772979736328
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.084303855895996
+TIME Linear: 1.0899782180786133
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.64%
+Speed Up INT8 * INT8 -> FP16 (per token):-0.35%
+Speed Up INT8 * INT8 -> FP16 (per channel):-0.16%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-0.08%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):0.71%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):0.52%
+==========M=2202==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.592350959777832
+TIME INT8 * INT8 -> FP16 (per token): 1.1122465133666992
+TIME INT8 * INT8 -> FP16 (per channel) 1.1086702346801758
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.108860969543457
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.1603116989135742
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.1663198471069336
+TIME Linear: 1.0867595672607422
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.49%
+Speed Up INT8 * INT8 -> FP16 (per token):-2.35%
+Speed Up INT8 * INT8 -> FP16 (per channel):-2.02%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-2.03%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-6.77%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-7.32%
+==========M=2233==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.5948781967163086
+TIME INT8 * INT8 -> FP16 (per token): 1.1261463165283203
+TIME INT8 * INT8 -> FP16 (per channel) 1.1223077774047852
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.1281490325927734
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.1638402938842773
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.163625717163086
+TIME Linear: 1.0840177536010742
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.12%
+Speed Up INT8 * INT8 -> FP16 (per token):-3.89%
+Speed Up INT8 * INT8 -> FP16 (per channel):-3.53%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-4.07%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-7.36%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-7.34%
+==========M=2264==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.5949020385742188
+TIME INT8 * INT8 -> FP16 (per token): 1.1360883712768555
+TIME INT8 * INT8 -> FP16 (per channel) 1.1337757110595703
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.1296510696411133
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.159834861755371
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.1693477630615234
+TIME Linear: 1.0969161987304688
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.77%
+Speed Up INT8 * INT8 -> FP16 (per token):-3.57%
+Speed Up INT8 * INT8 -> FP16 (per channel):-3.36%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-2.98%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-5.74%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-6.6%
+==========M=2295==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.5934476852416992
+TIME INT8 * INT8 -> FP16 (per token): 1.15814208984375
+TIME INT8 * INT8 -> FP16 (per channel) 1.1531352996826172
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.154494285583496
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.1586189270019531
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.165771484375
+TIME Linear: 1.090407371520996
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.58%
+Speed Up INT8 * INT8 -> FP16 (per token):-6.21%
+Speed Up INT8 * INT8 -> FP16 (per channel):-5.75%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-5.88%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-6.26%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-6.91%
+==========M=2326==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6827592849731445
+TIME INT8 * INT8 -> FP16 (per token): 1.1410951614379883
+TIME INT8 * INT8 -> FP16 (per channel) 1.145029067993164
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.1399030685424805
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.162099838256836
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.1596918106079102
+TIME Linear: 1.211094856262207
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.62%
+Speed Up INT8 * INT8 -> FP16 (per token):5.78%
+Speed Up INT8 * INT8 -> FP16 (per channel):5.46%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):5.88%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.05%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.24%
+==========M=2357==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6861686706542969
+TIME INT8 * INT8 -> FP16 (per token): 1.1564970016479492
+TIME INT8 * INT8 -> FP16 (per channel) 1.1541128158569336
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.1548042297363281
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.1657953262329102
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.1632680892944336
+TIME Linear: 1.2167930603027344
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.61%
+Speed Up INT8 * INT8 -> FP16 (per token):4.96%
+Speed Up INT8 * INT8 -> FP16 (per channel):5.15%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):5.09%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.19%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.4%
+==========M=2388==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.6854534149169922
+TIME INT8 * INT8 -> FP16 (per token): 1.1727571487426758
+TIME INT8 * INT8 -> FP16 (per channel) 1.172327995300293
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.1724472045898438
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3672351837158203
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3669967651367188
+TIME Linear: 1.181960105895996
+Speed Up INT8 * INT8 -> FP16 (per tensor):42.01%
+Speed Up INT8 * INT8 -> FP16 (per token):0.78%
+Speed Up INT8 * INT8 -> FP16 (per channel):0.81%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):0.8%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-15.68%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-15.66%
+==========M=2419==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.7468700408935547
+TIME INT8 * INT8 -> FP16 (per token): 1.1885643005371094
+TIME INT8 * INT8 -> FP16 (per channel) 1.1879205703735352
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.186227798461914
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3699054718017578
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3687372207641602
+TIME Linear: 1.1704683303833008
+Speed Up INT8 * INT8 -> FP16 (per tensor):36.19%
+Speed Up INT8 * INT8 -> FP16 (per token):-1.55%
+Speed Up INT8 * INT8 -> FP16 (per channel):-1.49%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-1.35%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-17.04%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-16.94%
+==========M=2450==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.793766975402832
+TIME INT8 * INT8 -> FP16 (per token): 1.206064224243164
+TIME INT8 * INT8 -> FP16 (per channel) 1.2029170989990234
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.204228401184082
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.297926902770996
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3039350509643555
+TIME Linear: 1.209878921508789
+Speed Up INT8 * INT8 -> FP16 (per tensor):34.39%
+Speed Up INT8 * INT8 -> FP16 (per token):0.32%
+Speed Up INT8 * INT8 -> FP16 (per channel):0.58%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):0.47%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-7.28%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-7.77%
+==========M=2481==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8041143417358398
+TIME INT8 * INT8 -> FP16 (per token): 1.2316703796386719
+TIME INT8 * INT8 -> FP16 (per channel) 1.226806640625
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.231241226196289
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.2967586517333984
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.303267478942871
+TIME Linear: 1.2112617492675781
+Speed Up INT8 * INT8 -> FP16 (per tensor):33.61%
+Speed Up INT8 * INT8 -> FP16 (per token):-1.68%
+Speed Up INT8 * INT8 -> FP16 (per channel):-1.28%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-1.65%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-7.06%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-7.6%
+==========M=2512==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8134365081787109
+TIME INT8 * INT8 -> FP16 (per token): 1.2399911880493164
+TIME INT8 * INT8 -> FP16 (per channel) 1.2377738952636719
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.2385368347167969
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.2365341186523438
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.2401580810546875
+TIME Linear: 1.1695146560668945
+Speed Up INT8 * INT8 -> FP16 (per tensor):30.45%
+Speed Up INT8 * INT8 -> FP16 (per token):-6.03%
+Speed Up INT8 * INT8 -> FP16 (per channel):-5.84%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-5.9%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-5.73%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-6.04%
+==========M=2543==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8182048797607422
+TIME INT8 * INT8 -> FP16 (per token): 1.2799978256225586
+TIME INT8 * INT8 -> FP16 (per channel) 1.2741804122924805
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.278090476989746
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.2398242950439453
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.2404680252075195
+TIME Linear: 1.1567354202270508
+Speed Up INT8 * INT8 -> FP16 (per tensor):29.27%
+Speed Up INT8 * INT8 -> FP16 (per token):-10.66%
+Speed Up INT8 * INT8 -> FP16 (per channel):-10.15%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-10.49%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-7.18%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-7.24%
+==========M=2574==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.728607177734375
+TIME INT8 * INT8 -> FP16 (per token): 1.2958049774169922
+TIME INT8 * INT8 -> FP16 (per channel) 1.2912750244140625
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.2925148010253906
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.6869306564331055
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.6901254653930664
+TIME Linear: 1.151275634765625
+Speed Up INT8 * INT8 -> FP16 (per tensor):36.71%
+Speed Up INT8 * INT8 -> FP16 (per token):-12.55%
+Speed Up INT8 * INT8 -> FP16 (per channel):-12.16%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-12.27%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-46.53%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-46.8%
+==========M=2605==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.7292032241821289
+TIME INT8 * INT8 -> FP16 (per token): 1.2845516204833984
+TIME INT8 * INT8 -> FP16 (per channel) 1.2841463088989258
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.2816429138183594
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3444185256958008
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3468027114868164
+TIME Linear: 1.332259178161621
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.27%
+Speed Up INT8 * INT8 -> FP16 (per token):3.58%
+Speed Up INT8 * INT8 -> FP16 (per channel):3.61%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):3.8%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-0.91%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-1.09%
+==========M=2636==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.7308483123779297
+TIME INT8 * INT8 -> FP16 (per token): 1.3017892837524414
+TIME INT8 * INT8 -> FP16 (per channel) 1.301121711730957
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.2999534606933594
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3556957244873047
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3540267944335938
+TIME Linear: 1.332402229309082
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.15%
+Speed Up INT8 * INT8 -> FP16 (per token):2.3%
+Speed Up INT8 * INT8 -> FP16 (per channel):2.35%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):2.44%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-1.75%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-1.62%
+==========M=2667==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.7307052612304688
+TIME INT8 * INT8 -> FP16 (per token): 1.3162851333618164
+TIME INT8 * INT8 -> FP16 (per channel) 1.3155460357666016
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.3140678405761719
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3556718826293945
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3529062271118164
+TIME Linear: 1.3025522232055664
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.9%
+Speed Up INT8 * INT8 -> FP16 (per token):-1.05%
+Speed Up INT8 * INT8 -> FP16 (per channel):-1.0%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-0.88%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-4.08%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-3.87%
+==========M=2698==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.731205940246582
+TIME INT8 * INT8 -> FP16 (per token): 1.328277587890625
+TIME INT8 * INT8 -> FP16 (per channel) 1.3288259506225586
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.3278961181640625
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3457536697387695
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.346898078918457
+TIME Linear: 1.2164115905761719
+Speed Up INT8 * INT8 -> FP16 (per tensor):39.89%
+Speed Up INT8 * INT8 -> FP16 (per token):-9.2%
+Speed Up INT8 * INT8 -> FP16 (per channel):-9.24%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-9.17%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-10.63%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-10.73%
+==========M=2729==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.7319927215576172
+TIME INT8 * INT8 -> FP16 (per token): 1.3346195220947266
+TIME INT8 * INT8 -> FP16 (per channel) 1.3321638107299805
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.3325929641723633
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3457775115966797
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3474702835083008
+TIME Linear: 1.2160062789916992
+Speed Up INT8 * INT8 -> FP16 (per tensor):39.8%
+Speed Up INT8 * INT8 -> FP16 (per token):-9.75%
+Speed Up INT8 * INT8 -> FP16 (per channel):-9.55%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-9.59%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-10.67%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-10.81%
+==========M=2760==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.7323503494262695
+TIME INT8 * INT8 -> FP16 (per token): 1.3663291931152344
+TIME INT8 * INT8 -> FP16 (per channel) 1.3631105422973633
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.3634443283081055
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3442516326904297
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3469219207763672
+TIME Linear: 1.227879524230957
+Speed Up INT8 * INT8 -> FP16 (per tensor):40.36%
+Speed Up INT8 * INT8 -> FP16 (per token):-11.28%
+Speed Up INT8 * INT8 -> FP16 (per channel):-11.01%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-11.04%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-9.48%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-9.69%
+==========M=2791==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.7325649261474609
+TIME INT8 * INT8 -> FP16 (per token): 1.3716936111450195
+TIME INT8 * INT8 -> FP16 (per channel) 1.3709783554077148
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.36871337890625
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3452529907226562
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.3470649719238281
+TIME Linear: 1.2026309967041016
+Speed Up INT8 * INT8 -> FP16 (per tensor):39.09%
+Speed Up INT8 * INT8 -> FP16 (per token):-14.06%
+Speed Up INT8 * INT8 -> FP16 (per channel):-14.0%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-13.81%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-11.86%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-12.01%
+==========M=2822==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8263349533081055
+TIME INT8 * INT8 -> FP16 (per token): 1.428842544555664
+TIME INT8 * INT8 -> FP16 (per channel) 1.4235258102416992
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.4279603958129883
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.372671127319336
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.4122724533081055
+TIME Linear: 1.391291618347168
+Speed Up INT8 * INT8 -> FP16 (per tensor):40.61%
+Speed Up INT8 * INT8 -> FP16 (per token):-2.7%
+Speed Up INT8 * INT8 -> FP16 (per channel):-2.32%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-2.64%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):1.34%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-1.51%
+==========M=2853==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8274555206298828
+TIME INT8 * INT8 -> FP16 (per token): 1.4456987380981445
+TIME INT8 * INT8 -> FP16 (per channel) 1.4417409896850586
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.445627212524414
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.3717889785766602
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.4119148254394531
+TIME Linear: 1.4599323272705078
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.32%
+Speed Up INT8 * INT8 -> FP16 (per token):0.97%
+Speed Up INT8 * INT8 -> FP16 (per channel):1.25%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):0.98%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):6.04%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):3.29%
+==========M=2884==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8276224136352539
+TIME INT8 * INT8 -> FP16 (per token): 1.4616966247558594
+TIME INT8 * INT8 -> FP16 (per channel) 1.459360122680664
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.4601945877075195
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8816471099853516
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8804550170898438
+TIME Linear: 1.209712028503418
+Speed Up INT8 * INT8 -> FP16 (per tensor):31.59%
+Speed Up INT8 * INT8 -> FP16 (per token):-20.83%
+Speed Up INT8 * INT8 -> FP16 (per channel):-20.64%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-20.71%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-55.55%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-55.45%
+==========M=2915==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8279323577880859
+TIME INT8 * INT8 -> FP16 (per token): 1.485276222229004
+TIME INT8 * INT8 -> FP16 (per channel) 1.4796733856201172
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.4834403991699219
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.9589900970458984
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.9464969635009766
+TIME Linear: 1.2125730514526367
+Speed Up INT8 * INT8 -> FP16 (per tensor):31.72%
+Speed Up INT8 * INT8 -> FP16 (per token):-22.49%
+Speed Up INT8 * INT8 -> FP16 (per channel):-22.03%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-22.34%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-61.56%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-60.53%
+==========M=2946==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8272171020507812
+TIME INT8 * INT8 -> FP16 (per token): 1.5017032623291016
+TIME INT8 * INT8 -> FP16 (per channel) 1.497030258178711
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.5018701553344727
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.4408111572265625
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.4436721801757812
+TIME Linear: 1.4600276947021484
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.34%
+Speed Up INT8 * INT8 -> FP16 (per token):-2.85%
+Speed Up INT8 * INT8 -> FP16 (per channel):-2.53%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-2.87%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):1.32%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):1.12%
+==========M=2977==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8290290832519531
+TIME INT8 * INT8 -> FP16 (per token): 1.5071392059326172
+TIME INT8 * INT8 -> FP16 (per channel) 1.5043973922729492
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.5067577362060547
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.4433622360229492
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.4446258544921875
+TIME Linear: 1.2223005294799805
+Speed Up INT8 * INT8 -> FP16 (per tensor):32.17%
+Speed Up INT8 * INT8 -> FP16 (per token):-23.3%
+Speed Up INT8 * INT8 -> FP16 (per channel):-23.08%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-23.27%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-18.09%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-18.19%
+==========M=3008==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8288383483886719
+TIME INT8 * INT8 -> FP16 (per token): 1.5154600143432617
+TIME INT8 * INT8 -> FP16 (per channel) 1.5119075775146484
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.5149593353271484
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.4445304870605469
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.4467477798461914
+TIME Linear: 1.209855079650879
+Speed Up INT8 * INT8 -> FP16 (per tensor):31.49%
+Speed Up INT8 * INT8 -> FP16 (per token):-25.26%
+Speed Up INT8 * INT8 -> FP16 (per channel):-24.97%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-25.22%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-19.4%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-19.58%
+==========M=3039==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8286237716674805
+TIME INT8 * INT8 -> FP16 (per token): 1.5352487564086914
+TIME INT8 * INT8 -> FP16 (per channel) 1.5288829803466797
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.5343189239501953
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.0398616790771484
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.032470703125
+TIME Linear: 1.4594793319702148
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.22%
+Speed Up INT8 * INT8 -> FP16 (per token):-5.19%
+Speed Up INT8 * INT8 -> FP16 (per channel):-4.76%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-5.13%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-39.77%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-39.26%
+==========M=3070==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8310079574584961
+TIME INT8 * INT8 -> FP16 (per token): 1.5491485595703125
+TIME INT8 * INT8 -> FP16 (per channel) 1.5447378158569336
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.5470504760742188
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.0673513412475586
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.061915397644043
+TIME Linear: 1.2113571166992188
+Speed Up INT8 * INT8 -> FP16 (per tensor):31.4%
+Speed Up INT8 * INT8 -> FP16 (per token):-27.89%
+Speed Up INT8 * INT8 -> FP16 (per channel):-27.52%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-27.71%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-70.66%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-70.22%
+==========M=3101==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8698701858520508
+TIME INT8 * INT8 -> FP16 (per token): 1.544809341430664
+TIME INT8 * INT8 -> FP16 (per channel) 1.5418052673339844
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.5435218811035156
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.5096187591552734
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.5433073043823242
+TIME Linear: 1.3172149658203125
+Speed Up INT8 * INT8 -> FP16 (per tensor):33.96%
+Speed Up INT8 * INT8 -> FP16 (per token):-17.28%
+Speed Up INT8 * INT8 -> FP16 (per channel):-17.05%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-17.18%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-14.61%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-17.16%
+==========M=3132==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8705854415893555
+TIME INT8 * INT8 -> FP16 (per token): 1.586461067199707
+TIME INT8 * INT8 -> FP16 (per channel) 1.5803337097167969
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.5833616256713867
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.513838768005371
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.5436649322509766
+TIME Linear: 1.610112190246582
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.93%
+Speed Up INT8 * INT8 -> FP16 (per token):1.47%
+Speed Up INT8 * INT8 -> FP16 (per channel):1.85%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):1.66%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):5.98%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.13%
+==========M=3163==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8683681488037109
+TIME INT8 * INT8 -> FP16 (per token): 1.602482795715332
+TIME INT8 * INT8 -> FP16 (per channel) 1.6003131866455078
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.6099929809570312
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.0542383193969727
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.0578384399414062
+TIME Linear: 1.3265132904052734
+Speed Up INT8 * INT8 -> FP16 (per tensor):34.54%
+Speed Up INT8 * INT8 -> FP16 (per token):-20.8%
+Speed Up INT8 * INT8 -> FP16 (per channel):-20.64%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-21.37%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-54.86%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-55.13%
+==========M=3194==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8774042129516602
+TIME INT8 * INT8 -> FP16 (per token): 1.579427719116211
+TIME INT8 * INT8 -> FP16 (per channel) 1.5761137008666992
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.5766143798828125
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.5725135803222656
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.573014259338379
+TIME Linear: 1.5859365463256836
+Speed Up INT8 * INT8 -> FP16 (per tensor):44.68%
+Speed Up INT8 * INT8 -> FP16 (per token):0.41%
+Speed Up INT8 * INT8 -> FP16 (per channel):0.62%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):0.59%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):0.85%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):0.81%
+==========M=3225==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8740901947021484
+TIME INT8 * INT8 -> FP16 (per token): 1.6529083251953125
+TIME INT8 * INT8 -> FP16 (per channel) 1.6316413879394531
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.6332149505615234
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.0984649658203125
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.094554901123047
+TIME Linear: 1.3852834701538086
+Speed Up INT8 * INT8 -> FP16 (per tensor):36.9%
+Speed Up INT8 * INT8 -> FP16 (per token):-19.32%
+Speed Up INT8 * INT8 -> FP16 (per channel):-17.78%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-17.9%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-51.48%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-51.2%
+==========M=3256==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8900642395019531
+TIME INT8 * INT8 -> FP16 (per token): 1.6571044921875
+TIME INT8 * INT8 -> FP16 (per channel) 1.6433238983154297
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.6524076461791992
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.6090631484985352
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.614975929260254
+TIME Linear: 1.3910770416259766
+Speed Up INT8 * INT8 -> FP16 (per tensor):36.02%
+Speed Up INT8 * INT8 -> FP16 (per token):-19.12%
+Speed Up INT8 * INT8 -> FP16 (per channel):-18.13%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-18.79%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-15.67%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-16.1%
+==========M=3287==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.875401496887207
+TIME INT8 * INT8 -> FP16 (per token): 1.6659259796142578
+TIME INT8 * INT8 -> FP16 (per channel) 1.659560203552246
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.6651630401611328
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.1304845809936523
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.1306991577148438
+TIME Linear: 1.321268081665039
+Speed Up INT8 * INT8 -> FP16 (per tensor):33.75%
+Speed Up INT8 * INT8 -> FP16 (per token):-26.09%
+Speed Up INT8 * INT8 -> FP16 (per channel):-25.6%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-26.03%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-61.25%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-61.26%
+==========M=3318==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8789539337158203
+TIME INT8 * INT8 -> FP16 (per token): 1.6880035400390625
+TIME INT8 * INT8 -> FP16 (per channel) 1.6835927963256836
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.6856670379638672
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.6069412231445312
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.6100406646728516
+TIME Linear: 1.5851020812988281
+Speed Up INT8 * INT8 -> FP16 (per tensor):44.55%
+Speed Up INT8 * INT8 -> FP16 (per token):-6.49%
+Speed Up INT8 * INT8 -> FP16 (per channel):-6.21%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-6.34%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-1.38%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-1.57%
+==========M=3349==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8769989013671875
+TIME INT8 * INT8 -> FP16 (per token): 1.697397232055664
+TIME INT8 * INT8 -> FP16 (per channel) 1.6928911209106445
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.6962051391601562
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.7230033874511719
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.7327308654785156
+TIME Linear: 1.4286041259765625
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.61%
+Speed Up INT8 * INT8 -> FP16 (per token):-18.82%
+Speed Up INT8 * INT8 -> FP16 (per channel):-18.5%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-18.73%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-20.61%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-21.29%
+==========M=3380==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8814334869384766
+TIME INT8 * INT8 -> FP16 (per token): 1.7144203186035156
+TIME INT8 * INT8 -> FP16 (per channel) 1.7129898071289062
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.7121076583862305
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.7235279083251953
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.7319440841674805
+TIME Linear: 1.6293764114379883
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.9%
+Speed Up INT8 * INT8 -> FP16 (per token):-5.22%
+Speed Up INT8 * INT8 -> FP16 (per channel):-5.13%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-5.08%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-5.78%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-6.29%
+==========M=3411==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.877833366394043
+TIME INT8 * INT8 -> FP16 (per token): 1.7306327819824219
+TIME INT8 * INT8 -> FP16 (per channel) 1.726078987121582
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.729273796081543
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.722264289855957
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.7321109771728516
+TIME Linear: 1.4165401458740234
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.03%
+Speed Up INT8 * INT8 -> FP16 (per token):-22.17%
+Speed Up INT8 * INT8 -> FP16 (per channel):-21.85%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-22.08%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-21.58%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-22.28%
+==========M=3442==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8796930313110352
+TIME INT8 * INT8 -> FP16 (per token): 1.717543601989746
+TIME INT8 * INT8 -> FP16 (per channel) 1.7137765884399414
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.7157554626464844
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.7229080200195312
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.7330646514892578
+TIME Linear: 1.4191627502441406
+Speed Up INT8 * INT8 -> FP16 (per tensor):38.01%
+Speed Up INT8 * INT8 -> FP16 (per token):-21.03%
+Speed Up INT8 * INT8 -> FP16 (per channel):-20.76%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-20.9%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-21.4%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-22.12%
+==========M=3473==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8535385131835938
+TIME INT8 * INT8 -> FP16 (per token): 1.7369747161865234
+TIME INT8 * INT8 -> FP16 (per channel) 1.7287731170654297
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.7376184463500977
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.995396614074707
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8785953521728516
+TIME Linear: 1.4316320419311523
+Speed Up INT8 * INT8 -> FP16 (per tensor):40.38%
+Speed Up INT8 * INT8 -> FP16 (per token):-21.33%
+Speed Up INT8 * INT8 -> FP16 (per channel):-20.76%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-21.37%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-39.38%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-31.22%
+==========M=3504==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.086592674255371
+TIME INT8 * INT8 -> FP16 (per token): 1.7461299896240234
+TIME INT8 * INT8 -> FP16 (per channel) 1.7391681671142578
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.7464160919189453
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.9982337951660156
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.999807357788086
+TIME Linear: 1.4173507690429688
+Speed Up INT8 * INT8 -> FP16 (per tensor):23.34%
+Speed Up INT8 * INT8 -> FP16 (per token):-23.2%
+Speed Up INT8 * INT8 -> FP16 (per channel):-22.71%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-23.22%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-40.98%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-41.09%
+==========M=3535==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.971221923828125
+TIME INT8 * INT8 -> FP16 (per token): 1.7632484436035156
+TIME INT8 * INT8 -> FP16 (per channel) 1.7535686492919922
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.7606735229492188
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.9971132278442383
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.9987821578979492
+TIME Linear: 1.5595436096191406
+Speed Up INT8 * INT8 -> FP16 (per tensor):37.72%
+Speed Up INT8 * INT8 -> FP16 (per token):-13.06%
+Speed Up INT8 * INT8 -> FP16 (per channel):-12.44%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-12.9%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-28.06%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-28.16%
+==========M=3566==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.8828163146972656
+TIME INT8 * INT8 -> FP16 (per token): 1.7847776412963867
+TIME INT8 * INT8 -> FP16 (per channel) 1.7730474472045898
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.7829179763793945
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.00042724609375
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.001476287841797
+TIME Linear: 1.4175653457641602
+Speed Up INT8 * INT8 -> FP16 (per tensor):37.72%
+Speed Up INT8 * INT8 -> FP16 (per token):-25.9%
+Speed Up INT8 * INT8 -> FP16 (per channel):-25.08%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-25.77%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-41.12%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-41.19%
+==========M=3597==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.9938955307006836
+TIME INT8 * INT8 -> FP16 (per token): 1.7920970916748047
+TIME INT8 * INT8 -> FP16 (per channel) 1.783895492553711
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.7914533615112305
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8612384796142578
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8707752227783203
+TIME Linear: 1.5338659286499023
+Speed Up INT8 * INT8 -> FP16 (per tensor):35.2%
+Speed Up INT8 * INT8 -> FP16 (per token):-16.84%
+Speed Up INT8 * INT8 -> FP16 (per channel):-16.3%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-16.79%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-21.34%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-21.96%
+==========M=3628==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0033607482910156
+TIME INT8 * INT8 -> FP16 (per token): 1.8099546432495117
+TIME INT8 * INT8 -> FP16 (per channel) 1.8029451370239258
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.8089532852172852
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8623113632202148
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8703699111938477
+TIME Linear: 1.5185832977294922
+Speed Up INT8 * INT8 -> FP16 (per tensor):33.93%
+Speed Up INT8 * INT8 -> FP16 (per token):-19.19%
+Speed Up INT8 * INT8 -> FP16 (per channel):-18.73%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-19.12%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-22.63%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-23.17%
+==========M=3659==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.9745121002197266
+TIME INT8 * INT8 -> FP16 (per token): 1.8875598907470703
+TIME INT8 * INT8 -> FP16 (per channel) 1.884293556213379
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.8869400024414062
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8611907958984375
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.874709129333496
+TIME Linear: 1.8326044082641602
+Speed Up INT8 * INT8 -> FP16 (per tensor):46.82%
+Speed Up INT8 * INT8 -> FP16 (per token):-3.0%
+Speed Up INT8 * INT8 -> FP16 (per channel):-2.82%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-2.96%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-1.56%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-2.3%
+==========M=3690==========
+TIME INT8 * INT8 -> FP16 (per tensor): 0.9755611419677734
+TIME INT8 * INT8 -> FP16 (per token): 1.9218921661376953
+TIME INT8 * INT8 -> FP16 (per channel) 1.917099952697754
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.9190788269042969
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8605709075927734
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.873326301574707
+TIME Linear: 1.5160083770751953
+Speed Up INT8 * INT8 -> FP16 (per tensor):35.65%
+Speed Up INT8 * INT8 -> FP16 (per token):-26.77%
+Speed Up INT8 * INT8 -> FP16 (per channel):-26.46%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-26.59%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-22.73%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-23.57%
+==========M=3721==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0134220123291016
+TIME INT8 * INT8 -> FP16 (per token): 1.9394874572753906
+TIME INT8 * INT8 -> FP16 (per channel) 1.9325971603393555
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.9394636154174805
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.416849136352539
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.418398857116699
+TIME Linear: 1.8341302871704102
+Speed Up INT8 * INT8 -> FP16 (per tensor):44.75%
+Speed Up INT8 * INT8 -> FP16 (per token):-5.74%
+Speed Up INT8 * INT8 -> FP16 (per channel):-5.37%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-5.74%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-31.77%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-31.86%
+==========M=3752==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0206937789916992
+TIME INT8 * INT8 -> FP16 (per token): 1.880812644958496
+TIME INT8 * INT8 -> FP16 (per channel) 1.8763065338134766
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.881551742553711
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8857002258300781
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8838167190551758
+TIME Linear: 1.5177011489868164
+Speed Up INT8 * INT8 -> FP16 (per tensor):32.75%
+Speed Up INT8 * INT8 -> FP16 (per token):-23.93%
+Speed Up INT8 * INT8 -> FP16 (per channel):-23.63%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-23.97%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-24.25%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-24.12%
+==========M=3783==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0208845138549805
+TIME INT8 * INT8 -> FP16 (per token): 1.906275749206543
+TIME INT8 * INT8 -> FP16 (per channel) 1.9030094146728516
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.9169092178344727
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.9569635391235352
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.9600868225097656
+TIME Linear: 1.8172502517700195
+Speed Up INT8 * INT8 -> FP16 (per tensor):43.82%
+Speed Up INT8 * INT8 -> FP16 (per token):-4.9%
+Speed Up INT8 * INT8 -> FP16 (per channel):-4.72%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-5.48%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-7.69%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-7.86%
+==========M=3814==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0215520858764648
+TIME INT8 * INT8 -> FP16 (per token): 1.931142807006836
+TIME INT8 * INT8 -> FP16 (per channel) 1.9208431243896484
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.9232749938964844
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.963210105895996
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.9663572311401367
+TIME Linear: 1.5218019485473633
+Speed Up INT8 * INT8 -> FP16 (per tensor):32.87%
+Speed Up INT8 * INT8 -> FP16 (per token):-26.9%
+Speed Up INT8 * INT8 -> FP16 (per channel):-26.22%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-26.38%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-29.01%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-29.21%
+==========M=3845==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0164976119995117
+TIME INT8 * INT8 -> FP16 (per token): 1.9503593444824219
+TIME INT8 * INT8 -> FP16 (per channel) 1.9428730010986328
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.9475698471069336
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8697261810302734
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8729209899902344
+TIME Linear: 1.9583940505981445
+Speed Up INT8 * INT8 -> FP16 (per tensor):48.1%
+Speed Up INT8 * INT8 -> FP16 (per token):0.41%
+Speed Up INT8 * INT8 -> FP16 (per channel):0.79%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):0.55%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):4.53%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):4.36%
+==========M=3876==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0184049606323242
+TIME INT8 * INT8 -> FP16 (per token): 1.9446372985839844
+TIME INT8 * INT8 -> FP16 (per channel) 1.9440412521362305
+TIME INT8 * INT8 -> FP16 (per token per channel): 1.945042610168457
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8711566925048828
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8751144409179688
+TIME Linear: 1.6317129135131836
+Speed Up INT8 * INT8 -> FP16 (per tensor):37.59%
+Speed Up INT8 * INT8 -> FP16 (per token):-19.18%
+Speed Up INT8 * INT8 -> FP16 (per channel):-19.14%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-19.2%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-14.67%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-14.92%
+==========M=3907==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0178089141845703
+TIME INT8 * INT8 -> FP16 (per token): 2.0447254180908203
+TIME INT8 * INT8 -> FP16 (per channel) 2.043604850769043
+TIME INT8 * INT8 -> FP16 (per token per channel): 2.0444154739379883
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8703937530517578
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8743038177490234
+TIME Linear: 1.8719673156738281
+Speed Up INT8 * INT8 -> FP16 (per tensor):45.63%
+Speed Up INT8 * INT8 -> FP16 (per token):-9.23%
+Speed Up INT8 * INT8 -> FP16 (per channel):-9.17%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-9.21%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):0.08%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-0.12%
+==========M=3938==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0258674621582031
+TIME INT8 * INT8 -> FP16 (per token): 2.0650148391723633
+TIME INT8 * INT8 -> FP16 (per channel) 2.0605087280273438
+TIME INT8 * INT8 -> FP16 (per token per channel): 2.0632266998291016
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.8711328506469727
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.8863677978515625
+TIME Linear: 1.622152328491211
+Speed Up INT8 * INT8 -> FP16 (per tensor):36.76%
+Speed Up INT8 * INT8 -> FP16 (per token):-27.3%
+Speed Up INT8 * INT8 -> FP16 (per channel):-27.02%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-27.19%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-15.35%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-16.29%
+==========M=3969==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.111912727355957
+TIME INT8 * INT8 -> FP16 (per token): 2.081418037414551
+TIME INT8 * INT8 -> FP16 (per channel) 2.077627182006836
+TIME INT8 * INT8 -> FP16 (per token per channel): 2.0804643630981445
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.9999265670776367
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.0190954208374023
+TIME Linear: 1.6222715377807617
+Speed Up INT8 * INT8 -> FP16 (per tensor):31.46%
+Speed Up INT8 * INT8 -> FP16 (per token):-28.3%
+Speed Up INT8 * INT8 -> FP16 (per channel):-28.07%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-28.24%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-23.28%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-24.46%
+==========M=4000==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.0828018188476562
+TIME INT8 * INT8 -> FP16 (per token): 2.0824193954467773
+TIME INT8 * INT8 -> FP16 (per channel) 2.0804405212402344
+TIME INT8 * INT8 -> FP16 (per token per channel): 2.0810365676879883
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.0050525665283203
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.9234657287597656
+TIME Linear: 1.621246337890625
+Speed Up INT8 * INT8 -> FP16 (per tensor):33.21%
+Speed Up INT8 * INT8 -> FP16 (per token):-28.45%
+Speed Up INT8 * INT8 -> FP16 (per channel):-28.32%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-28.36%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-23.67%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-18.64%
+==========M=4031==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.1140823364257812
+TIME INT8 * INT8 -> FP16 (per token): 2.1059513092041016
+TIME INT8 * INT8 -> FP16 (per channel) 2.1014928817749023
+TIME INT8 * INT8 -> FP16 (per token per channel): 2.102494239807129
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.0223140716552734
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.0354747772216797
+TIME Linear: 1.625204086303711
+Speed Up INT8 * INT8 -> FP16 (per tensor):31.45%
+Speed Up INT8 * INT8 -> FP16 (per token):-29.58%
+Speed Up INT8 * INT8 -> FP16 (per channel):-29.31%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-29.37%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-24.43%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-25.24%
+==========M=4062==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.1550188064575195
+TIME INT8 * INT8 -> FP16 (per token): 2.082657814025879
+TIME INT8 * INT8 -> FP16 (per channel) 2.0795106887817383
+TIME INT8 * INT8 -> FP16 (per token per channel): 2.081894874572754
+TIME INT8 * FP16 -> Fp16 (WO bias): 2.0826339721679688
+TIME INT8 * FP16 -> Fp16 (WI bias): 2.087259292602539
+TIME Linear: 1.9129276275634766
+Speed Up INT8 * INT8 -> FP16 (per tensor):39.62%
+Speed Up INT8 * INT8 -> FP16 (per token):-8.87%
+Speed Up INT8 * INT8 -> FP16 (per channel):-8.71%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-8.83%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-8.87%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-9.11%
+==========M=4093==========
+TIME INT8 * INT8 -> FP16 (per tensor): 1.1054277420043945
+TIME INT8 * INT8 -> FP16 (per token): 2.046632766723633
+TIME INT8 * INT8 -> FP16 (per channel) 2.0383358001708984
+TIME INT8 * INT8 -> FP16 (per token per channel): 2.042508125305176
+TIME INT8 * FP16 -> Fp16 (WO bias): 1.9584894180297852
+TIME INT8 * FP16 -> Fp16 (WI bias): 1.959085464477539
+TIME Linear: 1.8915891647338867
+Speed Up INT8 * INT8 -> FP16 (per tensor):41.56%
+Speed Up INT8 * INT8 -> FP16 (per token):-8.2%
+Speed Up INT8 * INT8 -> FP16 (per channel):-7.76%
+Speed Up INT8 * INT8 -> FP16 (per token per channel):-7.98%
+Speed Up INT8 * FP16 -> Fp16 (WO bias):-3.54%
+Speed Up INT8 * FP16 -> Fp16 (WI bias):-3.57%

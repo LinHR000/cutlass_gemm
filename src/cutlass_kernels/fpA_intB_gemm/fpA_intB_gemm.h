@@ -20,7 +20,7 @@
 #include "utils/activation_types.h"
 #include "utils/allocator.h"
 #include <cuda_runtime_api.h>
-
+#include "cutlass_extensions/compute_occupancy.h"
 namespace fastertransformer {
 
 /*
@@ -38,6 +38,7 @@ namespace fastertransformer {
 template<typename T, typename WeightType>
 class CutlassFpAIntBGemmRunner {
 public:
+
     CutlassFpAIntBGemmRunner();
     ~CutlassFpAIntBGemmRunner();
 
@@ -67,6 +68,19 @@ public:
 
     // Returns desired workspace size in bytes.
     int getWorkspaceSize(const int m, const int n, const int k);
+
+    // void choose_best_config(const T*          A,
+    //                         const WeightType* B,
+    //                         const T*          weight_scales,
+    //                         const T*          biases,
+    //                         T*                C,
+    //                         int               m,
+    //                         int               n,
+    //                         int               k,
+    //                         char*             workspace_ptr,
+    //                         const size_t      workspace_bytes,
+    //                         cudaStream_t      stream);
+    // CutlassGemmConfig gemm_config; 
 
 private:
     template<typename EpilogueTag>
@@ -138,6 +152,31 @@ public:
                        cudaStream_t      stream);
 
     int getWorkspaceSize(const int m, const int n, const int k);
+    // void choose_best_config(const float*          A,
+    //                         const WeightType*     B,
+    //                         const float*          weight_scales,
+    //                         const float*          biases,
+    //                         float*                C,
+    //                         int               m,
+    //                         int               n,
+    //                         int               k,
+    //                         char*             workspace_ptr,
+    //                         const size_t      workspace_bytes,
+    //                         cudaStream_t      stream);
+    // CutlassGemmConfig gemm_config; 
 };
+
+
+std::vector<int> choose_best_config(const half*          A,
+                                    const uint8_t* B,
+                                    const half*          weight_scales,
+                                    const half*          biases,
+                                    half*                C,
+                                    int               m,
+                                    int               n,
+                                    int               k,
+                                    char*             workspace_ptr,
+                                    const size_t      workspace_bytes,
+                                    cudaStream_t      stream);
 
 }  // namespace fastertransformer

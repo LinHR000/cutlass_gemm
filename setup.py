@@ -99,6 +99,7 @@ cutlass_gemm_extension = CUDAExtension(
              "src/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm_dummy_stubs.cu",
              "src/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm_fp16_int4.cu",
              "src/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm_fp16_int8.cu",
+             'src/cutlass_kernels/fpA_intB_gemm/choose_best_config.cu',
              "src/cutlass_kernels/int8_gemm/int8_gemm_bf16.cu",
              "src/cutlass_kernels/int8_gemm/int8_gemm_fp16.cu",
              "src/cutlass_kernels/int8_gemm/int8_gemm_fp32.cu",
@@ -155,6 +156,29 @@ cutlass_gemm_extension_int8 = CUDAExtension(
     define_macros=define_macros
 )
 ext_modules.append(cutlass_gemm_extension_int8)
+
+cutlass_gemm_extension_mix = CUDAExtension(
+    name="cutlass_gemm.gemm_op_mix",
+    sources=[
+            # "src/cutlass_kernels/cutlass_mix_gemm/int8_gemm_raw_template_int8_mix.cu",
+            #  "src/cutlass_kernels/cutlass_mix_gemm/int8_gemm_raw_template_int8_mix_splitk.cu",
+             "src/cutlass_kernels/cutlass_mix_gemm/int8_gemm_template_fp16_int8.cu",
+             "src/utils/th_utils.cu",
+             "src/utils/cuda_utils.cc",
+             "src/utils/logger.cc",
+             "src/utils/Tensor.cc",
+             'src/pt_binding_int8_mix.cpp'],
+    include_dirs=[os.path.join(ROOT_DIR,"3rdparty/cutlass-main/include"),
+                  os.path.join(ROOT_DIR,"3rdparty/cutlass-main/tools/util/include"),
+                  os.path.join(ROOT_DIR,"3rdparty"),
+                  os.path.join(ROOT_DIR,"src")],
+    extra_link_args=['-lcublas_static', '-lcublasLt_static',
+                             '-lculibos', '-lcudart', '-lcudart_static',
+                             '-lrt', '-lpthread', '-ldl', '-L/usr/lib/x86_64-linux-gnu/'],
+    extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS},
+    define_macros=define_macros
+)
+# ext_modules.append(cutlass_gemm_extension_mix)
 
 # cutlass_gemm_extension_fp16 = CUDAExtension(
 #     name="cutlass_gemm.gemm_op_fp16",

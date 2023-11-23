@@ -301,7 +301,62 @@ Tensor gemm_infp16_w8_ofp16_bias_act(
     }
     return output_tensor;
 }
+// std::vector<int> choose_best_config(const half*          A,
+//                                     const uint8_t* B,
+//                                     const half*          weight_scales,
+//                                     const half*          biases,
+//                                     half*                C,
+//                                     int               m,
+//                                     int               n,
+//                                     int               k,
+//                                     char*             workspace_ptr,
+//                                     const size_t      workspace_bytes,
+//                                     cudaStream_t      stream);
 
+std::vector<int> choose_best_config_half(
+    Tensor input_activations, Tensor weight, Tensor scales)
+{
+    const at::ScalarType _st    = input_activations.scalar_type();
+    int m_ = 1;
+    
+    if (input_activations.dim() == 2){
+        m_ = input_activations.size(0);
+    }else if (input_activations.dim() == 3){
+        m_ = input_activations.size(0) * input_activations.size(1);
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+
+    const int            m      = m_;
+    const int            n      = scales.size(0);
+    const int            k      = weight.size(0);
+    auto                 stream = at::cuda::getCurrentCUDAStream().stream();
+
+    const half*          input_act_ptr = get_ptr<const half>(input_activations);
+    const uint8_t* weight_ptr    = get_ptr<const uint8_t>(weight);
+    const half*          scales_ptr    = get_ptr<const half>(scales);
+
+    fastertransformer::CutlassFpAIntBGemmRunner<half, uint8_t> fused_gemm_dq_runner;
+    const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
+    Tensor output_tensor;
+    if (input_activations.dim() == 2){
+        output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    }else if (input_activations.dim() == 3){
+        output_tensor = torch::empty({input_activations.size(0),input_activations.size(1), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+    auto ws_tensor     = torch::empty({ws_bytes}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
+
+    half*   output_tensor_ptr = get_ptr<half>(output_tensor);
+    char* ws_ptr            = get_ptr<char>(ws_tensor);
+    return ft::choose_best_config(input_act_ptr, weight_ptr, scales_ptr, nullptr,output_tensor_ptr,m, n, k, ws_ptr, ws_bytes, stream);
+
+//     fused_gemm_dq_runner.choose_best_config(
+//             input_act_ptr, weight_ptr, scales_ptr, output_tensor_ptr, m, n, k, ws_ptr, ws_bytes, stream);
+
+//    return {int(fused_gemm_dq_runner.gemm_config.tile_config),int(fused_gemm_dq_runner.gemm_config.split_k_style),fused_gemm_dq_runner.gemm_config.split_k_factor,fused_gemm_dq_runner.gemm_config.stages};
+}
 
 
 // TORCH_LIBRARY(gemm_dq_unit_ops, m)

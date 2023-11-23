@@ -9,7 +9,8 @@ def main(args):
     with open("/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_choose.json",'r') as r:
         config_dict = json.load(r)
     symmetric_quantizer = gemm_op.symmetric_quantize_last_axis_of_batched_matrix
-    for m in range(1,args.m,31):
+    # for m in range(8,args.m,32):
+    for m in range(3072,args.m,160000):
         for key,config_dict_best in config_dict.items():
             if m < int(key):
                 break
@@ -39,14 +40,28 @@ def main(args):
 
         lda,ldb,ldc = k,k,n
 
+        gemm_in8_w8_ofp16_per_tensor = gemm_op_int8.gemm_in8_w8_ofp16_per_tensor
+        # gemm_in8_w8_ofp16_per_tensor(input,weight,bias_fp16, 1.0,1.0,m,n,k,tile_config,stages,splitk)
+        gemm_in8_w8_ofp16_per_tensor_time = 0
+        for i in range(args.num_iters):
+            torch.cuda.synchronize()
+            time_start = time.time()
+            gemm_in8_w8_ofp16_per_tensor(input,weight,bias_fp16,1.0,1.0,m,n,k,tile_config,stages,splitk)
+            torch.cuda.synchronize()
+            time_end = time.time()
+            a = time_end-time_start
+            print(a * 1000)
+            gemm_in8_w8_ofp16_per_tensor_time+=a
+        gemm_in8_w8_ofp16_per_tensor_time = gemm_in8_w8_ofp16_per_tensor_time * 1000 / args.num_iters
+
         # test gemm_in8_w8_ofp16_pt
         gemm_in8_w8_ofp16_pt = gemm_op.gemm_in8_w8_ofp16_pt
-        gemm_in8_w8_ofp16_pt(input,weight,alpha_col,alpha_row,m,n,k)
+        gemm_in8_w8_ofp16_pt(input,weight,alpha_col,alpha_row,m,n,k) + bias_fp16
         gemm_in8_w8_ofp16_pt_time = 0
         for i in range(args.num_iters):
             torch.cuda.synchronize()
             time_start = time.time()
-            gemm_in8_w8_ofp16_pt(input,weight,alpha_col,alpha_row,m,n,k)
+            gemm_in8_w8_ofp16_pt(input,weight,alpha_col,alpha_row,m,n,k) + bias_fp16
             torch.cuda.synchronize()
             time_end = time.time()
             gemm_in8_w8_ofp16_pt_time+=time_end-time_start
@@ -54,12 +69,12 @@ def main(args):
 
         # test gemm_in8_w8_ofp16_pc
         gemm_in8_w8_ofp16_pc = gemm_op.gemm_in8_w8_ofp16_pc
-        gemm_in8_w8_ofp16_pc(input,weight,alpha_col,alpha_row,m,n,k)
+        gemm_in8_w8_ofp16_pc(input,weight,alpha_col,alpha_row,m,n,k) + bias_fp16
         gemm_in8_w8_ofp16_pc_time = 0
         for i in range(args.num_iters):
             torch.cuda.synchronize()
             time_start = time.time()
-            gemm_in8_w8_ofp16_pc(input,weight,alpha_col,alpha_row,m,n,k)
+            gemm_in8_w8_ofp16_pc(input,weight,alpha_col,alpha_row,m,n,k)+ bias_fp16
             torch.cuda.synchronize()
             time_end = time.time()
             gemm_in8_w8_ofp16_pc_time+=time_end-time_start
@@ -67,12 +82,12 @@ def main(args):
 
         # test gemm_in8_w8_ofp16_ptpc
         gemm_in8_w8_ofp16_ptpc = gemm_op.gemm_in8_w8_ofp16_ptpc
-        gemm_in8_w8_ofp16_ptpc(input,weight,alpha_col,alpha_row,m,n,k)
+        gemm_in8_w8_ofp16_ptpc(input,weight,alpha_col,alpha_row,m,n,k) + bias_fp16
         gemm_in8_w8_ofp16_ptpc_time = 0
         for i in range(args.num_iters):
             torch.cuda.synchronize()
             time_start = time.time()
-            gemm_in8_w8_ofp16_ptpc(input,weight,alpha_col,alpha_row,m,n,k)
+            gemm_in8_w8_ofp16_ptpc(input,weight,alpha_col,alpha_row,m,n,k) + bias_fp16
             torch.cuda.synchronize()
             time_end = time.time()
             gemm_in8_w8_ofp16_ptpc_time+=time_end-time_start
@@ -80,12 +95,12 @@ def main(args):
 
         # test gemm_infp16_w8_ofp16
         gemm_infp16_w8_ofp16 = gemm_op.gemm_infp16_w8_ofp16
-        gemm_infp16_w8_ofp16(input_f,weight_mix,weight_mix_scale)
+        gemm_infp16_w8_ofp16(input_f,weight_mix,weight_mix_scale) + bias_fp16
         gemm_infp16_w8_ofp16_time = 0
         for i in range(args.num_iters):
             torch.cuda.synchronize()
             time_start = time.time()
-            gemm_infp16_w8_ofp16(input_f,weight_mix,weight_mix_scale)
+            gemm_infp16_w8_ofp16(input_f,weight_mix,weight_mix_scale) + bias_fp16
             torch.cuda.synchronize()
             time_end = time.time()
             gemm_infp16_w8_ofp16_time+=time_end-time_start
@@ -104,17 +119,7 @@ def main(args):
             gemm_infp16_w8_ofp16_bias_act_time+=time_end-time_start
         gemm_infp16_w8_ofp16_bias_act_time = gemm_infp16_w8_ofp16_bias_act_time * 1000 / args.num_iters
 
-        gemm_in8_w8_ofp16_per_tensor = gemm_op_int8.gemm_in8_w8_ofp16_per_tensor
-        gemm_in8_w8_ofp16_per_tensor(input,weight,1.0,0.0,m,n,k,tile_config,stages,splitk)
-        gemm_in8_w8_ofp16_per_tensor_time = 0
-        for i in range(args.num_iters):
-            torch.cuda.synchronize()
-            time_start = time.time()
-            gemm_in8_w8_ofp16_per_tensor(input,weight,1.0,0.0,m,n,k,tile_config,stages,splitk)
-            torch.cuda.synchronize()
-            time_end = time.time()
-            gemm_in8_w8_ofp16_per_tensor_time+=time_end-time_start
-        gemm_in8_w8_ofp16_per_tensor_time = gemm_in8_w8_ofp16_per_tensor_time * 1000 / args.num_iters
+        
 
         # gemm_in8_w8_ofp16_per_tensor_splitk = gemm_op_int8.gemm_in8_w8_ofp16_per_tensor_splitk
         # gemm_in8_w8_ofp16_per_tensor_splitk(input,weight,1.0,0.0,m,n,k,tile_config,stages,splitk)
@@ -144,6 +149,17 @@ def main(args):
         total_time_linear = total_time_linear * 1000 / args.num_iters
 
 
+        time_config = 0
+        for i in range(args.num_iters):
+            torch.cuda.synchronize()
+            time_start = time.time()
+            gemm_op.choose_best_config_half(input_f,weight_mix,weight_mix_scale)
+            torch.cuda.synchronize()
+            time_end = time.time()
+            total_time_linear+=time_end-time_start
+        total_time_linear = total_time_linear * 1000 / args.num_iters
+
+
 
         print("="*10+"M={}".format(m)+"="*10)
         print("TIME INT8 * INT8 -> FP16 (per tensor):",gemm_in8_w8_ofp16_per_tensor_time)
@@ -167,9 +183,9 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark the latency of processing a single gemm.')
-    parser.add_argument('--m', type=int, default=4096)
-    parser.add_argument('--n', type=int, default=int(8192/4 * 3))
-    parser.add_argument('--k', type=int, default=8192)
+    parser.add_argument('--m', type=int, default=8192)
+    parser.add_argument('--n', type=int, default=int(8192 * 3 /4))
+    parser.add_argument('--k', type=int, default=int(8192))
     parser.add_argument('--num-iters', type=int, default=10,
                         help='Number of iterations to run.')
     args = parser.parse_args()
