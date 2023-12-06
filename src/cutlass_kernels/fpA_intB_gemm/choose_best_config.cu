@@ -23,6 +23,15 @@
 #include <cublas_v2.h>
 namespace fastertransformer {
 
+int get_multi_processor_count(){
+    int multi_processor_count_ = 0;
+    int device{-1};
+    check_cuda_error(cudaGetDevice(&device));
+    // sm_ = getSMVersion();
+    check_cuda_error(cudaDeviceGetAttribute(&multi_processor_count_, cudaDevAttrMultiProcessorCount, device));
+    return multi_processor_count_;
+}
+
 std::vector<int> choose_best_config(const half*          A,
                                     const uint8_t* B,
                                     const half*          weight_scales,

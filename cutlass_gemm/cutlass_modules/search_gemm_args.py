@@ -12,7 +12,9 @@ class GemmSearch(object):
         weight = torch.randint(-1, 1, (n,k),dtype=torch.int8).cuda()
         bias = torch.randn(n,dtype=torch.float16).cuda()
         total_time = 0
-        for m in tqdm(range(8,8192,8)):
+        m_list = list([i for i in range(1,256)])
+        m_list += list([i for i in range(256,257,8)])
+        for m in tqdm(m_list):
             tmp_dict = {}
             input = torch.randint(-1, 1, (m,k),dtype=torch.int8).cuda()
             for stages in range(2,5,1):
@@ -122,7 +124,7 @@ class GemmSearch(object):
             raise ValueError()
 
     @staticmethod
-    def get_best_config(file_path):
+    def get_best_config(file_path,output_path):
         with open(file_path,'r') as r:
             data_dict = json.load(r)
         sorted_dict = {}
@@ -131,7 +133,7 @@ class GemmSearch(object):
             value = dict(sorted(value.items(), key=lambda item: item[1], reverse=False))
             sorted_dict[key] = list(value.keys())[0]
             sorted_dict_org[key] = value
-        with open("/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_splitk_choose.json",'w') as w:
+        with open(output_path,'w') as w:
             json.dump(sorted_dict,w,indent=4)
         # with open(file_path,'w') as w:
             # json.dump(sorted_dict_org,w,indent=4)
@@ -300,30 +302,30 @@ class CutlassGemm(object):
 
 
 if __name__ == "__main__":
-    # GemmSearch.gemm_search(8192, int(8192), int(8192 /4), iters=5, output_path='/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_stat_76b_o_proj.json')
-    # GemmSearch.get_best_config('/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_stat_splitk.json')
-    with open('/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_stat_76b_o_proj.json','r') as r:
-            data_dict_1 = json.load(r)
-    with open('/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_stat_76b_qkv.json','r') as r:
-            data_dict_2 = json.load(r)
-    with open('/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_stat_76b_mlp.json','r') as r:
-            data_dict_3 = json.load(r)
+    GemmSearch.gemm_search(8192, int(12288*2), int(4608), iters=5, output_path='/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_13b_per_tensor_1gpu_fc1_tmp.json')
+    GemmSearch.get_best_config('/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_13b_per_tensor_1gpu_fc1_tmp.json','/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_13b_per_tensor_1gpu_fc1.json')
+    # with open('/mnt/infra/haoran.lin2/cutlass_gemm/benchmark/gemm_wt_13b_fc1_1gpu.json','r') as r:
+    #         data_dict_1 = json.load(r)
+    # # with open('/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_stat_76b_qkv.json','r') as r:
+    # #         data_dict_2 = json.load(r)
+    # # with open('/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_stat_76b_mlp.json','r') as r:
+    # #         data_dict_3 = json.load(r)
 
-    sorted_dict_1 = {}
-    sorted_dict_2 = {}
-    sorted_dict_3 = {}
+    # sorted_dict_1 = {}
+    # # sorted_dict_2 = {}
+    # # sorted_dict_3 = {}
 
-    for key,value in data_dict_1.items():
-        value = dict(sorted(value.items(), key=lambda item: item[1], reverse=False))
-        sorted_dict_1[key] = list(value.keys())[0]
-    for key,value in data_dict_2.items():
-        value = dict(sorted(value.items(), key=lambda item: item[1], reverse=False))
-        sorted_dict_2[key] = list(value.keys())[0]
-    for key,value in data_dict_3.items():
-        value = dict(sorted(value.items(), key=lambda item: item[1], reverse=False))
-        sorted_dict_3[key] = list(value.keys())[0]
+    # for key,value in data_dict_1.items():
+    #     value = dict(sorted(value.items(), key=lambda item: item[1], reverse=False))
+    #     sorted_dict_1[key] = list(value.keys())[0]
+    # # for key,value in data_dict_2.items():
+    # #     value = dict(sorted(value.items(), key=lambda item: item[1], reverse=False))
+    # #     sorted_dict_2[key] = list(value.keys())[0]
+    # # for key,value in data_dict_3.items():
+    # #     value = dict(sorted(value.items(), key=lambda item: item[1], reverse=False))
+    # #     sorted_dict_3[key] = list(value.keys())[0]
     
-    best_dict = {8192:sorted_dict_3,int(8192 * 3 /4):sorted_dict_2,int(8192/4):sorted_dict_1}
+    # # best_dict = {8192:sorted_dict_3,int(8192 * 3 /4):sorted_dict_2,int(8192/4):sorted_dict_1}
 
-    with open("/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_76b_choose.json",'w') as w:
-        json.dump(best_dict,w,indent=4)
+    # with open("/mnt/infra/haoran.lin2/cutlass_gemm/output/gemm_best_13b_weight_only_1gpu_fc1.json",'w') as w:
+    #     json.dump(sorted_dict_1,w,indent=4)

@@ -49,6 +49,10 @@ public:
               int               m,
               int               n,
               int               k,
+              int               tile_config,
+            int               split_k_style,
+            int               split_k_factor,
+            int               stages,
               char*             workspace_ptr,
               const size_t      workspace_bytes,
               cudaStream_t      stream);
@@ -61,6 +65,10 @@ public:
                        int               m,
                        int               n,
                        int               k,
+                       int               tile_config,
+                        int               split_k_style,
+                        int               split_k_factor,
+                        int               stages,
                        ActivationType    activation_type,
                        char*             workspace_ptr,
                        const size_t      workspace_bytes,
@@ -107,6 +115,7 @@ private:
                   int               m,
                   int               n,
                   int               k,
+                   CutlassGemmConfig    chosen_config,
                   char*             workspace_ptr,
                   const size_t      workspace_bytes,
                   cudaStream_t      stream);
@@ -134,6 +143,10 @@ public:
               int               m,
               int               n,
               int               k,
+              int               tile_config,
+            int               split_k_style,
+            int               split_k_factor,
+            int               stages,
               char*             workspace_ptr,
               const size_t      workspace_bytes,
               cudaStream_t      stream);
@@ -146,24 +159,17 @@ public:
                        int               m,
                        int               n,
                        int               k,
+                       int               tile_config,
+                        int               split_k_style,
+                        int               split_k_factor,
+                        int               stages,
                        ActivationType    activation_type,
                        char*             workspace_ptr,
                        const size_t      workspace_bytes,
                        cudaStream_t      stream);
 
     int getWorkspaceSize(const int m, const int n, const int k);
-    // void choose_best_config(const float*          A,
-    //                         const WeightType*     B,
-    //                         const float*          weight_scales,
-    //                         const float*          biases,
-    //                         float*                C,
-    //                         int               m,
-    //                         int               n,
-    //                         int               k,
-    //                         char*             workspace_ptr,
-    //                         const size_t      workspace_bytes,
-    //                         cudaStream_t      stream);
-    // CutlassGemmConfig gemm_config; 
+
 };
 
 

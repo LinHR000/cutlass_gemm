@@ -415,14 +415,7 @@ CutlassFpAIntBGemmRunner<T, WeightType>::CutlassFpAIntBGemmRunner()
     check_cuda_error(cudaDeviceGetAttribute(&multi_processor_count_, cudaDevAttrMultiProcessorCount, device));
 }
 
-int get_multi_processor_count(){
-    int multi_processor_count_ = 0;
-    int device{-1};
-    check_cuda_error(cudaGetDevice(&device));
-    // sm_ = getSMVersion();
-    check_cuda_error(cudaDeviceGetAttribute(&multi_processor_count_, cudaDevAttrMultiProcessorCount, device));
-    return multi_processor_count_;
-}
+
 
 template<typename T, typename WeightType>
 CutlassFpAIntBGemmRunner<T, WeightType>::~CutlassFpAIntBGemmRunner()
@@ -465,55 +458,6 @@ void CutlassFpAIntBGemmRunner<T, WeightType>::dispatch_to_arch<EpilogueTag>(cons
     }
 }
 
-// template<typename T, typename WeightType>
-// void CutlassFpAIntBGemmRunner<T, WeightType>::choose_best_config(const T*          A,
-//                                                                     const WeightType* B,
-//                                                                     const T*          weight_scales,
-//                                                                     const T*          biases,
-//                                                                     T*                C,
-//                                                                     int               m,
-//                                                                     int               n,
-//                                                                     int               k,
-//                                                                     char*             workspace_ptr,
-//                                                                     const size_t      workspace_bytes,
-//                                                                     cudaStream_t      stream)
-// {
-//     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-
-//     static constexpr bool          is_weight_only    = !std::is_same<T, WeightType>::value;
-//     std::vector<CutlassGemmConfig> candidate_configs = get_candidate_configs(sm_, is_weight_only, false);
-//     std::vector<int>               occupancies(candidate_configs.size());
-
-//     for (size_t ii = 0; ii < candidate_configs.size(); ++ii) {
-//         dispatch_to_arch<EpilogueOpNoBias>(A,
-//                                       B,
-//                                       weight_scales,
-//                                       biases,
-//                                       C,
-//                                       m,
-//                                       n,
-//                                       k,
-//                                       candidate_configs[ii],
-//                                       workspace_ptr,
-//                                       workspace_bytes,
-//                                       stream,
-//                                       &occupancies[ii]);
-//     }
-//     // Standard GEMM, so 1 "expert". We use the same function for MoE and regular FFN.
-//     static constexpr int num_experts   = 1;
-//     CutlassGemmConfig    chosen_config = estimate_best_config_from_occupancies(candidate_configs,
-//                                                                             occupancies,
-//                                                                             m,
-//                                                                             n,
-//                                                                             k,
-//                                                                             num_experts,
-//                                                                             split_k_limit,
-//                                                                             workspace_bytes,
-//                                                                             multi_processor_count_,
-//                                                                             is_weight_only);
-//     this->gemm_config = choose_config;
-
-// }
 
 
 
@@ -527,42 +471,43 @@ void CutlassFpAIntBGemmRunner<T, WeightType>::run_gemm<EpilogueTag>(const T*    
                                                                     int               m,
                                                                     int               n,
                                                                     int               k,
+                                                                    CutlassGemmConfig    chosen_config,
                                                                     char*             workspace_ptr,
                                                                     const size_t      workspace_bytes,
                                                                     cudaStream_t      stream)
 {
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-    static constexpr bool          is_weight_only    = !std::is_same<T, WeightType>::value;
-    std::vector<CutlassGemmConfig> candidate_configs = get_candidate_configs(sm_, is_weight_only, false);
-    std::vector<int>               occupancies(candidate_configs.size());
+    // static constexpr bool          is_weight_only    = !std::is_same<T, WeightType>::value;
+    // std::vector<CutlassGemmConfig> candidate_configs = get_candidate_configs(sm_, is_weight_only, false);
+    // std::vector<int>               occupancies(candidate_configs.size());
 
-    for (size_t ii = 0; ii < candidate_configs.size(); ++ii) {
-        dispatch_to_arch<EpilogueTag>(A,
-                                      B,
-                                      weight_scales,
-                                      biases,
-                                      C,
-                                      m,
-                                      n,
-                                      k,
-                                      candidate_configs[ii],
-                                      workspace_ptr,
-                                      workspace_bytes,
-                                      stream,
-                                      &occupancies[ii]);
-    }
-    // Standard GEMM, so 1 "expert". We use the same function for MoE and regular FFN.
-    static constexpr int num_experts   = 1;
-    CutlassGemmConfig    chosen_config = estimate_best_config_from_occupancies(candidate_configs,
-                                                                            occupancies,
-                                                                            m,
-                                                                            n,
-                                                                            k,
-                                                                            num_experts,
-                                                                            split_k_limit,
-                                                                            workspace_bytes,
-                                                                            multi_processor_count_,
-                                                                            is_weight_only);
+    // for (size_t ii = 0; ii < candidate_configs.size(); ++ii) {
+    //     dispatch_to_arch<EpilogueTag>(A,
+    //                                   B,
+    //                                   weight_scales,
+    //                                   biases,
+    //                                   C,
+    //                                   m,
+    //                                   n,
+    //                                   k,
+    //                                   candidate_configs[ii],
+    //                                   workspace_ptr,
+    //                                   workspace_bytes,
+    //                                   stream,
+    //                                   &occupancies[ii]);
+    // }
+    // // Standard GEMM, so 1 "expert". We use the same function for MoE and regular FFN.
+    // static constexpr int num_experts   = 1;
+    // CutlassGemmConfig    chosen_config = estimate_best_config_from_occupancies(candidate_configs,
+    //                                                                         occupancies,
+    //                                                                         m,
+    //                                                                         n,
+    //                                                                         k,
+    //                                                                         num_experts,
+    //                                                                         split_k_limit,
+    //                                                                         workspace_bytes,
+    //                                                                         multi_processor_count_,
+    //                                                                         is_weight_only);
 
     dispatch_to_arch<EpilogueTag>(
         A, B, weight_scales, biases, C, m, n, k, chosen_config, workspace_ptr, workspace_bytes, stream);
@@ -577,28 +522,37 @@ void CutlassFpAIntBGemmRunner<T, WeightType>::gemm_bias_act(const T*          A,
                                                             int               m,
                                                             int               n,
                                                             int               k,
+                                                            int               tile_config,
+                                                            int               split_k_style,
+                                                            int               split_k_factor,
+                                                            int               stages,
                                                             ActivationType    activation_type,
                                                             char*             workspace_ptr,
                                                             const size_t      workspace_bytes,
                                                             cudaStream_t      stream)
 {
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
+    CutlassGemmConfig    chosen_config;
+    chosen_config.tile_config = static_cast<CutlassTileConfig>(tile_config);
+    chosen_config.split_k_style = static_cast<SplitKStyle>(split_k_style);
+    chosen_config.split_k_factor = split_k_factor;
+    chosen_config.stages = stages; 
 
     switch (activation_type) {
         case ActivationType::Relu:
             run_gemm<EpilogueOpBiasReLU>(
-                A, B, weight_scales, biases, C, m, n, k, workspace_ptr, workspace_bytes, stream);
+                A, B, weight_scales, biases, C, m, n, k, chosen_config,workspace_ptr, workspace_bytes, stream);
             break;
         case ActivationType::Gelu:
             run_gemm<EpilogueOpBiasFtGelu>(
-                A, B, weight_scales, biases, C, m, n, k, workspace_ptr, workspace_bytes, stream);
+                A, B, weight_scales, biases, C, m, n, k, chosen_config,workspace_ptr, workspace_bytes, stream);
             break;
         case ActivationType::Silu:
             run_gemm<EpilogueOpBiasSilu>(
-                A, B, weight_scales, biases, C, m, n, k, workspace_ptr, workspace_bytes, stream);
+                A, B, weight_scales, biases, C, m, n, k, chosen_config,workspace_ptr, workspace_bytes, stream);
             break;
         case ActivationType::Identity:
-            run_gemm<EpilogueOpBias>(A, B, weight_scales, biases, C, m, n, k, workspace_ptr, workspace_bytes, stream);
+            run_gemm<EpilogueOpBias>(A, B, weight_scales, biases, C, m, n, k, chosen_config,workspace_ptr, workspace_bytes, stream);
             break;
         case ActivationType::InvalidType:
             FT_CHECK_WITH_INFO(false, "Activation type for fpA_intB must be valid.");
@@ -622,12 +576,22 @@ void CutlassFpAIntBGemmRunner<T, WeightType>::gemm(const T*          A,
                                                    int               m,
                                                    int               n,
                                                    int               k,
+                                                   int               tile_config,
+                                                   int               split_k_style,
+                                                   int               split_k_factor,
+                                                   int               stages,
                                                    char*             workspace_ptr,
                                                    const size_t      workspace_bytes,
                                                    cudaStream_t      stream)
 {
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-    run_gemm<EpilogueOpNoBias>(A, B, weight_scales, nullptr, C, m, n, k, workspace_ptr, workspace_bytes, stream);
+    CutlassGemmConfig    chosen_config;
+    chosen_config.tile_config = static_cast<CutlassTileConfig>(tile_config);
+    chosen_config.split_k_style = static_cast<SplitKStyle>(split_k_style);
+    chosen_config.split_k_factor = split_k_factor;
+    chosen_config.stages = stages; 
+
+    run_gemm<EpilogueOpNoBias>(A, B, weight_scales, nullptr, C, m, n, k, chosen_config,workspace_ptr, workspace_bytes, stream);
 }
 
 template<typename T, typename WeightType>
@@ -651,6 +615,10 @@ void CutlassFpAIntBGemmRunner<float, WeightType>::gemm_bias_act(const float*    
                                                                 int               m,
                                                                 int               n,
                                                                 int               k,
+                                                                int               tile_config,
+                                                                int               split_k_style,
+                                                                int               split_k_factor,
+                                                                int               stages,
                                                                 ActivationType    activation_type,
                                                                 char*             workspace_ptr,
                                                                 const size_t      workspace_bytes,
@@ -668,6 +636,10 @@ void CutlassFpAIntBGemmRunner<float, WeightType>::gemm(const float*      A,
                                                        int               m,
                                                        int               n,
                                                        int               k,
+                                                        int               tile_config,
+                                                        int               split_k_style,
+                                                        int               split_k_factor,
+                                                        int               stages,
                                                        char*             workspace_ptr,
                                                        const size_t      workspace_bytes,
                                                        cudaStream_t      stream)
@@ -676,22 +648,6 @@ void CutlassFpAIntBGemmRunner<float, WeightType>::gemm(const float*      A,
     FT_CHECK_WITH_INFO(false, "Attempting to run mixed gemm when the types are the same is an error.");
 }
 
-// template<typename WeightType>
-// void CutlassFpAIntBGemmRunner<float, WeightType>::choose_best_config(const float*      A,
-//                                                        const WeightType* B,
-//                                                        const float*      weight_scales,
-//                                                        const float*      biases,
-//                                                        float*            C,
-//                                                        int               m,
-//                                                        int               n,
-//                                                        int               k,
-//                                                        char*             workspace_ptr,
-//                                                        const size_t      workspace_bytes,
-//                                                        cudaStream_t      stream)
-// {
-//     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-//     FT_CHECK_WITH_INFO(false, "Attempting to run mixed gemm when the types are the same is an error.");
-// }
 
 template<typename WeightType>
 int CutlassFpAIntBGemmRunner<float, WeightType>::getWorkspaceSize(const int m, const int n, const int k)

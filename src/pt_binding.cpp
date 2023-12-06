@@ -37,13 +37,21 @@ Tensor gemm_in8_w8_ofp16_ptpc(Tensor input,// int8 * int8 -> fp16 per token per 
                             int64_t k);
 Tensor gemm_infp16_w8_ofp16(Tensor input_activations, // int8 * fp16 -> fp16 weight only 量化
                             Tensor weight, 
-                            Tensor scales);
+                            Tensor scales,
+                            int               tile_config,
+                            int               split_k_style,
+                            int               split_k_factor,
+                            int               stages);
 Tensor gemm_infp16_w8_ofp16_bias_act(
                             Tensor input_activations, 
                             Tensor weight,
                              Tensor scales, 
                              Tensor bias, 
-                             std::string activation_type_str);
+                             std::string activation_type_str,
+                             int               tile_config,
+                            int               split_k_style,
+                            int               split_k_factor,
+                            int               stages);
 std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight,
                                                                     int quant_mode);
                                                                     
