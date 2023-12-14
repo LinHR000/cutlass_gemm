@@ -25,7 +25,7 @@ using torch_ext::get_ptr;
 namespace ft = fastertransformer;
 
 template<typename T, typename WeightType>
-Tensor fused_gemm_dq_helper(
+Tensor fused_gemm_dq_helper(Tensor output_tensor,
     Tensor input_activations, Tensor weight, Tensor scales,
     int               tile_config,
     int               split_k_style,
@@ -54,14 +54,14 @@ Tensor fused_gemm_dq_helper(
 
     fastertransformer::CutlassFpAIntBGemmRunner<T, WeightType> fused_gemm_dq_runner;
     const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
-    Tensor output_tensor;
-    if (input_activations.dim() == 2){
-        output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
-    }else if (input_activations.dim() == 3){
-        output_tensor = torch::empty({input_activations.size(0),input_activations.size(1), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
-    }else{
-        throw std::runtime_error("Invalid rank for activations");
-    }
+    // Tensor output_tensor;
+    // if (input_activations.dim() == 2){
+    //     output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    // }else if (input_activations.dim() == 3){
+    //     output_tensor = torch::empty({input_activations.size(0),input_activations.size(1), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
     auto ws_tensor     = torch::empty({ws_bytes}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
 
     T*   output_tensor_ptr = get_ptr<T>(output_tensor);
@@ -73,7 +73,7 @@ Tensor fused_gemm_dq_helper(
 }
 
 Tensor
-_fused_gemm_dq(Tensor input_activations, Tensor weight, Tensor scales,
+_fused_gemm_dq(Tensor output_tensor, Tensor input_activations, Tensor weight, Tensor scales,
                 int               tile_config,
                 int               split_k_style,
                 int               split_k_factor,
@@ -104,16 +104,16 @@ _fused_gemm_dq(Tensor input_activations, Tensor weight, Tensor scales,
                     "or last dim of scale must be 2x last dim of weight for int4.");
     }
 
-   Tensor output_tensor;
+//    Tensor output_tensor;
     switch (_st) {
         case at::ScalarType::Half: {
             if (quant_type == torch::kInt8) {
                 output_tensor =
-                    fused_gemm_dq_helper<half, uint8_t>(input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
+                    fused_gemm_dq_helper<half, uint8_t>(output_tensor, input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
             }
             else if (quant_type == at::ScalarType::QUInt4x2) {
                 output_tensor = fused_gemm_dq_helper<half, cutlass::uint4b_t>(
-                    input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
+                    output_tensor,input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
             }
             else {
                 std::string err_msg = "Unsupported weight type " + std::string(at::toString(quant_type));
@@ -125,11 +125,11 @@ _fused_gemm_dq(Tensor input_activations, Tensor weight, Tensor scales,
         case at::ScalarType::BFloat16: {
             if (quant_type == torch::kInt8) {
                 output_tensor = fused_gemm_dq_helper<__nv_bfloat16, uint8_t>(
-                    input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
+                    output_tensor,input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
             }
             else if (quant_type == at::ScalarType::QUInt4x2) {
                 output_tensor = fused_gemm_dq_helper<__nv_bfloat16, cutlass::uint4b_t>(
-                    input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
+                    output_tensor,input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
             }
             else {
                 std::string err_msg = "Unsupported weight type " + std::string(at::toString(quant_type));
@@ -144,13 +144,13 @@ _fused_gemm_dq(Tensor input_activations, Tensor weight, Tensor scales,
     return output_tensor;
 }
 
-Tensor gemm_infp16_w8_ofp16(Tensor input_activations, Tensor weight, Tensor scales,
+Tensor gemm_infp16_w8_ofp16(Tensor output_tensor, Tensor input_activations, Tensor weight, Tensor scales,
                             int               tile_config,
                             int               split_k_style,
                             int               split_k_factor,
                             int               stages)
 {
-    return _fused_gemm_dq(input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
+    return _fused_gemm_dq(output_tensor, input_activations, weight, scales,tile_config,split_k_style,split_k_factor,stages);
 }
 
 template<typename T,typename WeightType>
@@ -170,7 +170,7 @@ void fused_gemm_dq_cpp(T* input_activations, WeightType* weight, T* scales,T* ou
 
 
 template<typename T, typename WeightType>
-Tensor fused_gemm_dq_bias_act_helper(
+Tensor fused_gemm_dq_bias_act_helper(Tensor output_tensor,
     Tensor input_activations, Tensor weight, Tensor scales, Tensor bias, ft::ActivationType activation_type,
     int               tile_config,
     int               split_k_style,
@@ -199,14 +199,14 @@ Tensor fused_gemm_dq_bias_act_helper(
 
     fastertransformer::CutlassFpAIntBGemmRunner<T, WeightType> fused_gemm_dq_runner;
     const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
-    Tensor output_tensor;
-    if (input_activations.dim() == 2){
-        output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
-    }else if (input_activations.dim() == 3){
-        output_tensor = torch::empty({input_activations.size(0),input_activations.size(1), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
-    }else{
-        throw std::runtime_error("Invalid rank for activations");
-    }
+    // Tensor output_tensor;
+    // if (input_activations.dim() == 2){
+    //     output_tensor = torch::empty({m, n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    // }else if (input_activations.dim() == 3){
+    //     output_tensor = torch::empty({input_activations.size(0),input_activations.size(1), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
     auto ws_tensor     = torch::empty({ws_bytes}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
 
     T*   output_tensor_ptr = get_ptr<T>(output_tensor);
@@ -229,7 +229,7 @@ Tensor fused_gemm_dq_bias_act_helper(
     return output_tensor;
 }
 
-Tensor gemm_infp16_w8_ofp16_bias_act(
+Tensor gemm_infp16_w8_ofp16_bias_act(Tensor output_tensor,
     Tensor input_activations, Tensor weight, Tensor scales, Tensor bias, std::string activation_type_str,
     int               tile_config,
     int               split_k_style,
@@ -283,16 +283,16 @@ Tensor gemm_infp16_w8_ofp16_bias_act(
 
     TORCH_CHECK(!isGatedActivation(activation_type), "Fused gated activations not supported.");
 
-   Tensor output_tensor;
+//    Tensor output_tensor;
     switch (_st) {
         case at::ScalarType::Half: {
             if (quant_type == torch::kInt8) {
                 output_tensor = fused_gemm_dq_bias_act_helper<half, uint8_t>(
-                    input_activations, weight, scales, bias, activation_type,tile_config,split_k_style,split_k_factor,stages);
+                    output_tensor,input_activations, weight, scales, bias, activation_type,tile_config,split_k_style,split_k_factor,stages);
             }
             else if (quant_type == at::ScalarType::QUInt4x2) {
                 output_tensor = fused_gemm_dq_bias_act_helper<half, cutlass::uint4b_t>(
-                    input_activations, weight, scales, bias, activation_type,tile_config,split_k_style,split_k_factor,stages);
+                    output_tensor,input_activations, weight, scales, bias, activation_type,tile_config,split_k_style,split_k_factor,stages);
             }
             else {
                 std::string err_msg = "Unsupported weight type " + std::string(at::toString(quant_type));
@@ -304,11 +304,11 @@ Tensor gemm_infp16_w8_ofp16_bias_act(
         case at::ScalarType::BFloat16: {
             if (quant_type == torch::kInt8) {
                 output_tensor = fused_gemm_dq_bias_act_helper<__nv_bfloat16, uint8_t>(
-                    input_activations, weight, scales, bias, activation_type,tile_config,split_k_style,split_k_factor,stages);
+                    output_tensor,input_activations, weight, scales, bias, activation_type,tile_config,split_k_style,split_k_factor,stages);
             }
             else if (quant_type == at::ScalarType::QUInt4x2) {
                 output_tensor = fused_gemm_dq_bias_act_helper<__nv_bfloat16, cutlass::uint4b_t>(
-                    input_activations, weight, scales, bias, activation_type,tile_config,split_k_style,split_k_factor,stages);
+                    output_tensor,input_activations, weight, scales, bias, activation_type,tile_config,split_k_style,split_k_factor,stages);
             }
             else {
                 std::string err_msg = "Unsupported weight type " + std::string(at::toString(quant_type));

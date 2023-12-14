@@ -196,6 +196,168 @@ void generic_mixed_gemm_kernelLauncher(const T*          A,
 #endif
 }
 
+
+template<typename T,
+         typename WeightType,
+         typename arch,
+         typename EpilogueTag,
+         typename ThreadblockShape,
+         typename WarpShape,
+         int Stages>
+void generic_mixed_gemm_kernel_warmLauncher(const T*          A,
+                                       const WeightType* B,
+                                       const T*          weight_scales,
+                                       const T*          biases,
+                                       T*                C,
+                                       int               m,
+                                       int               n,
+                                       int               k,
+                                       CutlassGemmConfig gemm_config,
+                                       char*             workspace,
+                                       size_t            workspace_bytes,
+                                       cudaStream_t      stream,
+                                       int*              occupancy = nullptr)
+{
+    FT_LOG_DEBUG(__PRETTY_FUNCTION__);
+#ifdef BUILD_CUTLASS_MIXED_GEMM
+
+#ifdef ENABLE_BF16
+    static_assert(cutlass::platform::is_same<T, __nv_bfloat16>::value || cutlass::platform::is_same<T, half>::value
+                      || cutlass::platform::is_same<T, float>::value,
+                  "Specialized for bfloat16, half, float");
+#else
+    static_assert(cutlass::platform::is_same<T, half>::value || cutlass::platform::is_same<T, float>::value,
+                  "Specialized for half, float");
+#endif
+
+    static_assert(cutlass::platform::is_same<T, WeightType>::value
+                      || cutlass::platform::is_same<WeightType, uint8_t>::value
+                      || cutlass::platform::is_same<WeightType, cutlass::uint4b_t>::value,
+                  "");
+
+    // The cutlass type for the input elements. This is needed to convert to cutlass::half_t if necessary.
+    using ElementType_ =
+        typename cutlass::platform::conditional<cutlass::platform::is_same<T, half>::value, cutlass::half_t, T>::type;
+#ifdef ENABLE_BF16
+    using ElementType =
+        typename cutlass::platform::conditional<cutlass::platform::is_same<ElementType_, __nv_bfloat16>::value,
+                                                cutlass::bfloat16_t,
+                                                ElementType_>::type;
+#else
+    using ElementType       = ElementType_;
+#endif
+
+    using CutlassWeightType_ = typename cutlass::platform::
+        conditional<cutlass::platform::is_same<WeightType, half>::value, cutlass::half_t, WeightType>::type;
+#ifdef ENABLE_BF16
+    using CutlassWeightType =
+        typename cutlass::platform::conditional<cutlass::platform::is_same<CutlassWeightType_, __nv_bfloat16>::value,
+                                                cutlass::bfloat16_t,
+                                                CutlassWeightType_>::type;
+#else
+    using CutlassWeightType = CutlassWeightType_;
+#endif
+
+    // We need separate config for each architecture since we will target different tensorcore instructions. For float,
+    // we do not target TCs.
+    using MixedGemmArchTraits = cutlass::gemm::kernel::MixedGemmArchTraits<ElementType, CutlassWeightType, arch>;
+    using ElementAccumulator  = typename MixedGemmArchTraits::AccType;
+
+    using EpilogueOp =
+        typename Epilogue<ElementType, MixedGemmArchTraits::ElementsPerAccessC, ElementAccumulator, EpilogueTag>::Op;
+
+    using GemmKernel_ = typename cutlass::gemm::kernel::DefaultGemm<
+        ElementType,
+        cutlass::layout::RowMajor,
+        MixedGemmArchTraits::ElementsPerAccessA,
+        CutlassWeightType,
+        typename MixedGemmArchTraits::LayoutB,
+        MixedGemmArchTraits::ElementsPerAccessB,
+        ElementType,
+        cutlass::layout::RowMajor,
+        ElementAccumulator,
+        cutlass::arch::OpClassTensorOp,
+        arch,
+        ThreadblockShape,
+        WarpShape,
+        typename MixedGemmArchTraits::InstructionShape,
+        EpilogueOp,
+        typename cutlass::gemm::threadblock::GemmIdentityThreadblockSwizzle<>,
+        Stages,
+        true,
+        typename MixedGemmArchTraits::Operator>::GemmKernel;
+
+    using GemmKernel = cutlass::gemm::kernel::GemmFpAIntB<typename GemmKernel_::Mma,
+                                                          typename GemmKernel_::Epilogue,
+                                                          typename GemmKernel_::ThreadblockSwizzle,
+                                                          arch,  // Ensure top level arch is used for dispatch
+                                                          GemmKernel_::kSplitKSerial>;
+
+    if (occupancy != nullptr) {
+        *occupancy = compute_occupancy_for_kernel<GemmKernel>();
+        return;
+    }
+
+    using Gemm = cutlass::gemm::device::GemmUniversalBase<GemmKernel>;
+
+    const int ldb =
+        cutlass::platform::is_same<cutlass::layout::RowMajor, typename MixedGemmArchTraits::LayoutB>::value ?
+            n :
+            k * GemmKernel::kInterleave;
+
+    typename Gemm::Arguments args({m, n, k},
+                                  {nullptr, k},
+                                  {nullptr, ldb},
+                                  {reinterpret_cast<ElementType*>(const_cast<T*>(weight_scales)), 0},
+                                  {nullptr, 0},
+                                  {nullptr, n},
+                                  gemm_config.split_k_factor,
+                                  {ElementAccumulator(1.f), ElementAccumulator(0.f)});
+
+    // This assertion is enabled because because for the column interleaved layout, K MUST be a multiple of
+    // threadblockK. The reason for this is that the default pitchlinear iterators are used to handle walking over the
+    // interleaved matrix. The way masking in handled in these do not map to the interleaved layout. We need to write
+    // our own predicated iterator in order to relax this limitation.
+    if (GemmKernel::kInterleave > 1
+        && ((k % MixedGemmArchTraits::ThreadblockK)
+            || ((k / gemm_config.split_k_factor) % MixedGemmArchTraits::ThreadblockK))) {
+        throw std::runtime_error("Temp assertion: k must be multiple of threadblockK");
+    }
+
+    Gemm gemm;
+    if (gemm.get_workspace_size(args) > workspace_bytes) {
+        FT_LOG_WARNING(
+            "Requested split-k but workspace size insufficient. Falling back to non-split-k implementation.");
+        // If requested split-k factor will require more workspace bytes, revert to standard gemm.
+        args.batch_count = 1;
+    }
+
+    auto can_implement = gemm.can_implement(args);
+    if (can_implement != cutlass::Status::kSuccess) {
+        std::string err_msg = "fpA_intB cutlass kernel will fail for params. Error: "
+                              + std::string(cutlassGetStatusString(can_implement));
+        throw std::runtime_error("[FT Error][fpA_intB Runner] " + err_msg);
+    }
+
+    auto init_status = gemm.initialize(args, workspace, stream);
+    if (init_status != cutlass::Status::kSuccess) {
+        std::string err_msg =
+            "Failed to initialize cutlass fpA_intB gemm. Error: " + std::string(cutlassGetStatusString(init_status));
+        throw std::runtime_error("[FT Error][fpA_intB Runner] " + err_msg);
+    }
+
+    auto run_status = gemm.run(stream);
+    if (run_status != cutlass::Status::kSuccess) {
+        std::string err_msg =
+            "Failed to run cutlass fpA_intB gemm. Error: " + std::string(cutlassGetStatusString(run_status));
+        throw std::runtime_error("[FT Error][fpA_intB Runner] " + err_msg);
+    }
+#else
+    throw std::runtime_error(
+        "[FT Error][fpA_intB] FasterTransformer was built was mixed gemm support off. Please rebuild with cmake option -DBUILD_CUTLASS_MIXED_GEMM=ON");
+#endif
+}
+
 template<typename T,
          typename WeightType,
          typename arch,
@@ -479,9 +641,9 @@ void CutlassFpAIntBGemmRunner<T, WeightType>::run_gemm<EpilogueTag>(const T*    
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
     // static constexpr bool          is_weight_only    = !std::is_same<T, WeightType>::value;
     // std::vector<CutlassGemmConfig> candidate_configs = get_candidate_configs(sm_, is_weight_only, false);
-    // std::vector<int>               occupancies(candidate_configs.size());
+    // std::vector<int>               occupancies(2);
 
-    // for (size_t ii = 0; ii < candidate_configs.size(); ++ii) {
+    // for (size_t ii = 0; ii < 2; ++ii) {//占用太多开销，所以可以丢弃，offline进行选择，但是与此同时，这里起到了warm up的作用。
     //     dispatch_to_arch<EpilogueTag>(A,
     //                                   B,
     //                                   weight_scales,
@@ -490,7 +652,7 @@ void CutlassFpAIntBGemmRunner<T, WeightType>::run_gemm<EpilogueTag>(const T*    
     //                                   m,
     //                                   n,
     //                                   k,
-    //                                   candidate_configs[ii],
+    //                                   chosen_config,
     //                                   workspace_ptr,
     //                                   workspace_bytes,
     //                                   stream,
@@ -508,7 +670,6 @@ void CutlassFpAIntBGemmRunner<T, WeightType>::run_gemm<EpilogueTag>(const T*    
     //                                                                         workspace_bytes,
     //                                                                         multi_processor_count_,
     //                                                                         is_weight_only);
-
     dispatch_to_arch<EpilogueTag>(
         A, B, weight_scales, biases, C, m, n, k, chosen_config, workspace_ptr, workspace_bytes, stream);
 }

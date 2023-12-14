@@ -14,35 +14,39 @@ enum class QuantType {
     PACKED_INT4_WEIGHT_ONLY
 };
 // using fastertransformer;
-Tensor gemm_in8_w8_ofp16_pt(Tensor input, //int8 * int8 -> fp16 per token 量化
+Tensor gemm_in8_w8_ofp16_pt(Tensor output, //int8 * int8 -> fp16 per token 量化
+                            Tensor input, 
                             Tensor weight,
                             Tensor alpha_col, 
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
                             int64_t k);
-Tensor gemm_in8_w8_ofp16_pc(Tensor input, // int8 * int8 -> fp16 per channel 量化
+Tensor gemm_in8_w8_ofp16_pc(Tensor output,
+                            Tensor input, // int8 * int8 -> fp16 per channel 量化
                             Tensor weight,
                             Tensor alpha_col, 
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
                             int64_t k);
-Tensor gemm_in8_w8_ofp16_ptpc(Tensor input,// int8 * int8 -> fp16 per token per channel 量化
+Tensor gemm_in8_w8_ofp16_ptpc(Tensor output,
+                            Tensor input,// int8 * int8 -> fp16 per token per channel 量化
                             Tensor weight,
                             Tensor alpha_col, 
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
                             int64_t k);
-Tensor gemm_infp16_w8_ofp16(Tensor input_activations, // int8 * fp16 -> fp16 weight only 量化
+Tensor gemm_infp16_w8_ofp16(Tensor output_tensor,
+                            Tensor input_activations, // int8 * fp16 -> fp16 weight only 量化
                             Tensor weight, 
                             Tensor scales,
                             int               tile_config,
                             int               split_k_style,
                             int               split_k_factor,
                             int               stages);
-Tensor gemm_infp16_w8_ofp16_bias_act(
+Tensor gemm_infp16_w8_ofp16_bias_act(Tensor output_tensor,
                             Tensor input_activations, 
                             Tensor weight,
                              Tensor scales, 

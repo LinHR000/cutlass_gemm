@@ -10,7 +10,8 @@ using torch::Tensor;
 using torch_ext::get_ptr;
 
 namespace ft = fastertransformer;
-Tensor gemm_in8_w8_ofp16_per_tensor(Tensor&         input,
+Tensor gemm_in8_w8_ofp16_per_tensor(Tensor&         output,
+                                Tensor&         input,
                                 Tensor&            weight,
                                 c10::optional<torch::Tensor>&            bias,
                                 float             alpha, 
@@ -22,14 +23,14 @@ Tensor gemm_in8_w8_ofp16_per_tensor(Tensor&         input,
                                 const int               stages,
                                 const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Half;
-    Tensor output;
-    if (input.dim() == 2){
-        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else if (input.dim() == 3){
-        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else{
-        throw std::runtime_error("Invalid rank for activations");
-    }
+    // Tensor output;
+    // if (input.dim() == 2){
+    //     output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else if (input.dim() == 3){
+    //     output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
     // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
@@ -58,7 +59,8 @@ Tensor gemm_in8_w8_ofp16_per_tensor(Tensor&         input,
     return output;
 }
 
-Tensor gemm_in8_w8_obf16_per_tensor(Tensor&         input,
+Tensor gemm_in8_w8_obf16_per_tensor(Tensor&         output,
+                                Tensor&         input,
                                 Tensor&            weight,
                                 c10::optional<torch::Tensor>&            bias,
                                 float             alpha, 
@@ -70,14 +72,14 @@ Tensor gemm_in8_w8_obf16_per_tensor(Tensor&         input,
                                 const int               stages,
                                 const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::BFloat16;
-    Tensor output;
-    if (input.dim() == 2){
-        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else if (input.dim() == 3){
-        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else{
-        throw std::runtime_error("Invalid rank for activations");
-    }
+    // Tensor output;
+    // if (input.dim() == 2){
+    //     output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else if (input.dim() == 3){
+    //     output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
     // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
@@ -147,7 +149,8 @@ Tensor gemm_in8_w8_obf16_per_tensor(Tensor&         input,
 // }
 
 
-Tensor gemm_in8_w8_o8_per_tensor(Tensor         input,
+Tensor gemm_in8_w8_o8_per_tensor(Tensor&         output,
+                                Tensor         input,
                                 Tensor            weight,
                                 float             alpha, 
                                 float             beta,
@@ -158,14 +161,14 @@ Tensor gemm_in8_w8_o8_per_tensor(Tensor         input,
                                 const int               stages,
                                 const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Char;
-    Tensor output;
-    if (input.dim() == 2){
-        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else if (input.dim() == 3){
-        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else{
-        throw std::runtime_error("Invalid rank for activations");
-    }
+    // Tensor output;
+    // if (input.dim() == 2){
+    //     output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else if (input.dim() == 3){
+    //     output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
     // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
@@ -187,7 +190,8 @@ Tensor gemm_in8_w8_o8_per_tensor(Tensor         input,
     return output;                               
  }
 
-Tensor gemm_in8_w8_o32_per_tensor(Tensor         input,
+Tensor gemm_in8_w8_o32_per_tensor(Tensor&         output,
+                                Tensor         input,
                                 Tensor            weight,
                                 float             alpha, 
                                 float             beta,
@@ -198,14 +202,14 @@ Tensor gemm_in8_w8_o32_per_tensor(Tensor         input,
                                 const int               stages,
                                 const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Int;
-    Tensor output;
-    if (input.dim() == 2){
-        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else if (input.dim() == 3){
-        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else{
-        throw std::runtime_error("Invalid rank for activations");
-    }
+    // Tensor output;
+    // if (input.dim() == 2){
+    //     output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else if (input.dim() == 3){
+    //     output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
     // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm=80;
@@ -227,7 +231,8 @@ Tensor gemm_in8_w8_o32_per_tensor(Tensor         input,
     return output;                                
 }  
 
-Tensor gemm_in8_w8_ofp16_per_tensor_splitk(Tensor         input,
+Tensor gemm_in8_w8_ofp16_per_tensor_splitk(Tensor&         output,
+                                        Tensor         input,
                                         Tensor            weight,
                                         float             alpha, 
                                         float             beta,
@@ -238,14 +243,14 @@ Tensor gemm_in8_w8_ofp16_per_tensor_splitk(Tensor         input,
                                         const int               stages,
                                         const int               splitK){
     at::ScalarType output_data_type = at::ScalarType::Half;
-    Tensor output;
-    if (input.dim() == 2){
-        output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else if (input.dim() == 3){
-        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else{
-        throw std::runtime_error("Invalid rank for activations");
-    }
+    // Tensor output;
+    // if (input.dim() == 2){
+    //     output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else if (input.dim() == 3){
+    //     output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
     // Tensor output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     int sm = 80;
