@@ -510,43 +510,44 @@ void CutlassInt8GemmRunner<T>::run_gemm(const int8_t* A,
                                         int           m,
                                         int           n,
                                         int           k,
+                                        CutlassGemmConfig    chosen_config,
                                         char*         workspace_ptr,
                                         const size_t  workspace_bytes,
                                         cudaStream_t  stream)
 {
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-    static constexpr bool          is_weight_only    = false;
-    std::vector<CutlassGemmConfig> candidate_configs = get_candidate_configs(sm_, is_weight_only, false);
-    std::vector<int>               occupancies(candidate_configs.size());
+    // static constexpr bool          is_weight_only    = false;
+    // std::vector<CutlassGemmConfig> candidate_configs = get_candidate_configs(sm_, is_weight_only, false);
+    // std::vector<int>               occupancies(candidate_configs.size());
 
-    for (size_t ii = 0; ii < candidate_configs.size(); ++ii) {
-        dispatch_to_arch(A,
-                         B,
-                         quant_mode,
-                         alpha_col,
-                         alpha_row,
-                         C,
-                         m,
-                         n,
-                         k,
-                         candidate_configs[ii],
-                         workspace_ptr,
-                         workspace_bytes,
-                         stream,
-                         &occupancies[ii]);
-    }
-    // Standard GEMM, so 1 "expert". We use the same function for MoE and regular FFN.
-    static constexpr int num_experts   = 1;
-    CutlassGemmConfig    chosen_config = estimate_best_config_from_occupancies(candidate_configs,
-                                                                            occupancies,
-                                                                            m,
-                                                                            n,
-                                                                            k,
-                                                                            num_experts,
-                                                                            split_k_limit,
-                                                                            workspace_bytes,
-                                                                            multi_processor_count_,
-                                                                            is_weight_only);
+    // for (size_t ii = 0; ii < candidate_configs.size(); ++ii) {
+    //     dispatch_to_arch(A,
+    //                      B,
+    //                      quant_mode,
+    //                      alpha_col,
+    //                      alpha_row,
+    //                      C,
+    //                      m,
+    //                      n,
+    //                      k,
+    //                      candidate_configs[ii],
+    //                      workspace_ptr,
+    //                      workspace_bytes,
+    //                      stream,
+    //                      &occupancies[ii]);
+    // }
+    // // Standard GEMM, so 1 "expert". We use the same function for MoE and regular FFN.
+    // static constexpr int num_experts   = 1;
+    // CutlassGemmConfig    chosen_config = estimate_best_config_from_occupancies(candidate_configs,
+    //                                                                         occupancies,
+    //                                                                         m,
+    //                                                                         n,
+    //                                                                         k,
+    //                                                                         num_experts,
+    //                                                                         split_k_limit,
+    //                                                                         workspace_bytes,
+    //                                                                         multi_processor_count_,
+    //                                                                         is_weight_only);
 
     dispatch_to_arch(
         A, B, quant_mode, alpha_col, alpha_row, C, m, n, k, chosen_config, workspace_ptr, workspace_bytes, stream);
@@ -562,12 +563,21 @@ void CutlassInt8GemmRunner<T>::gemm(const int8_t* A,
                                     int           m,
                                     int           n,
                                     int           k,
+                                    int           tile_config,
+                                    int           split_k_style,
+                                    int           split_k_factor,
+                                    int           stages,
                                     char*         workspace_ptr,
                                     const size_t  workspace_bytes,
                                     cudaStream_t  stream)
 {
     FT_LOG_DEBUG(__PRETTY_FUNCTION__);
-    run_gemm(A, B, quant_mode, alpha_row, alpha_col, C, m, n, k, workspace_ptr, workspace_bytes, stream);
+    CutlassGemmConfig    chosen_config;
+    chosen_config.tile_config = static_cast<CutlassTileConfig>(tile_config);
+    chosen_config.split_k_style = static_cast<SplitKStyle>(split_k_style);
+    chosen_config.split_k_factor = split_k_factor;
+    chosen_config.stages = stages; 
+    run_gemm(A, B, quant_mode, alpha_row, alpha_col, C, m, n, k, chosen_config, workspace_ptr, workspace_bytes, stream);
 }
 
 template<typename T>

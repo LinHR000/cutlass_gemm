@@ -50,6 +50,10 @@ public:
               int           m,
               int           n,
               int           k,
+              int               tile_config,
+              int               split_k_style,
+              int               split_k_factor,
+              int               stages,
               char*         workspace_ptr,
               const size_t  workspace_bytes,
               cudaStream_t  stream);
@@ -82,6 +86,7 @@ private:
                   int           m,
                   int           n,
                   int           k,
+                  CutlassGemmConfig    chosen_config,
                   char*         workspace_ptr,
                   const size_t  workspace_bytes,
                   cudaStream_t  stream);
