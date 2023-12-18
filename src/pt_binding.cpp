@@ -21,7 +21,11 @@ Tensor gemm_in8_w8_ofp16_pt(Tensor output, //int8 * int8 -> fp16 per token 量�
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
-                            int64_t k);
+                            int64_t k,
+                            int     tile_config,
+                            int     split_k_style,
+                            int     split_k_factor,
+                            int     stages);
 Tensor gemm_in8_w8_ofp16_pc(Tensor output,
                             Tensor input, // int8 * int8 -> fp16 per channel 量化
                             Tensor weight,
@@ -29,7 +33,11 @@ Tensor gemm_in8_w8_ofp16_pc(Tensor output,
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
-                            int64_t k);
+                            int64_t k,
+                            int     tile_config,
+                            int     split_k_style,
+                            int     split_k_factor,
+                            int     stages);
 Tensor gemm_in8_w8_ofp16_ptpc(Tensor output,
                             Tensor input,// int8 * int8 -> fp16 per token per channel 量化
                             Tensor weight,
@@ -37,7 +45,11 @@ Tensor gemm_in8_w8_ofp16_ptpc(Tensor output,
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
-                            int64_t k);
+                            int64_t k,
+                            int     tile_config,
+                            int     split_k_style,
+                            int     split_k_factor,
+                            int     stages);
 Tensor gemm_infp16_w8_ofp16(Tensor output_tensor,
                             Tensor input_activations, // int8 * fp16 -> fp16 weight only 量化
                             Tensor weight, 

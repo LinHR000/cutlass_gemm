@@ -26,7 +26,11 @@ Tensor gemm_in8_w8_ofp16_pt(Tensor output,
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
-                            int64_t k){
+                            int64_t k,
+                            int     tile_config,
+                            int     split_k_style,
+                            int     split_k_factor,
+                            int     stages){
     at::ScalarType output_data_type = at::ScalarType::Half;
     const at::ScalarType at_fp32  = at::ScalarType::Float;
     ft::CutlassInt8GemmRunner<half> cutlass_runner_half;
@@ -50,6 +54,10 @@ Tensor gemm_in8_w8_ofp16_pt(Tensor output,
             m,
             n,
             k,
+            tile_config,
+            split_k_style,
+            split_k_factor,
+            stages,
             nullptr,
             0,
             stream);
@@ -63,7 +71,11 @@ Tensor gemm_in8_w8_ofp16_pc(Tensor output,
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
-                            int64_t k){
+                            int64_t k,
+                            int     tile_config,
+                            int     split_k_style,
+                            int     split_k_factor,
+                            int     stages){
     at::ScalarType output_data_type = at::ScalarType::Half;
     const at::ScalarType at_fp32  = at::ScalarType::Float;
     ft::CutlassInt8GemmRunner<half> cutlass_runner_half;
@@ -87,6 +99,10 @@ Tensor gemm_in8_w8_ofp16_pc(Tensor output,
             m,
             n,
             k,
+            tile_config,
+            split_k_style,
+            split_k_factor,
+            stages,
             nullptr,
             0,
             stream);
@@ -100,7 +116,11 @@ Tensor gemm_in8_w8_ofp16_ptpc(Tensor output,
                             Tensor alpha_row,
                             int64_t m,
                             int64_t n,
-                            int64_t k){
+                            int64_t k,
+                            int     tile_config,
+                            int     split_k_style,
+                            int     split_k_factor,
+                            int     stages){
     at::ScalarType output_data_type = at::ScalarType::Half;
     const at::ScalarType at_fp32  = at::ScalarType::Float;
     ft::CutlassInt8GemmRunner<half> cutlass_runner_half;
@@ -124,6 +144,10 @@ Tensor gemm_in8_w8_ofp16_ptpc(Tensor output,
             m,
             n,
             k,
+            tile_config,
+            split_k_style,
+            split_k_factor,
+            stages,
             nullptr,
             0,
             stream);
