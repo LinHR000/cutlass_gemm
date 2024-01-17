@@ -61,6 +61,19 @@ public:
     // Returns desired workspace size in bytes.
     int getWorkspaceSize(const int m, const int n, const int k);
 
+    std::vector<int> run_gemm_config(const int8_t* A,
+                                    const int8_t* B,
+                                    QuantMode     quant_mode,
+                                    const float*  alpha_col,
+                                    const float*  alpha_row,
+                                    T*            C,
+                                    int           m,
+                                    int           n,
+                                    int           k,
+                                    char*         workspace_ptr,
+                                    const size_t  workspace_bytes,
+                                    cudaStream_t  stream);
+
 private:
     void dispatch_to_arch(const int8_t*     A,
                           const int8_t*     B,

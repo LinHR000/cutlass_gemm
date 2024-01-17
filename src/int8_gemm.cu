@@ -154,6 +154,44 @@ Tensor gemm_in8_w8_ofp16_ptpc(Tensor output,
     return output;
 }
 
+std::vector<int> gemm_in8_w8_ofp16_config(Tensor output,
+                            Tensor input,
+                            Tensor weight,
+                            Tensor alpha_col, 
+                            Tensor alpha_row,
+                            int64_t m,
+                            int64_t n,
+                            int64_t k){
+    at::ScalarType output_data_type = at::ScalarType::Half;
+    const at::ScalarType at_fp32  = at::ScalarType::Float;
+    ft::CutlassInt8GemmRunner<half> cutlass_runner_half;
+    // Tensor output;
+    // if (input.dim() == 2){
+    //     output = torch::zeros({m, n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else if (input.dim() == 3){
+    //     output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    // }else{
+    //     throw std::runtime_error("Invalid rank for activations");
+    // }
+
+    auto stream = at::cuda::getCurrentCUDAStream().stream();
+    QuantMode quant_mode = QuantMode::PerTokenQuant;
+    
+    std::vector<int> out = cutlass_runner_half.run_gemm_config(get_ptr<int8_t>(input),
+            get_ptr<int8_t>(weight),
+            quant_mode,
+            get_ptr<float>(alpha_col),
+            get_ptr<float>(alpha_row),
+            get_ptr<half>(output),
+            m,
+            n,
+            k,
+            nullptr,
+            0,
+            stream);
+    return out;
+}
+
 // TORCH_LIBRARY(gemm_dq_int8_ops, m)
 // {
 //     m.def("int8_gemm_dq", int8_gemm_dq);

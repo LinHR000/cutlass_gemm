@@ -71,7 +71,16 @@ Tensor gemm_infp16_w8_ofp16_bias_act(Tensor output_tensor,
 std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight,
                                                                     int quant_mode);
                                                                     
-std::vector<int> choose_best_config_half(Tensor input_activations, Tensor weight, Tensor scales);                                                 
+std::vector<int> choose_best_config_half(Tensor input_activations, Tensor weight, Tensor scales);    
+
+std::vector<int> gemm_in8_w8_ofp16_config(Tensor output,
+                            Tensor input,
+                            Tensor weight,
+                            Tensor alpha_col, 
+                            Tensor alpha_row,
+                            int64_t m,
+                            int64_t n,
+                            int64_t k);
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def(
@@ -105,5 +114,9 @@ m.def(
 m.def(
     "choose_best_config_half",
     &choose_best_config_half,
+    "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "gemm_in8_w8_ofp16_config",
+    &gemm_in8_w8_ofp16_config,
     "Compute the attention between an input query and the cached key/value tensors");
 }
