@@ -14,8 +14,17 @@
  * limitations under the License.
  */
 
-#include "cutlass_kernels/int8_gemm/int8_gemm_template.h"
+#include "tensorrt_llm/kernels/cutlass_kernels/int8_gemm/int8_gemm_template.h"
 
-namespace fastertransformer {
+namespace tensorrt_llm
+{
+namespace kernels
+{
+namespace cutlass_kernels
+{
+
 template class CutlassInt8GemmRunner<int32_t>;
-}  // namespace fastertransformer
+
+} // namespace cutlass_kernels
+} // namespace kernels
+} // namespace tensorrt_llm

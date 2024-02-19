@@ -14,10 +14,19 @@
  * limitations under the License.
  */
 
-#include "cutlass_kernels/int8_gemm/int8_gemm_template.h"
+#include "tensorrt_llm/kernels/cutlass_kernels/int8_gemm/int8_gemm_template.h"
 
-namespace fastertransformer {
+namespace tensorrt_llm
+{
+namespace kernels
+{
+namespace cutlass_kernels
+{
+
 #ifdef ENABLE_BF16
 template class CutlassInt8GemmRunner<__nv_bfloat16>;
 #endif
-}  // namespace fastertransformer
+
+} // namespace cutlass_kernels
+} // namespace kernels
+} // namespace tensorrt_llm

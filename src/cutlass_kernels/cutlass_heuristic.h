@@ -16,22 +16,25 @@
 
 #pragma once
 
-#include "cutlass_extensions/ft_gemm_configs.h"
-#include "utils/cuda_utils.h"
+#include "cutlass_extensions/gemm_configs.h"
+#include "tensorrt_llm/common/cudaUtils.h"
 
-namespace fastertransformer {
+namespace tensorrt_llm
+{
+namespace kernels
+{
+namespace cutlass_kernels
+{
 
-std::vector<CutlassGemmConfig> get_candidate_configs(int sm, const bool is_weight_only, const bool simt_configs_only);
+std::vector<tensorrt_llm::cutlass_extensions::CutlassGemmConfig> get_candidate_configs(int sm,
+    const bool is_weight_only, const bool simt_configs_only, const bool int8_configs_only = false,
+    const int max_split_k = 1, const bool enable_hopper_gmma = false);
 
-CutlassGemmConfig estimate_best_config_from_occupancies(const std::vector<CutlassGemmConfig>& candidate_configs,
-                                                        const std::vector<int>&               occupancies,
-                                                        const int64_t                         m,
-                                                        const int64_t                         n,
-                                                        const int64_t                         k,
-                                                        const int64_t                         num_experts,
-                                                        const int                             split_k_limit,
-                                                        const size_t                          workspace_bytes,
-                                                        const int                             multi_processor_count,
-                                                        const int                             is_weight_only);
+tensorrt_llm::cutlass_extensions::CutlassGemmConfig estimate_best_config_from_occupancies(
+    const std::vector<tensorrt_llm::cutlass_extensions::CutlassGemmConfig>& candidate_configs,
+    const std::vector<int>& occupancies, const int64_t m, const int64_t n, const int64_t k, const int64_t num_experts,
+    const int split_k_limit, const size_t workspace_bytes, const int multi_processor_count, const int is_weight_only);
 
-}  // namespace fastertransformer
+} // namespace cutlass_kernels
+} // namespace kernels
+} // namespace tensorrt_llm

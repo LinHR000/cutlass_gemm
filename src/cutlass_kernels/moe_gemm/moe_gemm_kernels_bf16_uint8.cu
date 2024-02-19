@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-#include "cutlass_kernels/moe_gemm/moe_gemm_kernels_template.h"
+#include "tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels_template.h"
 
-namespace fastertransformer {
+namespace tensorrt_llm
+{
 #ifdef ENABLE_BF16
 template class MoeGemmRunner<__nv_bfloat16, uint8_t>;
 #endif
-}  // namespace fastertransformer
+} // namespace tensorrt_llm

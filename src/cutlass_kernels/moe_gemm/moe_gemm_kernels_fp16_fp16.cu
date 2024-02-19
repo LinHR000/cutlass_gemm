@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include "cutlass_kernels/moe_gemm/moe_gemm_kernels_template.h"
+#include "tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels_template.h"
 
-namespace fastertransformer {
+namespace tensorrt_llm
+{
 template class MoeGemmRunner<half, half>;
 }

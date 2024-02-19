@@ -16,99 +16,78 @@
 
 #pragma once
 
-#include "cutlass_extensions/include/cutlass_extensions/epilogue/epilogue_quant_helper.h"
-#include "cutlass_extensions/include/cutlass_extensions/ft_gemm_configs.h"
-#include "utils/activation_types.h"
-#include "utils/allocator.h"
+#include "cutlass_extensions/gemm_configs.h"
+#include "tensorrt_llm/common/quantization.h"
 #include <cuda_runtime_api.h>
 
-using cutlass::epilogue::QuantMode;
-namespace fastertransformer {
+namespace tk = tensorrt_llm::common;
+namespace tkc = tensorrt_llm::cutlass_extensions;
+
+namespace tensorrt_llm
+{
+namespace kernels
+{
+namespace cutlass_kernels
+{
 
 /*
   This runner supports:
   int8_t inputs (A and B)
   float alpha scalings (either per-col, or per-col x per-row)
-  T output (D) where T = {float, half, __nv_bfloat16} // TODO(mseznec)
+  T output (D) where T = {float, half, __nv_bfloat16} // TODO
 
   Activations, biases, scales and outputs are all assumed to be row-major.
   Weights are assumed to be column-major.
 */
 
-template<typename T>
-class CutlassInt8GemmRunner {
+class CutlassInt8GemmRunnerInterface
+{
+public:
+    CutlassInt8GemmRunnerInterface() {}
+
+    virtual ~CutlassInt8GemmRunnerInterface() {}
+
+    virtual void gemm(const int8_t* A, const int8_t* B, tk::QuantMode quantOption, const float* alphaCol,
+        const float* alphaRow, void* C, int m, int n, int k, tkc::CutlassGemmConfig gemmConfig, char* workspacePtr,
+        const size_t workspaceBytes, cudaStream_t stream)
+        = 0;
+
+    // Returns desired workspace size in bytes.
+    virtual size_t getWorkspaceSize(const int m, const int n, const int k) = 0;
+
+    virtual std::vector<tkc::CutlassGemmConfig> getConfigs() const = 0;
+
+protected:
+    static constexpr int SPLIT_K_LIMIT = 7;
+    static constexpr int MIN_M_TILE = 32;
+    static constexpr int MIN_N_TILE = 64;
+};
+
+template <typename T>
+class CutlassInt8GemmRunner : public virtual CutlassInt8GemmRunnerInterface
+{
 public:
     CutlassInt8GemmRunner();
     ~CutlassInt8GemmRunner();
 
-    void gemm(const int8_t* A,
-              const int8_t* B,
-              QuantMode     quant_mode,
-              const float*  alpha_col,
-              const float*  alpha_row,
-              T*            C,
-              int           m,
-              int           n,
-              int           k,
-              int               tile_config,
-              int               split_k_style,
-              int               split_k_factor,
-              int               stages,
-              char*         workspace_ptr,
-              const size_t  workspace_bytes,
-              cudaStream_t  stream);
+    void gemm(const int8_t* A, const int8_t* B, tk::QuantMode quantOption, const float* alphaCol, const float* alphaRow,
+        void* C, int m, int n, int k, tkc::CutlassGemmConfig gemmConfig, char* workspacePtr,
+        const size_t workspaceBytes, cudaStream_t stream) override;
 
     // Returns desired workspace size in bytes.
-    int getWorkspaceSize(const int m, const int n, const int k);
+    size_t getWorkspaceSize(const int m, const int n, const int k) override;
 
-    std::vector<int> run_gemm_config(const int8_t* A,
-                                    const int8_t* B,
-                                    QuantMode     quant_mode,
-                                    const float*  alpha_col,
-                                    const float*  alpha_row,
-                                    T*            C,
-                                    int           m,
-                                    int           n,
-                                    int           k,
-                                    char*         workspace_ptr,
-                                    const size_t  workspace_bytes,
-                                    cudaStream_t  stream);
+    std::vector<tkc::CutlassGemmConfig> getConfigs() const override;
 
 private:
-    void dispatch_to_arch(const int8_t*     A,
-                          const int8_t*     B,
-                          QuantMode         quant_mode,
-                          const float*      alpha_col,
-                          const float*      alpha_row,
-                          T*                C,
-                          int               m,
-                          int               n,
-                          int               k,
-                          CutlassGemmConfig gemm_config,
-                          char*             workspace_ptr,
-                          const size_t      workspace_bytes,
-                          cudaStream_t      stream,
-                          int*              occupancy = nullptr);
+    void dispatchToArch(const int8_t* A, const int8_t* B, tk::QuantMode quantOption, const float* alphaCol,
+        const float* alphaRow, T* C, int m, int n, int k, tkc::CutlassGemmConfig gemmConfig, char* workspacePtr,
+        const size_t workspaceBytes, cudaStream_t stream, int* occupancy = nullptr);
 
-    void run_gemm(const int8_t* A,
-                  const int8_t* B,
-                  QuantMode     quant_mode,
-                  const float*  alpha_col,
-                  const float*  alpha_row,
-                  T*            C,
-                  int           m,
-                  int           n,
-                  int           k,
-                  CutlassGemmConfig    chosen_config,
-                  char*         workspace_ptr,
-                  const size_t  workspace_bytes,
-                  cudaStream_t  stream);
-
-private:
-    static constexpr int split_k_limit = 7;
-
-    int sm_;
-    int multi_processor_count_;
+    int mSm;
+    int mMultiProcessorCount;
 };
 
-}  // namespace fastertransformer
+} // namespace cutlass_kernels
+} // namespace kernels
+} // namespace tensorrt_llm
