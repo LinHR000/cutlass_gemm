@@ -4,7 +4,7 @@
 #include "torch/csrc/cuda/Stream.h"
 #include <torch/custom_class.h>
 #include <torch/script.h>
-#include "tensorrt_llm//kernels/moe_gemm/moe_gemm_kernels.h"
+#include "tensorrt_llm/kernels/moe_gemm/moe_gemm_kernels.h"
 #include "utils/th_utils.h"
 using torch::Tensor;
 using torch_ext::get_ptr;
@@ -85,6 +85,14 @@ Tensor moe_gemm(Tensor&         input,
         throw std::runtime_error("unsupported data type");
     }
 
+    //get gemm config
+    if (tile_config != -1) {
+        gemm_config = CutlassGemmConfig(CutlassTileConfig(tile_config), SplitKStyle(split_k_style), split_k_factor, stages);
+    }else{
+        gemm_config = nullptr;
+    }
+
+
     // run the moe gemm
     if (use_bias){ // use bias api
         cutlass_runner.moeGemmBiasAct(input_ptr,
@@ -98,10 +106,6 @@ Tensor moe_gemm(Tensor&         input,
                                       gemm_k,
                                       num_experts,
                                       ActivationType(activation_type),
-                                      tile_config,
-                                      split_k_style,
-                                      split_k_factor,
-                                      stages
                                       stream);
     } else{
         cutlass_runner.moeGemm(input_ptr,
@@ -115,10 +119,6 @@ Tensor moe_gemm(Tensor&         input,
                               gemm_k,
                               num_experts,
                               ActivationType(activation_type),
-                              tile_config,
-                              split_k_style,
-                              split_k_factor,
-                              stages
                               stream);
     }
     return output;

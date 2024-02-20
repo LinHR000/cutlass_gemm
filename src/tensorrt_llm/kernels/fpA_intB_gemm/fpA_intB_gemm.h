@@ -97,20 +97,20 @@ public:
     ~CutlassFpAIntBGemmRunner();
 
     void gemm(const void* A, const void* B, const void* weight_scales, void* C, int m, int n, int k,
-        tkc::CutlassGemmConfig gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
+              std::optional<tkc::CutlassGemmConfig> gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
         cudaStream_t stream) override;
 
     void gemm(const void* A, const void* B, const void* weight_scales, const float alpha, void* C, int m, int n, int k,
-        tkc::CutlassGemmConfig gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
+        std::optional<tkc::CutlassGemmConfig> gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
         cudaStream_t stream) override;
 
     void gemm(const void* A, const void* B, const void* weight_scales, const void* weight_zero_points,
-        const void* biases, void* C, int m, int n, int k, const int group_size, tkc::CutlassGemmConfig gemmConfig,
+        const void* biases, void* C, int m, int n, int k, const int group_size, std::optional<tkc::CutlassGemmConfig> gemmConfig,
         char* workspace_ptr, const size_t workspace_bytes, cudaStream_t stream) override;
 
     void gemm(const void* A, const void* B, const void* weight_scales, const void* weight_zero_points,
         const void* biases, const float alpha, void* C, int m, int n, int k, const int group_size,
-        tkc::CutlassGemmConfig gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
+              std::optional<tkc::CutlassGemmConfig> gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
         cudaStream_t stream) override;
 
     // Disabled since the fused GEMM, activation kernels will not be used in v1.
