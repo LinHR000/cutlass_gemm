@@ -4,8 +4,8 @@
 #include "torch/csrc/cuda/Stream.h"
 #include <torch/custom_class.h>
 #include <torch/script.h>
-#include "tensorrt_llm/kernels/fpA_intB_gemm/fpA_intB_gemm.h"
-#include "utils/th_utils.h"
+#include "tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm.h"
+#include "tensorrt_llm/thop/thUtils.h"
 using torch::Tensor;
 using torch_ext::get_ptr;
 using tensorrt_llm;

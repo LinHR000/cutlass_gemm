@@ -468,8 +468,9 @@ inline void print_element_(half x)
 }
 #ifdef ENABLE_BF16
 inline void print_element_(__nv_bfloat16 x)
-{
-    print_float_((float) x);
+{   
+    float f = __bfloat162float(x);
+    print_float_(f);
 }
 #endif
 inline void print_element_(uint32_t ul)

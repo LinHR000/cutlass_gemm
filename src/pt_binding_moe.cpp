@@ -4,11 +4,13 @@
 #include "torch/csrc/cuda/Stream.h"
 #include <torch/custom_class.h>
 #include <torch/script.h>
-#include "tensorrt_llm/kernels/moe_gemm/moe_gemm_kernels.h"
-#include "utils/th_utils.h"
+#include "tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels.h"
+#include "tensorrt_llm/thop/thUtils.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/numeric_types.h"
 using torch::Tensor;
 using torch_ext::get_ptr;
-using tensorrt_llm;
+// using tensorrt_llm;
 
 Tensor moe_gemm(Tensor&         input,
                 Tensor&         weight,
@@ -31,53 +33,215 @@ Tensor moe_gemm(Tensor&         input,
     auto stream = at::cuda::getCurrentCUDAStream().stream();
     bool allocate_out = out ? false : true;
     at::ScalarType output_data_type = input.scalar_type();
-    if (input.dim() == 2){
-        output = torch::zeros({input.size(0), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-    }else if (input.dim() == 3){
-        output = torch::empty({input.size(0),input.size(1), n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+    Tensor output;
+    if (allocate_out){
+        if (input.dim() == 2){
+            output = torch::zeros({input.size(0), gemm_n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+        }else if (input.dim() == 3){
+            output = torch::empty({input.size(0),input.size(1), gemm_n}, torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+        }else{
+            throw std::runtime_error("Invalid rank for activations");
+        }
     }else{
-        throw std::runtime_error("Invalid rank for activations");
+        output = *out;
     }
-    void *input_ptr, *weight_ptr, *weight_scales_ptr, *bias_ptr, *output_ptr;
+
+    tensorrt_llm::cutlass_extensions::CutlassGemmConfig* gemm_config;
+    //get gemm config
+    if (tile_config != -1) {
+        gemm_config = new tensorrt_llm::cutlass_extensions::CutlassGemmConfig(tensorrt_llm::cutlass_extensions::CutlassTileConfig(tile_config), 
+                                                                            tensorrt_llm::cutlass_extensions::SplitKStyle(split_k_style), 
+                                                                            split_k_factor, stages);
+    }else{
+        gemm_config = nullptr;
+    }
+
     // according input data type, initialize the moe gemm runner and choose the corresponding gemm function
     bool use_bias = bias ? true : false;
+    bool use_weight_scales = weight_scales ? true : false;
     if (input.scalar_type() == at::ScalarType::Half){
-        input_ptr = get_ptr<half>(input);
-        weight_scales_ptr = get_ptr<half>(weight_scales);
-        if (use_bias){
-            bias_ptr = get_ptr<half>(bias);
-        }
-        output_ptr = get_ptr<half>(output);
         // according weight data type, choose the corresponding gemm function
+        half* bias_ptr = bias ? reinterpret_cast<half*>(bias.value().data_ptr()) : nullptr;
+        half* weight_scales_ptr = weight_scales ? reinterpret_cast<half*>(weight_scales.value().data_ptr()) : nullptr;
         if (weight.scalar_type() == at::ScalarType::Half){
-            MoeGemmRunner<half,half> cutlass_runner;
-            weight_ptr = get_ptr<half>(weight);
+            tensorrt_llm::MoeGemmRunner<half,half> cutlass_runner;
+                // run the moe gemm
+            if (use_bias){ // use bias api
+                cutlass_runner.moeGemmBiasAct(get_ptr<half>(input),
+                                            get_ptr<half>(weight),
+                                            weight_scales_ptr,
+                                            bias_ptr,
+                                            get_ptr<half>(output),
+                                            &total_rows_before_expert,
+                                            total_rows,
+                                            gemm_n,
+                                            gemm_k,
+                                            num_experts,
+                                            tensorrt_llm::ActivationType(activation_type),
+                                            stream);
+            } 
+            else{
+                cutlass_runner.moeGemm(get_ptr<half>(input),
+                                    get_ptr<half>(weight),
+                                    weight_scales_ptr,
+                                    get_ptr<half>(output),
+                                    &total_rows_before_expert,
+                                    total_rows,
+                                    gemm_n,
+                                    gemm_k,
+                                    num_experts,
+                                    stream);
+            }
         }else if (weight.scalar_type() == at::ScalarType::Char){
-            MoeGemmRunner<half,uint8_t> cutlass_runner;
-            weight_ptr = get_ptr<uint8_t>(weight);
-        } else if (weight.scalar_type() == at::ScalarType::QInt4x2){
-            MoeGemmRunner<half,cutlass::uint4b_t> cutlass_runner;
-            weight_ptr = get_ptr<cutlass::uint4b_t>(weight);
+            tensorrt_llm::MoeGemmRunner<half,uint8_t> cutlass_runner;
+                // run the moe gemm
+            if (use_bias){ // use bias api
+                cutlass_runner.moeGemmBiasAct(get_ptr<half>(input),
+                                            get_ptr<uint8_t>(weight),
+                                            weight_scales_ptr,
+                                            bias_ptr,
+                                            get_ptr<half>(output),
+                                            &total_rows_before_expert,
+                                            total_rows,
+                                            gemm_n,
+                                            gemm_k,
+                                            num_experts,
+                                            tensorrt_llm::ActivationType(activation_type),
+                                            stream);
+            } 
+            else{
+                cutlass_runner.moeGemm(get_ptr<half>(input),
+                                    get_ptr<uint8_t>(weight),
+                                    weight_scales_ptr,
+                                    get_ptr<half>(output),
+                                    &total_rows_before_expert,
+                                    total_rows,
+                                    gemm_n,
+                                    gemm_k,
+                                    num_experts,
+                                    stream);
+            }
+        } else if (weight.scalar_type() == at::ScalarType::QUInt4x2){
+            tensorrt_llm::MoeGemmRunner<half,cutlass::uint4b_t> cutlass_runner;
+                // run the moe gemm
+            if (use_bias){ // use bias api
+                cutlass_runner.moeGemmBiasAct(get_ptr<half>(input),
+                                            get_ptr<cutlass::uint4b_t>(weight),
+                                            weight_scales_ptr,
+                                            bias_ptr,
+                                            get_ptr<half>(output),
+                                            &total_rows_before_expert,
+                                            total_rows,
+                                            gemm_n,
+                                            gemm_k,
+                                            num_experts,
+                                            tensorrt_llm::ActivationType(activation_type),
+                                            stream);
+            } 
+            else{
+                cutlass_runner.moeGemm(get_ptr<half>(input),
+                                    get_ptr<cutlass::uint4b_t>(weight),
+                                    weight_scales_ptr,
+                                    get_ptr<half>(output),
+                                    &total_rows_before_expert,
+                                    total_rows,
+                                    gemm_n,
+                                    gemm_k,
+                                    num_experts,
+                                    stream);
+            }
         } else{
             throw std::runtime_error("unsupported data type");
         }
     }else if (input.scalar_type() == at::ScalarType::BFloat16){
-        input_ptr = get_ptr<half>(input);
-        weight_scales_ptr = get_ptr<__nv_bfloat16>(weight_scales);
-        if (use_bias){
-            bias_ptr = get_ptr<__nv_bfloat16>(bias);
-        }
-        output_ptr = get_ptr<__nv_bfloat16>(output);
-
+        __nv_bfloat16* bias_ptr = bias ? reinterpret_cast<__nv_bfloat16*>(bias.value().data_ptr()) : nullptr;
+        __nv_bfloat16* weight_scales_ptr = weight_scales ? reinterpret_cast<__nv_bfloat16*>(weight_scales.value().data_ptr()) : nullptr;
         if (weight.scalar_type() == at::ScalarType::BFloat16){
-            MoeGemmRunner<__nv_bfloat16,__nv_bfloat16> cutlass_runner;
-            weight_ptr = get_ptr<half>(weight);
+            tensorrt_llm::MoeGemmRunner<__nv_bfloat16,__nv_bfloat16> cutlass_runner;
+            if (use_bias){ // use bias api
+                cutlass_runner.moeGemmBiasAct(get_ptr<__nv_bfloat16>(input),
+                                            get_ptr<__nv_bfloat16>(weight),
+                                            weight_scales_ptr,
+                                            bias_ptr,
+                                            get_ptr<__nv_bfloat16>(output),
+                                            &total_rows_before_expert,
+                                            total_rows,
+                                            gemm_n,
+                                            gemm_k,
+                                            num_experts,
+                                            tensorrt_llm::ActivationType(activation_type),
+                                            stream);
+            } 
+            else{
+                cutlass_runner.moeGemm(get_ptr<__nv_bfloat16>(input),
+                                    get_ptr<__nv_bfloat16>(weight),
+                                    weight_scales_ptr,
+                                    get_ptr<__nv_bfloat16>(output),
+                                    &total_rows_before_expert,
+                                    total_rows,
+                                    gemm_n,
+                                    gemm_k,
+                                    num_experts,
+                                    stream);
+            }
         }else if (weight.scalar_type() == at::ScalarType::Char){
-            MoeGemmRunner<__nv_bfloat16,uint8_t> cutlass_runner;
-            weight_ptr = get_ptr<uint8_t>(weight);
-        } else if (weight.scalar_type() == at::ScalarType::QInt4x2){
-            MoeGemmRunner<__nv_bfloat16,cutlass::uint4b_t> cutlass_runner;
-            weight_ptr = get_ptr<cutlass::uint4b_t>(weight);
+            tensorrt_llm::MoeGemmRunner<__nv_bfloat16,uint8_t> cutlass_runner;
+                // run the moe gemm
+            if (use_bias){ // use bias api
+                cutlass_runner.moeGemmBiasAct(get_ptr<__nv_bfloat16>(input),
+                                            get_ptr<uint8_t>(weight),
+                                            weight_scales_ptr,
+                                            bias_ptr,
+                                            get_ptr<__nv_bfloat16>(output),
+                                            &total_rows_before_expert,
+                                            total_rows,
+                                            gemm_n,
+                                            gemm_k,
+                                            num_experts,
+                                            tensorrt_llm::ActivationType(activation_type),
+                                            stream);
+            }
+            else{
+                cutlass_runner.moeGemm(get_ptr<__nv_bfloat16>(input),
+                                    get_ptr<uint8_t>(weight),
+                                    weight_scales_ptr,
+                                    get_ptr<__nv_bfloat16>(output),
+                                    &total_rows_before_expert,
+                                    total_rows,
+                                    gemm_n,
+                                    gemm_k,
+                                    num_experts,
+                                    stream);
+            }
+        } else if (weight.scalar_type() == at::ScalarType::QUInt4x2){
+            tensorrt_llm::MoeGemmRunner<__nv_bfloat16,cutlass::uint4b_t> cutlass_runner;
+                // run the moe gemm
+            if (use_bias){ // use bias api
+                cutlass_runner.moeGemmBiasAct(get_ptr<__nv_bfloat16>(input),
+                                            get_ptr<cutlass::uint4b_t>(weight),
+                                            weight_scales_ptr,
+                                            bias_ptr,
+                                            get_ptr<__nv_bfloat16>(output),
+                                            &total_rows_before_expert,
+                                            total_rows,
+                                            gemm_n,
+                                            gemm_k,
+                                            num_experts,
+                                            tensorrt_llm::ActivationType(activation_type),
+                                            stream);
+            } 
+            else{
+                cutlass_runner.moeGemm(get_ptr<__nv_bfloat16>(input),
+                                    get_ptr<cutlass::uint4b_t>(weight),
+                                    weight_scales_ptr,
+                                    get_ptr<__nv_bfloat16>(output),
+                                    &total_rows_before_expert,
+                                    total_rows,
+                                    gemm_n,
+                                    gemm_k,
+                                    num_experts,
+                                    stream);
+            }
         } else{
             throw std::runtime_error("unsupported data type");
         }
@@ -85,42 +249,6 @@ Tensor moe_gemm(Tensor&         input,
         throw std::runtime_error("unsupported data type");
     }
 
-    //get gemm config
-    if (tile_config != -1) {
-        gemm_config = CutlassGemmConfig(CutlassTileConfig(tile_config), SplitKStyle(split_k_style), split_k_factor, stages);
-    }else{
-        gemm_config = nullptr;
-    }
-
-
-    // run the moe gemm
-    if (use_bias){ // use bias api
-        cutlass_runner.moeGemmBiasAct(input_ptr,
-                                      weight_ptr,
-                                      weight_scales_ptr,
-                                      bias_ptr,
-                                      output_ptr,
-                                      &total_rows_before_expert,
-                                      total_rows,
-                                      gemm_n,
-                                      gemm_k,
-                                      num_experts,
-                                      ActivationType(activation_type),
-                                      stream);
-    } else{
-        cutlass_runner.moeGemm(input_ptr,
-                               weight_ptr,
-                               weight_scales_ptr,
-                               bias_ptr,
-                               output_ptr,
-                              &total_rows_before_expert,
-                              total_rows,
-                              gemm_n,
-                              gemm_k,
-                              num_experts,
-                              ActivationType(activation_type),
-                              stream);
-    }
     return output;
 }
 

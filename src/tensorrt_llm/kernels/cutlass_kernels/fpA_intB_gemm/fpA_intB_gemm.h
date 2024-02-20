@@ -19,7 +19,7 @@
 #include "cutlass_extensions/gemm_configs.h"
 #include "cutlass_extensions/weight_only_quant_op.h"
 #include <cuda_runtime_api.h>
-
+#include <boost/optional.hpp>
 namespace tkc = tensorrt_llm::cutlass_extensions;
 
 namespace tensorrt_llm
@@ -97,7 +97,7 @@ public:
     ~CutlassFpAIntBGemmRunner();
 
     void gemm(const void* A, const void* B, const void* weight_scales, void* C, int m, int n, int k,
-              std::optional<tkc::CutlassGemmConfig> gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
+              boost::optional<tkc::CutlassGemmConfig> gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
         cudaStream_t stream) override;
 
     void gemm(const void* A, const void* B, const void* weight_scales, const float alpha, void* C, int m, int n, int k,
