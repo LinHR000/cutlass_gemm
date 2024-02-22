@@ -145,7 +145,14 @@ if nvcc_cuda_version >= Version("11.2"):
 
 ext_modules = []
 
-sources=["cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_heuristic.cpp",
+base_dir = os.path.abspath(os.path.dirname(__file__))
+include_path = []
+include_path.append(os.path.join(base_dir, '3rdparty/cutlass/include/'))
+include_path.append(os.path.join(base_dir, 'cpp/'))
+include_path.append(os.path.join(base_dir, 'cpp/tensorrt_llm/cutlass_extensions/include/'))
+include_path.append("/usr/local/tensorrt/include/")
+
+sources_moe=["cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_heuristic.cpp",
         "cpp/tensorrt_llm/kernels/mixtureOfExperts/moe_kernels.cu",
         "cpp/tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels_bf16_bf16.cu",
         "cpp/tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels_bf16_uint4.cu",
@@ -157,23 +164,36 @@ sources=["cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_heuristic.cpp",
         "cpp/tensorrt_llm/common/stringUtils.cpp",
         "cpp/tensorrt_llm/common/logger.cpp",
         "cpp/tensorrt_llm/common/tllmException.cpp",
-        "moe/moe.cpp"
+        "cpp/pt_binding_moe.cpp"
+        # "moe/moe.cpp"
         ]
 
-base_dir = os.path.abspath(os.path.dirname(__file__))
-include_path = []
-include_path.append(os.path.join(base_dir, '3rdparty/cutlass/include/'))
-include_path.append(os.path.join(base_dir, 'cpp/'))
-include_path.append(os.path.join(base_dir, 'cpp/tensorrt_llm/cutlass_extensions/include/'))
-include_path.append("/usr/local/tensorrt/include/")
-
 th_moe_extension = CUDAExtension(
-    name="moe_ops",
-    sources=sources,
+    name="cutlass_gemm.gemm_op_moe",
+    sources=sources_moe,
     extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
     include_dirs=include_path
 )
 ext_modules.append(th_moe_extension)
+
+sources_utils=[
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_heuristic.cpp',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_preprocessors.cpp',
+        'cpp/tensorrt_llm/thop/weightOnlyQuantOp.cpp',
+        "cpp/tensorrt_llm/common/stringUtils.cpp",
+        "cpp/tensorrt_llm/common/logger.cpp",
+        "cpp/tensorrt_llm/common/tllmException.cpp",
+        "cpp/pt_binding_utils.cpp"
+        # "moe/moe.cpp"
+        ]
+
+th_utils_extension = CUDAExtension(
+    name="cutlass_gemm.gemm_op_utils",
+    sources=sources_utils,
+    extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
+    include_dirs=include_path
+)
+ext_modules.append(th_utils_extension)
 
 
 
@@ -194,9 +214,9 @@ def get_requirements() -> List[str]:
 
 
 setuptools.setup(
-    name="moe_ops",
+    name="cutlass_gemm",
     version="0.0.1",
-    author="weishengying",
+    author="skywork",
     license="Apache 2.0",
     description=("moe for pytorch"),
     long_description=read_readme(),

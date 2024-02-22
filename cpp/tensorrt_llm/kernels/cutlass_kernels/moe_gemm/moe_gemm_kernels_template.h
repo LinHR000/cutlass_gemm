@@ -401,6 +401,33 @@ void MoeGemmRunner<T, WeightType>::runGemm<EpilogueTag>(const T* A, const Weight
 }
 
 template <typename T, typename WeightType>
+template <typename EpilogueTag>
+cutlass_extensions::CutlassGemmConfig MoeGemmRunner<T, WeightType>::runGemmConfig<EpilogueTag>(const T* A, const WeightType* B, 
+    const T* weight_scales,
+    const T* biases, T* C, int64_t* total_rows_before_expert, int64_t total_rows, int64_t gemm_n, int64_t gemm_k,
+    int num_experts, cudaStream_t stream)
+{
+    cutlass_extensions::CutlassGemmConfig chosen_conf;
+    auto candidate_configs = getConfigs();
+    std::vector<int> occupancies(candidate_configs.size());
+
+    for (size_t ii = 0; ii < candidate_configs.size(); ++ii)
+    {
+        dispatchToArch<EpilogueTag>(A, B, weight_scales, biases, C, total_rows_before_expert, total_rows, gemm_n,
+            gemm_k, num_experts, candidate_configs[ii], stream, &occupancies[ii]);
+    }
+
+    static constexpr int workspace_bytes = 0; // No workspace for MoE GEMMs.
+    static constexpr int split_k_limit = 1;   // MoE GEMM does not support split-k.
+
+    static constexpr bool is_weight_only = !std::is_same<T, WeightType>::value;
+    chosen_conf = kernels::cutlass_kernels::estimate_best_config_from_occupancies(candidate_configs, occupancies,
+        total_rows, gemm_n, gemm_k, num_experts, split_k_limit, workspace_bytes, multi_processor_count_,
+        is_weight_only);
+    return chosen_conf;
+}
+
+template <typename T, typename WeightType>
 void MoeGemmRunner<T, WeightType>::moeGemmBiasAct(const T* A, const WeightType* B, const T* weight_scales,
     const T* biases, T* C, int64_t* total_rows_before_expert, int64_t total_rows, int64_t gemm_n, int64_t gemm_k,
     int num_experts, ActivationType activation_type, cudaStream_t stream)
@@ -429,11 +456,51 @@ void MoeGemmRunner<T, WeightType>::moeGemmBiasAct(const T* A, const WeightType* 
 }
 
 template <typename T, typename WeightType>
+cutlass_extensions::CutlassGemmConfig MoeGemmRunner<T, WeightType>::moeGemmBiasActConfig(const T* A, const WeightType* B, 
+    const T* weight_scales,
+    const T* biases, T* C, int64_t* total_rows_before_expert, int64_t total_rows, int64_t gemm_n, int64_t gemm_k,
+    int num_experts, ActivationType activation_type, cudaStream_t stream)
+{
+    cutlass_extensions::CutlassGemmConfig choose_config;
+    switch (activation_type)
+    {
+    case ActivationType::Relu:
+        choose_config = runGemmConfig<cutlass_extensions::EpilogueOpDefaultReLU>(
+            A, B, weight_scales, biases, C, total_rows_before_expert, total_rows, gemm_n, gemm_k, num_experts, stream);
+        break;
+    case ActivationType::Gelu:
+        choose_config = runGemmConfig<cutlass_extensions::EpilogueOpDefaultFtGelu>(
+            A, B, weight_scales, biases, C, total_rows_before_expert, total_rows, gemm_n, gemm_k, num_experts, stream);
+        break;
+    case ActivationType::Silu:
+        choose_config = runGemmConfig<cutlass_extensions::EpilogueOpDefaultSilu>(
+            A, B, weight_scales, biases, C, total_rows_before_expert, total_rows, gemm_n, gemm_k, num_experts, stream);
+        break;
+    case ActivationType::Identity:
+        choose_config = runGemmConfig<cutlass_extensions::EpilogueOpDefault>(
+            A, B, weight_scales, biases, C, total_rows_before_expert, total_rows, gemm_n, gemm_k, num_experts, stream);
+        break;
+    case ActivationType::InvalidType: TLLM_THROW("Activation type for fpA_intB must be valid."); break;
+    default: TLLM_THROW("Invalid activation type."); break;
+    }
+    return choose_config;
+}
+
+template <typename T, typename WeightType>
 void MoeGemmRunner<T, WeightType>::moeGemm(const T* A, const WeightType* B, const T* weight_scales, T* C,
     int64_t* total_rows_before_expert, int64_t total_rows, int64_t gemm_n, int64_t gemm_k, int num_experts,
     cudaStream_t stream)
 {
     runGemm<cutlass_extensions::EpilogueOpDefault>(
+        A, B, weight_scales, nullptr, C, total_rows_before_expert, total_rows, gemm_n, gemm_k, num_experts, stream);
+}
+
+template <typename T, typename WeightType>
+cutlass_extensions::CutlassGemmConfig MoeGemmRunner<T, WeightType>::moeGemmConfig(const T* A, const WeightType* B, const T* weight_scales, T* C,
+    int64_t* total_rows_before_expert, int64_t total_rows, int64_t gemm_n, int64_t gemm_k, int num_experts,
+    cudaStream_t stream)
+{
+    return runGemmConfig<cutlass_extensions::EpilogueOpDefault>(
         A, B, weight_scales, nullptr, C, total_rows_before_expert, total_rows, gemm_n, gemm_k, num_experts, stream);
 }
 

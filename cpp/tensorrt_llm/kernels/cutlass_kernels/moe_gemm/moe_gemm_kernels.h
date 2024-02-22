@@ -58,6 +58,14 @@ public:
 
     void moeGemm(const T* A, const WeightType* B, const T* weight_scales, T* C, int64_t* total_rows_before_expert,
         int64_t total_rows, int64_t gemm_n, int64_t gemm_k, int num_experts, cudaStream_t stream);
+    // for choose best config
+    cutlass_extensions::CutlassGemmConfig moeGemmConfig(const T* A, const WeightType* B, 
+        const T* weight_scales, T* C, int64_t* total_rows_before_expert,
+        int64_t total_rows, int64_t gemm_n, int64_t gemm_k, int num_experts, cudaStream_t stream);
+
+    cutlass_extensions::CutlassGemmConfig moeGemmBiasActConfig(const T* A, const WeightType* B, const T* weight_scales, const T* biases, T* C,
+        int64_t* total_rows_before_expert, int64_t total_rows, int64_t gemm_n, int64_t gemm_k, int num_experts,
+        ActivationType activation_type, cudaStream_t stream);
 
     std::vector<cutlass_extensions::CutlassGemmConfig> getConfigs();
 
@@ -69,6 +77,11 @@ private:
 
     template <typename EpilogueTag>
     void runGemm(const T* A, const WeightType* B, const T* weight_scales, const T* biases, T* C,
+        int64_t* total_rows_before_expert, int64_t total_rows, int64_t gemm_n, int64_t gemm_k, int num_experts,
+        cudaStream_t stream);
+    // for choose best config
+    template <typename EpilogueTag>
+    cutlass_extensions::CutlassGemmConfig runGemmConfig(const T* A, const WeightType* B, const T* weight_scales, const T* biases, T* C,
         int64_t* total_rows_before_expert, int64_t total_rows, int64_t gemm_n, int64_t gemm_k, int num_experts,
         cudaStream_t stream);
 

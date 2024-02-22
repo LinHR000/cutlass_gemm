@@ -9,6 +9,7 @@
 #include "tensorrt_llm/thop/thUtils.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/numeric_types.h"
+#include <map>
 using torch::Tensor;
 using torch_ext::get_ptr;
 // using tensorrt_llm;
@@ -612,4 +613,5 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("moe_gemm", &moe_gemm, "moe gemm");
-    m.def("run_moe_fc", &run_moe_fc, "moe fc");}
+    m.def("run_moe_fc", &run_moe_fc, "moe fc");
+    }
