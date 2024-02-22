@@ -195,6 +195,33 @@ th_utils_extension = CUDAExtension(
 )
 ext_modules.append(th_utils_extension)
 
+sources_fpAIntB=[
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/bf16_int4_gemm_fg_scalebias.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/bf16_int4_gemm_fg_scaleonly.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/bf16_int4_gemm_per_col.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/bf16_int8_gemm_fg_scalebias.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/bf16_int8_gemm_fg_scaleonly.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/bf16_int8_gemm_per_col.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int4_gemm_fg_scalebias.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int4_gemm_fg_scaleonly.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int4_gemm_per_col.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int8_gemm_fg_scalebias.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int8_gemm_fg_scaleonly.cu',
+        'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int8_gemm_per_col.cu',
+        "cpp/tensorrt_llm/common/stringUtils.cpp",
+        "cpp/tensorrt_llm/common/logger.cpp",
+        "cpp/tensorrt_llm/common/tllmException.cpp",
+        "cpp/pt_binding_fpAIntB.cpp"
+        ]
+
+th_utils_extension = CUDAExtension(
+    name="cutlass_gemm.gemm_op_fpAIntB",
+    sources=sources_fpAIntB,
+    extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
+    include_dirs=include_path
+)
+ext_modules.append(th_utils_extension)
+
 
 
 def get_path(*filepath) -> str:
@@ -203,7 +230,7 @@ def get_path(*filepath) -> str:
 
 def read_readme() -> str:
     """Read the README file."""
-    return "从 trt-llm 中单独把 moe 分离出来，并封装为 pytorch 可以直接使用的算子"
+    return ""
 
 
 def get_requirements() -> List[str]:

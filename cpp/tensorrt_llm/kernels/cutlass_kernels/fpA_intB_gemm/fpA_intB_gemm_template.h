@@ -472,16 +472,37 @@ template <typename ActivationType, typename WeightType, cutlass::WeightOnlyQuant
     typename BiasType, typename OutputType>
 void CutlassFpAIntBGemmRunner<ActivationType, WeightType, QuantOp, ScaleZeroType, BiasType, OutputType>::gemm(
     const void* A, const void* B, const void* weight_scales, const void* weight_zero_points, const void* biases,
-    const float alpha, void* C, int m, int n, int k, const int group_size, tkc::CutlassGemmConfig gemmConfig,
+    const float alpha, void* C, int m, int n, int k, const int group_size, std::optional<tkc::CutlassGemmConfig> gemmConfig,
     char* workspace_ptr, const size_t workspace_bytes, cudaStream_t stream)
 {
     TLLM_LOG_DEBUG(__PRETTY_FUNCTION__);
+    // 如果gemm_confg是nullptr,自动选择合适的gemm_config
+    tkc::CutlassGemmConfig chosen_conf;
+    if (gemmConfig){
+        tkc::CutlassGemmConfig &chosen_conf = *gemmConfig;
+    }{
+        auto candidate_configs = getConfigs();
+        std::vector<int> occupancies(candidate_configs.size());
+
+        for (size_t ii = 0; ii < candidate_configs.size(); ++ii)
+        {
+            dispatch_to_arch<tkc::EpilogueOpBias>((const ActivationType*) A, (const WeightType*) B,
+                (const ScaleZeroType*) weight_scales, (const ScaleZeroType*) weight_zero_points, (const BiasType*) biases,
+                alpha, (OutputType*) C, m, n, k, group_size, candidate_configs[ii], workspace_ptr, workspace_bytes, stream, &occupancies[ii]);
+        }
+
+        static constexpr bool is_weight_only = !std::is_same<ActivationType, WeightType>::value;
+        static constexpr int num_experts = 1;  
+        chosen_conf = kernels::cutlass_kernels::estimate_best_config_from_occupancies(candidate_configs, occupancies,
+            m, n, k, num_experts, SPLIT_K_LIMIT, workspace_bytes, multi_processor_count_,
+            is_weight_only);
+    }
     if constexpr ((QuantOp == cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_AND_ZEROS)
         || (QuantOp == cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_ONLY))
     {
         dispatch_to_arch<tkc::EpilogueOpBias>((const ActivationType*) A, (const WeightType*) B,
             (const ScaleZeroType*) weight_scales, (const ScaleZeroType*) weight_zero_points, (const BiasType*) biases,
-            alpha, (OutputType*) C, m, n, k, group_size, gemmConfig, workspace_ptr, workspace_bytes, stream, nullptr);
+            alpha, (OutputType*) C, m, n, k, group_size, chosen_conf, workspace_ptr, workspace_bytes, stream, nullptr);
     }
     else
     {
@@ -494,7 +515,7 @@ template <typename ActivationType, typename WeightType, cutlass::WeightOnlyQuant
     typename BiasType, typename OutputType>
 void CutlassFpAIntBGemmRunner<ActivationType, WeightType, QuantOp, ScaleZeroType, BiasType, OutputType>::gemm(
     const void* A, const void* B, const void* weight_scales, const void* weight_zero_points, const void* biases,
-    void* C, int m, int n, int k, const int group_size, tkc::CutlassGemmConfig gemmConfig, char* workspace_ptr,
+    void* C, int m, int n, int k, const int group_size, std::optional<tkc::CutlassGemmConfig> gemmConfig, char* workspace_ptr,
     const size_t workspace_bytes, cudaStream_t stream)
 {
     TLLM_LOG_DEBUG(__PRETTY_FUNCTION__);
@@ -506,14 +527,34 @@ template <typename ActivationType, typename WeightType, cutlass::WeightOnlyQuant
     typename BiasType, typename OutputType>
 void CutlassFpAIntBGemmRunner<ActivationType, WeightType, QuantOp, ScaleZeroType, BiasType, OutputType>::gemm(
     const void* A, const void* B, const void* weight_scales, const float alpha, void* C, int m, int n, int k,
-    tkc::CutlassGemmConfig gemmConfig, char* workspace_ptr, const size_t workspace_bytes, cudaStream_t stream)
+    std::optional<tkc::CutlassGemmConfig> gemmConfig, char* workspace_ptr, const size_t workspace_bytes, cudaStream_t stream)
 {
     TLLM_LOG_DEBUG(__PRETTY_FUNCTION__);
+    tkc::CutlassGemmConfig chosen_conf;
+    if (gemmConfig){
+        tkc::CutlassGemmConfig &chosen_conf = *gemmConfig;
+    }{
+        auto candidate_configs = getConfigs();
+        std::vector<int> occupancies(candidate_configs.size());
+
+        for (size_t ii = 0; ii < candidate_configs.size(); ++ii)
+        {
+            dispatch_to_arch<tkc::EpilogueOpBias>((const ActivationType*) A, (const WeightType*) B,
+                (const ScaleZeroType*) weight_scales, nullptr, nullptr, alpha, (OutputType*) C, m, n, k, k, candidate_configs[ii],
+                workspace_ptr, workspace_bytes, stream, &occupancies[ii]);
+        }
+
+        static constexpr bool is_weight_only = !std::is_same<ActivationType, WeightType>::value;
+        static constexpr int num_experts = 1;
+        chosen_conf = kernels::cutlass_kernels::estimate_best_config_from_occupancies(candidate_configs, occupancies,
+            m, n, k, num_experts, SPLIT_K_LIMIT, workspace_bytes, multi_processor_count_,
+            is_weight_only);
+    }
 
     if constexpr (QuantOp == cutlass::WeightOnlyQuantOp::PER_COLUMN_SCALE_ONLY)
     {
         dispatch_to_arch<tkc::EpilogueOpBias>((const ActivationType*) A, (const WeightType*) B,
-            (const ScaleZeroType*) weight_scales, nullptr, nullptr, alpha, (OutputType*) C, m, n, k, k, gemmConfig,
+            (const ScaleZeroType*) weight_scales, nullptr, nullptr, alpha, (OutputType*) C, m, n, k, k, chosen_conf,
             workspace_ptr, workspace_bytes, stream, nullptr);
     }
     else
@@ -526,7 +567,7 @@ template <typename ActivationType, typename WeightType, cutlass::WeightOnlyQuant
     typename BiasType, typename OutputType>
 void CutlassFpAIntBGemmRunner<ActivationType, WeightType, QuantOp, ScaleZeroType, BiasType, OutputType>::gemm(
     const void* A, const void* B, const void* weight_scales, void* C, int m, int n, int k,
-    tkc::CutlassGemmConfig gemmConfig, char* workspace_ptr, const size_t workspace_bytes, cudaStream_t stream)
+    std::optional<tkc::CutlassGemmConfig> gemmConfig, char* workspace_ptr, const size_t workspace_bytes, cudaStream_t stream)
 {
     TLLM_LOG_DEBUG(__PRETTY_FUNCTION__);
     gemm(A, B, weight_scales, 1.f, C, m, n, k, gemmConfig, workspace_ptr, workspace_bytes, stream);

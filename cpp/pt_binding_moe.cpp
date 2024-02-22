@@ -334,6 +334,7 @@ Tensor run_moe_fc_helper(Tensor                            input_activations, //
                          c10::optional<Tensor>             fc2_expert_biases,
                          c10::optional<Tensor>             fc1_expert_scales,
                          c10::optional<Tensor>             fc2_expert_scales,
+                         c10::optional<Tensor>             output,
                          const int                         active_rows,
                          const int                         k,
                          std::optional<std::string>        tile_config, // if tie_config is -1, use default tile config
@@ -412,9 +413,14 @@ Tensor run_moe_fc_helper(Tensor                            input_activations, //
     auto expert_for_source_row =
         torch::empty({num_rows, k}, torch::dtype(torch::kInt32).device(torch::kCUDA).requires_grad(false));
     int* expert_for_source_row_ptr = get_ptr<int>(expert_for_source_row);
+    bool allocate_out  = output ? false : true;
+    Tensor output_tensor ;
+    if (allocate_out){
+        output_tensor = torch::empty({num_rows, hidden_size}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+    }else{
+        Tensor &ououtput_tensortput = *output;
+    }
 
-    auto output_tensor =
-        torch::empty({num_rows, hidden_size}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
     T* output_tensor_ptr = get_ptr<T>(output_tensor);
 
     moe_runner.runMoe(input_act_ptr,
@@ -456,6 +462,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                   c10::optional<Tensor>             fc2_expert_biases,
                   c10::optional<Tensor>             fc1_expert_scales,
                   c10::optional<Tensor>             fc2_expert_scales,
+                  c10::optional<Tensor>             output,
                   int64_t     active_rows,
                   int64_t     k,
                   std::optional<std::string>        tile_config, // if tie_config is -1, use default tile config
@@ -520,6 +527,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                                 fc2_expert_biases,
                                                                 fc1_expert_scales,
                                                                 fc2_expert_scales,
+                                                                output,
                                                                 active_rows,
                                                                 k,
                                                                 tile_config,
@@ -545,6 +553,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                               fc2_expert_biases,
                                                               fc1_expert_scales,
                                                               fc2_expert_scales,
+                                                              output,
                                                               active_rows,
                                                               k,
                                                               tile_config,
@@ -561,6 +570,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                               fc2_expert_biases,
                                                               fc1_expert_scales,
                                                               fc2_expert_scales,
+                                                              output,
                                                               active_rows,
                                                               k,
                                                               tile_config,
@@ -577,6 +587,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                               fc2_expert_biases,
                                                               fc1_expert_scales,
                                                               fc2_expert_scales,
+                                                              output,
                                                               active_rows,
                                                               k,
                                                               tile_config,
@@ -602,6 +613,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                                                 fc2_expert_biases,
                                                                                 fc1_expert_scales,
                                                                                 fc2_expert_scales,
+                                                                                output,
                                                                                 active_rows,
                                                                                 k,
                                                                                 tile_config,
@@ -618,6 +630,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                               fc2_expert_biases,
                                                               fc1_expert_scales,
                                                               fc2_expert_scales,
+                                                              output,
                                                               active_rows,
                                                               k,
                                                               tile_config,
@@ -634,6 +647,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                               fc2_expert_biases,
                                                               fc1_expert_scales,
                                                               fc2_expert_scales,
+                                                              output,
                                                               active_rows,
                                                               k,
                                                               tile_config,
