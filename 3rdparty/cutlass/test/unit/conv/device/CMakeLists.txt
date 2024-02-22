@@ -1,4 +1,4 @@
-# Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Redistribution and use in source and binary forms, with or without
@@ -110,7 +110,9 @@ cutlass_test_unit_add_executable(
 
   # F16
   conv2d_fprop_implicit_gemm_f16nhwc_f16nhwc_f16nhwc_simt_f16_sm60.cu
-  depthwise_fprop_implicit_gemm_f16nhwc_f16nhwc_f16nhwc_simt_f16_sm60.cu
+  depthwise_conv2d_fprop_implicit_gemm_f16nhwc_f16nhwc_f16nhwc_simt_f16_sm60.cu
+  depthwise_conv2d_fprop_direct_conv_f16nhwc_f16nhwc_f16nhwc_simt_f16_sm60.cu
+  depthwise_conv2d_fprop_direct_conv_fixed_stride_dilation_f16nhwc_f16nhwc_f16nhwc_simt_f16_sm60.cu
 )
 
 if (CUTLASS_NVCC_MAX_ARCH GREATER_EQUAL 80)
@@ -182,6 +184,7 @@ if (CUTLASS_NVCC_MAX_ARCH GREATER_EQUAL 80)
     # Conv2d (Strided Dgrad)
     conv2d_strided_dgrad_implicit_gemm_f16nhwc_f16nhwc_f32nhwc_tensor_op_f32_sm80.cu
     conv2d_strided_dgrad_implicit_gemm_tf32nhwc_tf32nhwc_f32nhwc_tensor_op_f32_sm80.cu
+    conv2d_strided_dgrad_implicit_gemm_swizzling4_sm80.cu
 
     # Conv3d
     conv3d_wgrad_implicit_gemm_f16ndhwc_f16ndhwc_f32ndhwc_tensor_op_f32_sm80.cu
@@ -241,3 +244,4 @@ if (CUTLASS_NVCC_MAX_ARCH GREATER_EQUAL 75)
   endif()
 
 endif()
+

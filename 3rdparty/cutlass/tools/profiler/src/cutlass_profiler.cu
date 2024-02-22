@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,15 +36,15 @@
 #include <stdexcept>
 
 // Profiler includes
-#include "cutlass_profiler.h"
-#include "gemm_operation_profiler.h"
-#include "rank_k_operation_profiler.h"
-#include "rank_2k_operation_profiler.h"
-#include "trmm_operation_profiler.h"
-#include "symm_operation_profiler.h"
-#include "conv2d_operation_profiler.h"          
-#include "conv3d_operation_profiler.h"          
-#include "sparse_gemm_operation_profiler.h"
+#include "cutlass/profiler/cutlass_profiler.h"
+#include "cutlass/profiler/gemm_operation_profiler.h"
+#include "cutlass/profiler/rank_k_operation_profiler.h"
+#include "cutlass/profiler/rank_2k_operation_profiler.h"
+#include "cutlass/profiler/trmm_operation_profiler.h"
+#include "cutlass/profiler/symm_operation_profiler.h"
+#include "cutlass/profiler/conv2d_operation_profiler.h"          
+#include "cutlass/profiler/conv3d_operation_profiler.h"          
+#include "cutlass/profiler/sparse_gemm_operation_profiler.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -124,13 +124,12 @@ int CutlassProfiler::operator()() {
     options_.execution_mode == ExecutionMode::kTrace) {
 
     // Profiles all operations
-    profile_();
+    return profile_();
   }
   else if (options_.execution_mode == ExecutionMode::kEnumerate) {
     // Enumerates all operations
     enumerate_();
   }
-
   return 0;
 }
 
@@ -157,7 +156,7 @@ int CutlassProfiler::profile_() {
 
       if (result) {
         return result;
-      } 
+      }
     }
   }
 

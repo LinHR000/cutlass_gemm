@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@ Status Manifest::initialize() {
   // initialize procedurally generated cutlass op in manifest object
   initialize_all(*this);
 
-  // initialize manually instanced conv3d reference op in manifest object
+  // initialize manually instanced reference op in manifest object
   initialize_reference_operations(*this);
 
   // initialize manually instanced reduction reference op in manifest object

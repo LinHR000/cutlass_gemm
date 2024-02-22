@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,8 +34,6 @@
 #pragma once
 
 #include <vector>
-
-#include "../../common/cutlass_unit_test.h"
 
 #include "cutlass/cutlass.h"
 #include "cutlass/layout/matrix.h"
@@ -774,6 +772,29 @@ struct TestbedGroupConv2dProblemSizes {
       cutlass::conv::Mode::kCrossCorrelation,
       1,                                              // split_k_slices
       2                                               // groups
+    ));
+
+    // Larger problem sizes
+    
+    default_single_group_sizes.push_back(cutlass::conv::Conv2dProblemSize(
+      {1, 56, 56, 696},                               // input size  (NHWC)
+      {768, 3, 3, 232},                               // filter size (KRSC)
+      {1, 1, 1, 1},                                   // padding (pad_h, _, pad_w, _)
+      {2, 2},                                         // stride (stride_h, stride_w)
+      {1, 1},                                         // dilation (dilation_h, dilation_w)
+      cutlass::conv::Mode::kCrossCorrelation,
+      1,                                              // split_k_slices
+      3                                               // groups
+    ));
+    default_single_group_sizes.push_back(cutlass::conv::Conv2dProblemSize(
+      {1, 14, 14, 1392},                              // input size  (NHWC)
+      {1536, 3, 3, 232},                              // filter size (KRSC)
+      {1, 1, 1, 1},                                   // padding (pad_h, _, pad_w, _)
+      {1, 1},                                         // stride (stride_h, stride_w)
+      {1, 1},                                         // dilation (dilation_h, dilation_w)
+      cutlass::conv::Mode::kCrossCorrelation,
+      1,                                              // split_k_slices
+      3                                               // groups
     ));
 
     ////////////////////////////////////////////////////////////////////////////////////

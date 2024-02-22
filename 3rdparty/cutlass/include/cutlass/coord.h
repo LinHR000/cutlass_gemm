@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,16 @@
  **************************************************************************************************/
 /*! \file
     \brief A Coord is a coordinate of arbitrary rank into a tensor or matrix
+*/
+
+/*
+  Note:  CUTLASS 3x increases the host compiler requirements to C++17. However, certain
+         existing integrations of CUTLASS require C++11 host compilers.
+
+         Until this requirement can be lifted, certain headers with this annotation are required
+         to be remain consistent with C++11 syntax.
+
+         C++11 compatibility is enforced by `cutlass_test_unit_core_cpp11`.
 */
 
 #pragma once
@@ -100,12 +110,21 @@ public:
     }
   }
 
+  /// Constructs from some other Coord
+  template <int R, typename I, typename L>
+  CUTLASS_HOST_DEVICE
+  Coord(Coord<R, I, L> other) {
+    for (int i = 0; i < kRank; ++i) {
+      idx[i] = other[i];
+    }
+  }
+
   /// Returns a slice of the Coord which may be larger or smaller in rank
   /// than this.
   template <int Slice>
   CUTLASS_HOST_DEVICE
-  Coord<Slice> slice(int start = 0, Index identity = 0) const {
-    Coord<Slice> result;
+  Coord<Slice, Index, LongIndex> slice(int start = 0, Index identity = 0) const {
+    Coord<Slice, Index, LongIndex> result;
     for (int i = 0; i < Slice; ++i) {
       if (i + start < kRank) {
         result[i] = idx[i + start];

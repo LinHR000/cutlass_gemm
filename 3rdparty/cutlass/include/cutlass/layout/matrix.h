@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,17 @@
     Layout functions must implement all members in the public interface of IdentityTensorLayout<>
     defined in cutlass/tensor_ref.h.
 */
+
+/*
+  Note:  CUTLASS 3x increases the host compiler requirements to C++17. However, certain
+         existing integrations of CUTLASS require C++11 host compilers.
+
+         Until this requirement can be lifted, certain headers with this annotation are required
+         to be remain consistent with C++11 syntax.
+
+         C++11 compatibility is enforced by this unit test: `cutlass_test_unit_core_cpp11`.
+*/
+
 #pragma once
 
 #include "cutlass/cutlass.h"
@@ -538,7 +549,7 @@ public:
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
   MatrixCoord inverse(LongIndex offset) const {
-    // TODO
+    CUTLASS_UNUSED(offset);
     return MatrixCoord(0, 0);
   }
 
@@ -689,7 +700,6 @@ public:
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
   TensorCoord inverse(LongIndex offset) const {
-    // TODO
     return TensorCoord();
   }
 
@@ -785,7 +795,7 @@ public:
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
   static AffineRank2ColumnMajor packed(MatrixCoord const &extent) {
-    return AffineRank2ColumnMajor(extent.column(), 1);
+    return AffineRank2ColumnMajor(1, extent.row());
   }
 
   /// Returns the offset of a coordinate in linear memory. 
@@ -798,7 +808,7 @@ public:
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
   MatrixCoord inverse(LongIndex offset) const {
-    // TODO
+    CUTLASS_UNUSED(offset);
     return MatrixCoord(0, 0);
   }
 
@@ -891,7 +901,7 @@ public:
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
   static AffineRank2RowMajor packed(MatrixCoord const &extent) {
-    return AffineRank2RowMajor(extent.column(), 1);
+    return AffineRank2RowMajor(1, extent.row());
   }
 
   /// Returns the offset of a coordinate in linear memory. 
@@ -904,7 +914,7 @@ public:
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
   MatrixCoord inverse(LongIndex offset) const {
-    // TODO
+    CUTLASS_UNUSED(offset);
     return MatrixCoord(0, 0);
   }
 
@@ -1054,7 +1064,6 @@ public:
   CUTLASS_HOST_DEVICE
   MatrixCoord inverse(LongIndex offset) const {
 
-    // TODO
     return MatrixCoord(0, 0);
   }
 
@@ -1154,7 +1163,6 @@ public:
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
   MatrixCoord inverse(LongIndex offset) const {
-    // TODO
     return MatrixCoord(0, 0);
   }
 

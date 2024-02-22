@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,9 +47,9 @@
 // sleep not supported
 #endif
 
-#include "options.h"
-#include "operation_profiler.h"
-#include "gpu_timer.h"
+#include "cutlass/profiler/options.h"
+#include "cutlass/profiler/operation_profiler.h"
+#include "cutlass/profiler/gpu_timer.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -75,6 +75,9 @@ OperationProfiler::OperationProfiler(
     {ArgumentTypeID::kInteger, {"cta_m", "threadblock-shape::m"}, "Threadblock shape in the M dimension"},
     {ArgumentTypeID::kInteger, {"cta_n", "threadblock-shape::n"}, "Threadblock shape in the N dimension"},
     {ArgumentTypeID::kInteger, {"cta_k", "threadblock-shape::k"}, "Threadblock shape in the K dimension"},
+    {ArgumentTypeID::kInteger, {"cluster_m", "cluster-shape::m"}, "Cluster shape in the M dimension"},
+    {ArgumentTypeID::kInteger, {"cluster_n", "cluster-shape::n"}, "Cluster shape in the N dimension"},
+    {ArgumentTypeID::kInteger, {"cluster_k", "cluster-shape::k"}, "Cluster shape in the K dimension"},
     {ArgumentTypeID::kInteger, {"stages", "threadblock-stages"}, "Number of stages of threadblock-scoped matrix multiply"},
     {ArgumentTypeID::kInteger, {"warps_m", "warp-count::m"}, "Number of warps within threadblock along the M dimension"},
     {ArgumentTypeID::kInteger, {"warps_n", "warp-count::n"}, "Number of warps within threadblock along the N dimension"},
@@ -97,12 +100,11 @@ OperationProfiler::OperationProfiler(
       verification_providers_.push_back(provider);
     }
   }
+
 }
 
 /// Destructor
-OperationProfiler::~OperationProfiler() {
-
-}
+OperationProfiler::~OperationProfiler() {}
 
 /// Gets the schema description
 std::string const & OperationProfiler::description() const {
@@ -198,6 +200,24 @@ bool OperationProfiler::satisfies(
     }
   }
 
+  if (arg_as_int(int_value, "cluster_m", problem_space, problem)) {
+    if (int64_t(op_desc.tile_description.cluster_shape.m()) != int_value) {
+      return false;
+    }
+  }
+
+  if (arg_as_int(int_value, "cluster_n", problem_space, problem)) {
+    if (int64_t(op_desc.tile_description.cluster_shape.n()) != int_value) {
+      return false;
+    }
+  }
+
+  if (arg_as_int(int_value, "cluster_k", problem_space, problem)) {
+    if (int64_t(op_desc.tile_description.cluster_shape.k()) != int_value) {
+      return false;
+    }
+  }
+
   if (arg_as_int(int_value, "stages", problem_space, problem)) {
     if (int64_t(op_desc.tile_description.threadblock_stages) != int_value) {
       return false;
@@ -249,17 +269,17 @@ int OperationProfiler::profile_all(
   ProblemSpace::Iterator problem_it = problem_space.begin();
   ProblemSpace::Iterator problem_end = problem_space.end();
 
-  bool continue_profiling = true, internal_error = false;
+  bool continue_profiling = true;
+  int retval = 0;
 
   // For each problem in problem space
   for (; continue_profiling && problem_it != problem_end; ++problem_it) {
-
     ProblemSpace::Problem problem = problem_it.at();
-
     report.next_problem();
 
     // For each operation in manifest
-    for (auto const & operation_ptr : manifest) {
+    int matched_operation_count = 0;
+    for (auto const& operation_ptr : manifest) {
 
       library::Operation const *operation = operation_ptr.get();
 
@@ -271,8 +291,8 @@ int OperationProfiler::profile_all(
 
       // Execute compatible cutlass operations if they satisfy the current device's compute capability
       if (operation->description().kind == kind_ &&
-        operation->description().provider == library::Provider::kCUTLASS &&
-        options.device.compute_capability() >= min_cc &&
+          operation->description().provider == library::Provider::kCUTLASS &&
+          options.device.compute_capability() >= min_cc &&
           options.device.compute_capability() <= max_cc) {
 
         std::string operation_name(operation->description().name);
@@ -299,7 +319,10 @@ int OperationProfiler::profile_all(
         if (!filtered_by_name || !satisfies(operation->description(), problem_space, problem)) {
           continue;
         }
-      
+
+        // we have found a kernel match, so increment the counter for match kernels
+        ++matched_operation_count;
+
         // A. Initialize configuration
         Status status = this->initialize_configuration(
           options,
@@ -324,6 +347,11 @@ int OperationProfiler::profile_all(
         }
 
         if (continue_profiling) {
+
+          if (options.report.print_kernel_before_running) {
+            std::cout << "Profiling kernel for JUnit test " << options.report.junit_output_path << ": "
+                      << operation_name << std::endl;
+          }
 
           status = this->initialize_workspace(
             options,
@@ -353,7 +381,6 @@ int OperationProfiler::profile_all(
         //
 
         // B. Verify CUTLASS
-         
         if (continue_profiling && options.profiling.provider_enabled(library::Provider::kCUTLASS)) {
 
           continue_profiling = this->verify_cutlass(
@@ -363,6 +390,8 @@ int OperationProfiler::profile_all(
             operation, 
             problem_space,
             problem);
+
+          retval |= (not continue_profiling);
         }
 
         if (options.execution_mode == ExecutionMode::kDryRun) {
@@ -405,10 +434,18 @@ int OperationProfiler::profile_all(
       if (!continue_profiling) {
         break;
       }
-    } 
+    }
+
+    // If we did not find any kernels that match our filters and error_on_no_match was set, report an error
+    if (options.profiling.error_on_no_match && matched_operation_count <= 0) {
+      #if !NDEBUG
+      std::cout << "Error: No matching kernels found with kernel selection filters [--error_on_no_match]" << std::endl;
+      #endif
+      retval = 1;
+    }
   }
 
-  return internal_error ? 1 : 0;
+  return retval;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -596,6 +633,9 @@ void OperationProfiler::initialize_result_(
   set_argument(result, "cta_m", problem_space, operation_desc.tile_description.threadblock_shape.m());
   set_argument(result, "cta_n", problem_space, operation_desc.tile_description.threadblock_shape.n());
   set_argument(result, "cta_k", problem_space, operation_desc.tile_description.threadblock_shape.k());
+  set_argument(result, "cluster_m", problem_space, operation_desc.tile_description.cluster_shape.m());
+  set_argument(result, "cluster_n", problem_space, operation_desc.tile_description.cluster_shape.n());
+  set_argument(result, "cluster_k", problem_space, operation_desc.tile_description.cluster_shape.k());
   set_argument(result, "stages", problem_space, operation_desc.tile_description.threadblock_stages);
   set_argument(result, "warps_m", problem_space, operation_desc.tile_description.warp_count.m());
   set_argument(result, "warps_n", problem_space, operation_desc.tile_description.warp_count.n());
@@ -643,7 +683,7 @@ bool OperationProfiler::find_string_matches_(
 
   // Search filter_tokens in operation_name in order
   size_t start = 0, idx = 0;
-  for(auto & token : filter_tokens) {
+  for (auto & token : filter_tokens) {
     // Check if characters left to be parsed in operation_name
     if (start < operation_name.length()) {
       // Find token in operation_name[start:]

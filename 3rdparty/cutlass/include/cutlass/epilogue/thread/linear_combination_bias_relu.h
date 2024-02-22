@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -204,7 +204,8 @@ template <
   typename ElementCompute_,
   typename ElementZ_,
   int ElementsPerAccess,
-  bool StoreT = true
+  bool StoreT_ = true,
+  typename ElementVector_ = ElementC_
 >
 class LinearCombinationBiasRelu {
 public:
@@ -214,6 +215,7 @@ public:
   using ElementAccumulator = ElementAccumulator_;
   using ElementCompute = ElementCompute_;
   using ElementZ = ElementZ_;
+  using ElementVector = ElementVector_;
 
   using ElementT = uint1b_t;
 
@@ -222,6 +224,9 @@ public:
 
   using ElementwiseOp = ReLu<ElementCompute>;
   using BinaryOp = plus<ElementCompute>;
+
+  // Indicates that this epilogue applies only one binary operation
+  static bool const kIsSingleSource = true;
 
   using FragmentAccumulator = Array<ElementAccumulator, kElementsPerAccess>;
   using FragmentCompute = Array<ElementCompute, kElementsPerAccess>;
@@ -233,7 +238,7 @@ public:
   static bool const kStoreZ = true;
 
   /// If true, the 'T' tensor is stored
-  static bool const kStoreT = StoreT;
+  static bool const kStoreT = StoreT_;
 
   /// Host-constructable parameters structure
   struct Params {

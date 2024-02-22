@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@
 //  Operands data type: complex<float>
 //  Rounding: float -> tfloat32_t (half_ulp_truncate)
 //  Instruction operand data type: tfloat32_t (real part) and  tfloat32_t (imaginary part)
-//  Math instruction: MMA.1688.F32.TF32
+//  Math instruction: mma.sync.aligned.m16n8k8.f32.tf32.tf32.f32
 //  Instruction output/accumulation data type: f32 (real part) and f32 (imaginary part)
 //  Output data type: complex<float>
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,15 @@
 /*! \file
     \brief Statically sized array of elements that accommodates all CUTLASS-supported numeric types
            and is safe to use in a union.
+*/
+/*
+  Note:  CUTLASS 3x increases the host compiler requirements to C++17. However, certain
+         existing integrations of CUTLASS require C++11 host compilers.
+
+         Until this requirement can be lifted, certain headers with this annotation are required
+         to be remain consistent with C++11 syntax.
+
+         C++11 compatibility is enforced by `cutlass_test_unit_core_cpp11`.
 */
 
 #pragma once
@@ -370,8 +379,6 @@ public:
 
     CUTLASS_HOST_DEVICE
     reverse_iterator(Storage *ptr, int idx = 0): ptr_(ptr), idx_(idx) { }
-
-    // TODO
   };
 
   /// Bidirectional constant iterator over elements
@@ -390,8 +397,6 @@ public:
 
     CUTLASS_HOST_DEVICE
     const_reverse_iterator(Storage const *ptr, int idx = 0): ptr_(ptr), idx_(idx) { }
-
-    // TODO
   };
 
 private:

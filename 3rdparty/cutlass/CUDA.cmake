@@ -1,4 +1,4 @@
-# Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Redistribution and use in source and binary forms, with or without
@@ -76,11 +76,12 @@ find_library(
   PATHS
   ${CUDA_TOOLKIT_ROOT_DIR}
   PATH_SUFFIXES
+  lib/x86_64-linux-gnu
   lib/x64
   lib64
   lib
   NO_DEFAULT_PATH
-  # We aren't going to search any system paths. We want to find the runtime
+  # We aren't going to search any system paths. We want to find the runtime 
   # in the CUDA toolkit we're building against.
   )
 
@@ -95,10 +96,10 @@ if(NOT TARGET cudart AND CUDART_LIBRARY)
     # from the PATH search.
   else()
     add_library(cudart SHARED IMPORTED GLOBAL)
-  endif()
+  endif()  
 
   add_library(nvidia::cudart ALIAS cudart)
-
+  
   set_property(
     TARGET cudart
     PROPERTY IMPORTED_LOCATION
@@ -120,13 +121,14 @@ find_library(
   PATHS
   ${CUDA_TOOLKIT_ROOT_DIR}
   PATH_SUFFIXES
+  lib/x86_64-linux-gnu
   lib/x64
   lib64
   lib
   lib64/stubs
   lib/stubs
   NO_DEFAULT_PATH
-  # We aren't going to search any system paths. We want to find the runtime
+  # We aren't going to search any system paths. We want to find the runtime 
   # in the CUDA toolkit we're building against.
   )
 
@@ -141,10 +143,10 @@ if(NOT TARGET cuda_driver AND CUDA_DRIVER_LIBRARY)
     # from the PATH search.
   else()
     add_library(cuda_driver SHARED IMPORTED GLOBAL)
-  endif()
+  endif()  
 
   add_library(nvidia::cuda_driver ALIAS cuda_driver)
-
+  
   set_property(
     TARGET cuda_driver
     PROPERTY IMPORTED_LOCATION
@@ -170,7 +172,7 @@ find_library(
   lib64
   lib
   NO_DEFAULT_PATH
-  # We aren't going to search any system paths. We want to find the runtime
+  # We aren't going to search any system paths. We want to find the runtime 
   # in the CUDA toolkit we're building against.
   )
 
@@ -185,10 +187,10 @@ if(NOT TARGET nvrtc AND NVRTC_LIBRARY)
     # from the PATH search.
   else()
     add_library(nvrtc SHARED IMPORTED GLOBAL)
-  endif()
-
+  endif()  
+  
   add_library(nvidia::nvrtc ALIAS nvrtc)
-
+  
   set_property(
     TARGET nvrtc
     PROPERTY IMPORTED_LOCATION
@@ -226,7 +228,14 @@ else()
 endif()
 
 set(CUTLASS_UNITY_BUILD_ENABLED ${CUTLASS_UNITY_BUILD_ENABLED_INIT} CACHE BOOL "Enable combined source compilation")
-set(CUTLASS_UNITY_BUILD_BATCH_SIZE 16 CACHE STRING "Batch size for unified source files")
+
+if (MSVC)
+  set(CUTLASS_UNITY_BUILD_BATCH_SIZE_INIT 8)
+else()
+  set(CUTLASS_UNITY_BUILD_BATCH_SIZE_INIT 16)
+endif()
+
+set(CUTLASS_UNITY_BUILD_BATCH_SIZE ${CUTLASS_UNITY_BUILD_BATCH_SIZE_INIT} CACHE STRING "Batch size for unified source files")
 
 function(cutlass_unify_source_files TARGET_ARGS_VAR)
 
@@ -247,7 +256,7 @@ function(cutlass_unify_source_files TARGET_ARGS_VAR)
 
     set(CUDA_FILE_ARGS)
     set(TARGET_SOURCE_ARGS)
-
+    
     foreach(ARG ${__UNPARSED_ARGUMENTS})
       if(${ARG} MATCHES ".*\.cu$")
         list(APPEND CUDA_FILE_ARGS ${ARG})
@@ -255,7 +264,7 @@ function(cutlass_unify_source_files TARGET_ARGS_VAR)
         list(APPEND TARGET_SOURCE_ARGS ${ARG})
       endif()
     endforeach()
-
+    
     list(LENGTH CUDA_FILE_ARGS NUM_CUDA_FILE_ARGS)
     while(NUM_CUDA_FILE_ARGS GREATER 0)
       list(SUBLIST CUDA_FILE_ARGS 0 ${__BATCH_SIZE} CUDA_FILE_BATCH)
@@ -287,7 +296,7 @@ function(cutlass_unify_source_files TARGET_ARGS_VAR)
 endfunction()
 function(cutlass_add_library NAME)
 
-  set(options)
+  set(options SKIP_GENCODE_FLAGS)
   set(oneValueArgs EXPORT_NAME)
   set(multiValueArgs)
   cmake_parse_arguments(_ "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -296,14 +305,16 @@ function(cutlass_add_library NAME)
 
   if(CUTLASS_NATIVE_CUDA OR CUDA_COMPILER MATCHES "clang")
     cutlass_correct_source_file_language_property(${TARGET_SOURCE_ARGS})
-    add_library(${NAME} ${TARGET_SOURCE_ARGS})
+    add_library(${NAME} ${TARGET_SOURCE_ARGS} "")
   else()
     set(CUDA_LINK_LIBRARIES_KEYWORD PRIVATE)
-    cuda_add_library(${NAME} ${TARGET_SOURCE_ARGS})
+    cuda_add_library(${NAME} ${TARGET_SOURCE_ARGS} "")
   endif()
 
   cutlass_apply_standard_compile_options(${NAME})
+  if (NOT __SKIP_GENCODE_FLAGS)
   cutlass_apply_cuda_gencode_flags(${NAME})
+  endif()
 
   target_compile_features(
    ${NAME}

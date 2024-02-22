@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -333,13 +333,6 @@ public:
 
   static Status can_implement(Arguments const &args) {
     return Status::kSuccess;
-  }
-
-  static size_t get_extra_workspace_size(
-    Arguments const &args,
-    cutlass::gemm::GemmCoord const &grid_tiled_shape) {
-
-    return 0;
   }
 
   /// Executes one GEMM

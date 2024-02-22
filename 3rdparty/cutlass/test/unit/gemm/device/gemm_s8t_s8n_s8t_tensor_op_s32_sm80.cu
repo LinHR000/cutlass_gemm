@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -242,6 +242,26 @@ CUTLASS_TEST_L0(SM80_Device_Gemm_s8t_s8n_s8t_tensor_op_s32, 256x128x64_64x64x64,
       cutlass::gemm::GemmShape<64, 64, 64>, cutlass::gemm::GemmShape<16, 8, 32>,
       cutlass::epilogue::thread::FastLinearCombinationClamp<
           ElementOutput, 128 / cutlass::sizeof_bits<ElementOutput>::value>,
+      cutlass::gemm::threadblock::GemmIdentityThreadblockSwizzle<>, 3>;
+
+  test::gemm::device::MultistageTestbed<Gemm> testbed;
+
+  EXPECT_TRUE(testbed.run_all());
+} )
+
+CUTLASS_TEST_L0(SM80_Device_Gemm_s8t_s8n_s8t_tensor_op_s32_align8, 256x128x64_64x64x64, {
+  using ElementOutput = int8_t;
+  using ElementAccumulator = int32_t;
+  using ElementCompute = float;
+
+  using Gemm = cutlass::gemm::device::Gemm<
+      int8_t, cutlass::layout::RowMajor, int8_t,
+      cutlass::layout::ColumnMajor, ElementOutput, cutlass::layout::RowMajor,
+      ElementAccumulator, cutlass::arch::OpClassTensorOp, cutlass::arch::Sm80,
+      cutlass::gemm::GemmShape<256, 128, 64>,
+      cutlass::gemm::GemmShape<64, 64, 64>, cutlass::gemm::GemmShape<16, 8, 32>,
+      cutlass::epilogue::thread::FastLinearCombinationClamp<
+          ElementOutput, 8>,
       cutlass::gemm::threadblock::GemmIdentityThreadblockSwizzle<>, 3>;
 
   test::gemm::device::MultistageTestbed<Gemm> testbed;

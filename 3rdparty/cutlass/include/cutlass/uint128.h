@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,15 @@
   \file
   \brief Defines an unsigned 128b integer with several operators to support 64-bit integer division.
 */
+/*
+  Note:  CUTLASS 3x increases the host compiler requirements to C++17. However, certain
+         existing integrations of CUTLASS require C++11 host compilers.
 
+         Until this requirement can be lifted, certain headers with this annotation are required
+         to be remain consistent with C++11 syntax.
+
+         C++11 compatibility is enforced by `cutlass_test_unit_core_cpp11`.
+*/
 #pragma once
 
 #if defined(__CUDACC_RTC__)
@@ -46,15 +54,9 @@
 #endif
 
 #include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-namespace cutlass {
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Optionally enable GCC's built-in type
-#if defined(__x86_64) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
+#if (defined(__x86_64) || defined (__aarch64__)) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
 #define CUTLASS_UINT128_NATIVE
 #elif defined(_MSC_VER) && defined(_M_AMD64) && !defined(__CUDA_ARCH__)
 #define CUTLASS_INT128_ARITHMETIC
@@ -65,17 +67,19 @@ namespace cutlass {
 #endif
 #endif
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
+namespace cutlass {
 
 ///! Unsigned 128b integer type
 struct uint128_t {
 
   /// Size of one part of the uint's storage in bits
-  int const kPartSize = sizeof_bits<uint64_t>::value;
+  static constexpr int kPartSize = sizeof_bits<uint64_t>::value;
 
   struct hilo {
     uint64_t lo;
     uint64_t hi;
+
+    hilo() = default;
 
     CUTLASS_HOST_DEVICE hilo(uint64_t lo_, uint64_t hi_):lo(lo_), hi(hi_) {}
   };
@@ -94,8 +98,7 @@ struct uint128_t {
   //
 
   /// Default ctor
-  CUTLASS_HOST_DEVICE
-  uint128_t(): hilo_(0, 0) { }
+  uint128_t() = default;
 
   /// Constructor from uint64
   CUTLASS_HOST_DEVICE
@@ -157,7 +160,7 @@ struct uint128_t {
   /// Multiply by unsigned 64b integer yielding 128b integer
   CUTLASS_HOST_DEVICE
   uint128_t operator*(uint64_t const &rhs) const {
-    uint128_t y;
+    uint128_t y{};
 #if defined(CUTLASS_UINT128_NATIVE)
     y.native = native * rhs;
 #elif defined(CUTLASS_INT128_ARITHMETIC)
@@ -168,7 +171,6 @@ struct uint128_t {
     uint64_t overflow;
     y.hilo_.hi += _umul128(hilo_.hi, rhs, &overflow);
 #else
-    // TODO - not implemented
     CUTLASS_UNUSED(rhs);
     exception();
 #endif
@@ -186,7 +188,6 @@ struct uint128_t {
     uint64_t remainder = 0;
     quotient = _udiv128(hilo_.hi, hilo_.lo, divisor, &remainder);
 #else
-    // TODO - not implemented
     CUTLASS_UNUSED(divisor);
     exception();
 #endif
@@ -203,7 +204,6 @@ struct uint128_t {
     // implemented using MSVC's arithmetic intrinsics
     (void)_udiv128(hilo_.hi, hilo_.lo, divisor, &remainder);
 #else
-    // TODO - not implemented
     CUTLASS_UNUSED(divisor);
     exception();
 #endif
@@ -221,7 +221,7 @@ struct uint128_t {
     // implemented using MSVC's arithmetic intrinsics
     quotient = _udiv128(hilo_.hi, hilo_.lo, divisor, &remainder);
 #else
-    // TODO - not implemented
+    CUTLASS_UNUSED(remainder);
     CUTLASS_UNUSED(divisor);
     exception();
 #endif

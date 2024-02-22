@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **************************************************************************************************/
+/*
+  Note:  CUTLASS 3x increases the host compiler requirements to C++17. However, certain
+         existing integrations of CUTLASS require C++11 host compilers.
+
+         Until this requirement can be lifted, certain headers with this annotation are required
+         to be remain consistent with C++11 syntax.
+
+         C++11 compatibility is enforced by `cutlass_test_unit_core_cpp11`.
+*/
 
 #pragma once
 
@@ -43,7 +52,7 @@
 #include "cutlass/array.h"
 #include "cutlass/uint128.h"
 #include "cutlass/coord.h"
-#include "cutlass/numeric_types.h"
+#include "cutlass/half.h"
 
 /**
  * \file
@@ -148,15 +157,23 @@ CUTLASS_HOST_DEVICE dividend_t round_nearest(dividend_t dividend, divisor_t divi
   return ((dividend + divisor - 1) / divisor) * divisor;
 }
 
+template <typename value_t>
+CUTLASS_HOST_DEVICE
+constexpr
+value_t abs_for_integer(value_t a) {
+  return ((a > 0) ? a : -a);
+}
 /**
  * Greatest common divisor
  */
 template <typename value_t>
-CUTLASS_HOST_DEVICE value_t gcd(value_t a, value_t b) {
+CUTLASS_HOST_DEVICE
+CUTLASS_CONSTEXPR_IF_CXX17
+value_t gcd(value_t a, value_t b) {
   for (;;) {
-    if (a == 0) return b;
+    if (a == 0) return cutlass::abs_for_integer(b);
     b %= a;
-    if (b == 0) return a;
+    if (b == 0) return cutlass::abs_for_integer(a);
     a %= b;
   }
 }
@@ -165,21 +182,44 @@ CUTLASS_HOST_DEVICE value_t gcd(value_t a, value_t b) {
  * Least common multiple
  */
 template <typename value_t>
-CUTLASS_HOST_DEVICE value_t lcm(value_t a, value_t b) {
+CUTLASS_HOST_DEVICE
+CUTLASS_CONSTEXPR_IF_CXX17
+value_t lcm(value_t a, value_t b) {
   value_t temp = gcd(a, b);
 
-  return temp ? (a / temp * b) : 0;
+  return temp ? (cutlass::abs_for_integer(a) / temp * cutlass::abs_for_integer(b)) : 0;
 }
 
+/**
+ * Greatest common divisor
+ */
+template <typename value_t>
+CUTLASS_HOST_DEVICE
+constexpr
+value_t gcd_cxx11(value_t a, value_t b) {
+  return (a == 0 || b == 0) ? cutlass::abs_for_integer(a | b) : gcd_cxx11(b, a % b);
+}
+
+/**
+ * Least common multiple
+ */
+template <typename value_t>
+CUTLASS_HOST_DEVICE
+constexpr
+value_t lcm_cxx11(value_t a, value_t b) {
+  return gcd_cxx11(a, b) ? (cutlass::abs_for_integer(a) / gcd_cxx11(a, b) * cutlass::abs_for_integer(b)) : 0;
+}
 /// Returns the smallest value in the half-open range [a, a+b) that is a multiple of b
 CUTLASS_HOST_DEVICE
-constexpr int round_up(int a, int b) {
+CUTLASS_CONSTEXPR_IF_CXX17
+int round_up(int a, int b) {
   return ((a + b - 1) / b) * b;
 }
 
 /// Returns the ceiling of (a / b)
 CUTLASS_HOST_DEVICE
-constexpr int ceil_div(int a, int b) {
+CUTLASS_CONSTEXPR_IF_CXX17
+int ceil_div(int a, int b) {
   return (a + b - 1) / b;
 }
 
@@ -280,6 +320,36 @@ struct FastDivmod {
   unsigned int multiplier;
   unsigned int shift_right;
 
+  /// Find quotient and remainder using device-side intrinsics
+  CUTLASS_HOST_DEVICE
+  void fast_divmod(int& quotient, int& remainder, int dividend) const {
+
+#if defined(__CUDA_ARCH__)
+    // Use IMUL.HI if divisor != 1, else simply copy the source.
+    quotient = (divisor != 1) ? __umulhi(dividend, multiplier) >> shift_right : dividend;
+#else
+    quotient = int((divisor != 1) ? int(((int64_t)dividend * multiplier) >> 32) >> shift_right : dividend);
+#endif
+
+    // The remainder.
+    remainder = dividend - (quotient * divisor);
+  }
+
+  /// For long int input
+  CUTLASS_HOST_DEVICE
+  void fast_divmod(int& quotient, int64_t& remainder, int64_t dividend) const {
+
+#if defined(__CUDA_ARCH__)
+    // Use IMUL.HI if divisor != 1, else simply copy the source.
+    quotient = (divisor != 1) ? __umulhi(dividend, multiplier) >> shift_right : dividend;
+#else
+    quotient = int((divisor != 1) ? ((dividend * multiplier) >> 32) >> shift_right : dividend);
+#endif
+    // The remainder.
+    remainder = dividend - (quotient * divisor);
+  }
+
+
   /// Construct the FastDivmod object, in host code ideally.
   ///
   /// This precomputes some values based on the divisor and is computationally expensive.
@@ -288,17 +358,41 @@ struct FastDivmod {
   FastDivmod(): divisor(0), multiplier(0), shift_right(0) { }
 
   CUTLASS_HOST_DEVICE
-  FastDivmod(int divisor_): divisor(divisor_) {
-    find_divisor(multiplier, shift_right, divisor);
+  FastDivmod(int divisor): divisor(divisor) {
+
+    if (divisor != 1) {
+      unsigned int p = 31 + find_log2(divisor);
+      unsigned m = unsigned(((1ull << p) + unsigned(divisor) - 1) / unsigned(divisor));
+
+      multiplier = m;
+      shift_right = p - 32;
+    } else {
+      multiplier = 0;
+      shift_right = 0;
+    }
   }
 
   /// Computes integer division and modulus using precomputed values. This is computationally
   /// inexpensive.
   CUTLASS_HOST_DEVICE
   void operator()(int &quotient, int &remainder, int dividend) const {
-    fast_divmod(quotient, remainder, dividend, divisor, multiplier, shift_right);
+    fast_divmod(quotient, remainder, dividend);
   }
 
+  /// Computes integer division using precomputed values. This is computationally
+  /// inexpensive.
+  CUTLASS_HOST_DEVICE
+  int div(int dividend) const {
+    int quotient, remainder;
+    fast_divmod(quotient, remainder, dividend);
+    return quotient;
+  }
+
+  /// Alias for `div` to match the interface of FastDivmodU64
+  CUTLASS_HOST_DEVICE
+  int divide(int dividend) const {
+    return div(dividend);
+  }
 
   /// Computes integer division and modulus using precomputed values. This is computationally
   /// inexpensive.
@@ -307,7 +401,7 @@ struct FastDivmod {
   CUTLASS_HOST_DEVICE
   int divmod(int &remainder, int dividend) const {
     int quotient;
-    fast_divmod(quotient, remainder, dividend, divisor, multiplier, shift_right);
+    fast_divmod(quotient, remainder, dividend);
     return quotient;
   }
 
@@ -315,7 +409,7 @@ struct FastDivmod {
   /// inexpensive.
   CUTLASS_HOST_DEVICE
   void operator()(int &quotient, int64_t &remainder, int64_t dividend) const {
-    fast_divmod(quotient, remainder, dividend, divisor, multiplier, shift_right);
+    fast_divmod(quotient, remainder, dividend);
   }
 
   /// Computes integer division and modulus using precomputed values. This is computationally
@@ -323,9 +417,14 @@ struct FastDivmod {
   CUTLASS_HOST_DEVICE
   int divmod(int64_t &remainder, int64_t dividend) const {
     int quotient;
-    fast_divmod(quotient, remainder, dividend, divisor, multiplier, shift_right);
+    fast_divmod(quotient, remainder, dividend);
     return quotient;
   }
+
+  /// Returns the divisor when cast to integer
+  CUTLASS_HOST_DEVICE
+  operator int() const { return divisor; }
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -406,7 +505,6 @@ struct FastDivmodU64 {
       }
       quotient = (x >> shift_right);
     #else
-      // TODO - use proper 'fast' division here also. No reason why x86-code shouldn't be optimized.
       quotient = dividend / divisor;
     #endif
 
@@ -424,6 +522,54 @@ struct FastDivmodU64 {
   uint64_t divmod(uint64_t &remainder, uint64_t dividend) const {
     uint64_t quotient = divide(dividend);
     remainder = modulus(quotient, dividend);
+    return quotient;
+  }
+
+  /// Computes integer division and modulus using precomputed values. This is computationally
+  /// inexpensive.
+  CUTLASS_HOST_DEVICE
+  void operator()(uint64_t &quotient, uint64_t &remainder, uint64_t dividend) const {
+    quotient = divmod(remainder, dividend);
+  }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Object to encapsulate the fast division+modulus operation for 64b integer division
+/// in which the divisor is a power of two.
+struct FastDivmodU64Pow2 {
+
+  uint64_t divisor;
+  unsigned int shift_right;
+
+  /// Default ctor
+  CUTLASS_HOST_DEVICE
+  FastDivmodU64Pow2(): divisor(0), shift_right(0) { }
+
+  /// Construct the FastDivmod object, in host code ideally.
+  ///
+  /// This precomputes some values based on the divisor and is computationally expensive.
+  CUTLASS_HOST_DEVICE
+  FastDivmodU64Pow2(uint64_t divisor_): divisor(divisor_), shift_right(FastDivmodU64::integer_log2(divisor_)) { }
+
+  /// Returns the quotient of floor(dividend / divisor)
+  CUTLASS_HOST_DEVICE
+  uint64_t divide(uint64_t dividend) const {
+    return dividend >> shift_right;
+  }
+
+  /// Computes the remainder given a computed quotient and dividend
+  CUTLASS_HOST_DEVICE
+  uint64_t modulus(uint64_t dividend) const {
+    // See https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#division-modulo-operations
+    return dividend & (divisor - 1);
+  }
+
+  /// Returns the quotient of floor(dividend / divisor) and computes the remainder
+  CUTLASS_HOST_DEVICE
+  uint64_t divmod(uint64_t &remainder, uint64_t dividend) const {
+    uint64_t quotient = divide(dividend);
+    remainder = modulus(dividend);
     return quotient;
   }
 
@@ -587,12 +733,12 @@ struct Max {
 };
 
 CUTLASS_HOST_DEVICE
-constexpr int const_min(int a, int b) {
+CUTLASS_CONSTEXPR_IF_CXX17 int const_min(int a, int b) {
     return (b < a ? b : a);
 }
 
 CUTLASS_HOST_DEVICE
-constexpr int const_max(int a, int b) {
+CUTLASS_CONSTEXPR_IF_CXX17 int const_max(int a, int b) {
     return (b > a ? b : a);
 }
 

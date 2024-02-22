@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,7 +74,7 @@ template <
 >
 struct ConvReferenceDispatcher;
 
-/// Dispatcher for Conv2d (partially specialied for kConvDim == 2)
+/// Dispatcher for Conv2d (partially specialized for kConvDim == 2)
 template <
   Provider kProvider,
   conv::Operator kConvolutionalOperator,
@@ -146,6 +146,7 @@ struct ConvReferenceDispatcher<
         LayoutC,
         ElementCompute,
         ElementAccumulator,
+        ElementC,
         ConvertOp,
         InnerProductOp
       >(

@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -120,6 +120,7 @@ public:
   using EpilogueOutputOp = typename Conv2d::EpilogueOutputOp;
   using ElementZ = typename EpilogueOutputOp::ElementZ;
   using ElementT = typename EpilogueOutputOp::ElementT;
+  using ElementVector = typename EpilogueOutputOp::ElementVector;
 
   static cutlass::conv::Operator const kConvolutionalOperator = Conv2d::kConvolutionalOperator;
   static const bool kAddBroadcastFirst = AddBroadcastFirst;
@@ -142,7 +143,7 @@ public:
   cutlass::HostTensor<ElementT, LayoutC> tensor_T_computed;
   cutlass::HostTensor<ElementT, LayoutC> tensor_T_reference;
   cutlass::HostTensor<ElementAccumulator, LayoutC> tensor_Y_reference;
-  cutlass::HostTensor<ElementC, LayoutC> tensor_Broadcast;                 // Input Broadcast
+  cutlass::HostTensor<ElementVector, LayoutC> tensor_Broadcast;            // Input Broadcast
 
 public:
 
@@ -253,7 +254,7 @@ public:
     // Determine SMEM requirements and waive if not satisfied
     //
 
-    int smem_size = int(sizeof(typename Conv2d::ImplicitGemmKernel::SharedStorage));
+    int smem_size = int(sizeof(typename Conv2d::UnderlyingKernel::SharedStorage));
 
     cudaDeviceProp properties;
     int device_idx;
@@ -269,7 +270,7 @@ public:
       throw std::runtime_error("cudaGetDeviceProperties() failed");
     }
 
-    if (properties.sharedMemPerMultiprocessor < smem_size) {
+    if (properties.sharedMemPerBlockOptin < smem_size) {
       return false;
     }
 
@@ -501,7 +502,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TestAllConv: Runs cutlass::conv::device::ImplicitGemmConvolution operator and compares it with reference
 // TestAllConv runs conv operator on default conv problem sizes from test::conv::device::TestbedConv2dProblemSizes
-// Additionaly, each conv2d test can provide conv problem sizes (conv_test_sizes) and blacklist of sizes 
+// Additionally, each conv2d test can provide conv problem sizes (conv_test_sizes) and blacklist of sizes 
 // (conv_blacklist_sizes)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename ImplicitGemm,
@@ -557,7 +558,7 @@ bool TestAllConv2dWithBroadcast(
       // CUTLASS DGRAD's *unity* stride specialization only support stride {1, 1} 
       if ((ImplicitGemm::kConvolutionalOperator == 
             cutlass::conv::Operator::kDgrad) && 
-          (ImplicitGemm::ImplicitGemmKernel::Mma::IteratorA::kStrideSupport == 
+          (ImplicitGemm::UnderlyingKernel::Mma::IteratorA::kStrideSupport == 
             cutlass::conv::StrideSupport::kUnity)) {
         if (!((conv_problem.stride_h == 1) && (conv_problem.stride_w == 1))) {
           continue;
@@ -568,7 +569,7 @@ bool TestAllConv2dWithBroadcast(
       // CUTLASS DGRAD's *strided* specialization only support stride >= {2, 2} 
       if ((ImplicitGemm::kConvolutionalOperator == 
             cutlass::conv::Operator::kDgrad) && 
-          (ImplicitGemm::ImplicitGemmKernel::Mma::IteratorA::kStrideSupport == 
+          (ImplicitGemm::UnderlyingKernel::Mma::IteratorA::kStrideSupport == 
             cutlass::conv::StrideSupport::kStrided)) {
          if (((conv_problem.stride_h == 1) && (conv_problem.stride_w == 1))) {
            continue;
@@ -605,7 +606,7 @@ bool TestAllConv2dWithBroadcast(
   // CUTLASS DGRAD's *strided* specialization does not support split-k mode 
   if ((ImplicitGemm::kConvolutionalOperator == 
           cutlass::conv::Operator::kDgrad) && 
-      (ImplicitGemm::ImplicitGemmKernel::Mma::IteratorA::kStrideSupport == 
+      (ImplicitGemm::UnderlyingKernel::Mma::IteratorA::kStrideSupport == 
         cutlass::conv::StrideSupport::kStrided)) {
 
     passed = testbed.run(
@@ -631,7 +632,7 @@ bool TestAllConv2dWithBroadcast(
 
   // Sweep split-k-slice using serial and prallel reduction with non-unity alpha and non-zero beta for 
   // a single conv2d problem size. Convolution unit tests take a long time to run so only sweep parameters 
-  // which are abolutely neccessary to catch functional bugs. The below code does provide option to sweep 
+  // which are abolutely necessary to catch functional bugs. The below code does provide option to sweep 
   // alpha and beta for local testing, but only runs one value for alpha and beta.
   cutlass::conv::Conv2dProblemSize conv2d_split_k_test_size (
       {1, 17, 11, 288},   // input size (NHWC)

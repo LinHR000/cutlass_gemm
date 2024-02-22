@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -145,6 +145,7 @@ private:
   uint32_t predicates_[kAccessesPerVector];
   int filter_rs_;
   int filter_c_;
+  int channels_per_group_;
 
   //
   // Assertions
@@ -175,6 +176,7 @@ public:
 
     filter_c_ = threadblock_offset.row() + thread_coord.contiguous();
     Index column = threadblock_offset.column() + thread_coord.strided();
+    channels_per_group_ = problem_size_.C / problem_size_.groups;
 
     CUTLASS_PRAGMA_UNROLL
     for (int s = 0; s < ThreadMap::Iterations::kStrided; ++s) {
@@ -188,7 +190,7 @@ public:
 
     CUTLASS_PRAGMA_UNROLL
     for (int v_idx = 0; v_idx < kAccessesPerVector; ++v_idx) {
-      clear_mask(v_idx, filter_c_ + v_idx * AccessType::kElements >= problem_size_.C);
+      clear_mask(v_idx, filter_c_ + v_idx * AccessType::kElements >= channels_per_group_);
     }
 
     pointer_ += (
@@ -229,7 +231,7 @@ public:
  
     CUTLASS_PRAGMA_UNROLL
     for (int v_idx = 0; v_idx < kAccessesPerVector; ++v_idx) {
-      clear_mask(v_idx, filter_c_ + v_idx * AccessType::kElements >= problem_size_.C);
+      clear_mask(v_idx, filter_c_ + v_idx * AccessType::kElements >= channels_per_group_);
     }
       
     pointer_ += next;
@@ -286,7 +288,7 @@ public:
   static Status can_implement(Conv2dProblemSize const &problem_size) {
 
     // check alignment constraint on iterator's contiguous dimension
-    if (problem_size.C % AccessType::kElements) {
+    if ((problem_size.C / problem_size.groups) % AccessType::kElements) {
       return Status::kErrorInvalidProblem;
     }
 

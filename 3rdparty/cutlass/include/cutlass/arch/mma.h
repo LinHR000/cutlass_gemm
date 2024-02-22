@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,61 +49,88 @@ namespace arch {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the operation implied by MMA.
-struct OpMultiplyAdd;
+struct OpMultiplyAdd {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the result is saturated to MAX_FLOAT|MIN_FLOAT or MAX_INT|MIN_INT
-struct OpMultiplyAddSaturate;
+struct OpMultiplyAddSaturate {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the input is converted to a narrower type (BF16)
-struct OpMultiplyAddFastBF16;
+struct OpMultiplyAddFastBF16 {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the input is converted to a narrower type (F16)
-struct OpMultiplyAddFastF16;
+struct OpMultiplyAddFastF16 {};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Tag indicating the input data types are mixed and the narrower type is 
+/// upcasted to the wider type
+struct OpMultiplyAddMixedInputUpcast {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the input is converted to 2 (big and small) TF32 components
 //  Perform 3xTF32 or 4xTF32 for every F32 output element
-struct OpMultiplyAddFastF32;
+struct OpMultiplyAddFastF32 {};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the input is converted to 2 (big and small) TF32 components
 //  Perform 3xTF32 or 4xTF32 for every complex<F32> output element
-struct OpMultiplyAddComplexFastF32;
+struct OpMultiplyAddComplexFastF32 {};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Helper for determining whether staged accumulation should be used for a given operator
+template <typename Operator>
+struct UseStagedAccumulation {
+  static bool const value = platform::is_same<Operator, OpMultiplyAddFastF32>::value ||
+                            platform::is_same<Operator, OpMultiplyAddComplexFastF32>::value;
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the complex multiply-add operation
-struct OpMultiplyAddComplex;
+struct OpMultiplyAddComplex {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the gaussian complex multiply-add operation
-struct OpMultiplyAddGaussianComplex;
+struct OpMultiplyAddGaussianComplex {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag indicating the inner product is defined by (XOR, POPC)
-struct OpXorPopc;
+struct OpXorPopc {};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Tag indicating the inner product is defined by (AND, POPC)
+struct OpAndPopc {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tag classifying math operators as thread-level operations.
-struct OpClassSimt;
+struct OpClassSimt {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Tag classifing operators as Tensor Core operations.
-struct OpClassTensorOp;
+/// Tag classifying operators as Tensor Core operations.
+struct OpClassTensorOp {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/// Tag classifing operators as WMMA Tensor Core operations
-struct OpClassWmmaTensorOp;
+/// Tag classifying operators as WMMA Tensor Core operations
+struct OpClassWmmaTensorOp {};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Tag classifying operators as Tensor Core with structure sparse operations.
+struct OpClassSparseTensorOp {};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -223,4 +250,5 @@ struct SparseMma;
 #include "cutlass/arch/mma_sm75.h"
 #include "cutlass/arch/mma_sm80.h"
 #include "cutlass/arch/mma_sparse_sm80.h"
+#include "cutlass/arch/mma_sm90.h"
 /////////////////////////////////////////////////////////////////////////////////////////////////

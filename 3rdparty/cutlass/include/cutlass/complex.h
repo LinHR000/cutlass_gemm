@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,8 @@
 
 #include <cuComplex.h>
 
+#include <cuda_fp16.h>
+
 #if defined(__CUDACC_RTC__)
 #include <cuda/std/cstdint>
 #else
@@ -39,11 +41,10 @@
 #endif
 
 #include "cutlass/cutlass.h"
-#include "cutlass/half.h"
+#include "cutlass/functional.h"
 #include "cutlass/real.h"
 
-#include "cutlass/bfloat16.h"
-#include "cutlass/tfloat32.h"
+#include "cutlass/numeric_types.h"
 
 #include "cutlass/fast_math.h"
 
@@ -53,8 +54,10 @@
 
 namespace cutlass {
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 /// Enumeraed type describing a transformation on a complex value.
 enum class ComplexTransform {
   kNone,
@@ -147,15 +150,18 @@ class complex
 // Methods
 //
 
-/// Constructor
-  CUTLASS_HOST_DEVICE
-  complex(T r = T(0)) : _real(r), _imag(T(0)) {}
+  /// Default constructor
+  complex() = default;
 
-/// Constructor
+  /// Constructor
+  CUTLASS_HOST_DEVICE
+  complex(T r) : _real(r), _imag(T(0)) {}
+
+  /// Constructor
   CUTLASS_HOST_DEVICE
   complex(T r, T i) : _real(r), _imag(i) {}
-  //
-/// Constructor
+
+  /// Constructor
   template<typename A>
   CUTLASS_HOST_DEVICE
   complex(complex<A> const &z) : _real(static_cast<T>(z.real())), _imag(static_cast<T>(z.imag())) {}
@@ -171,16 +177,6 @@ class complex
   complex(cuDoubleComplex const &z) : _real(static_cast<T>(cuCreal(z))), _imag(static_cast<T>(cuCimag(z))) {}
   #endif
 
-  /// Assignment
-  template<typename A>
-  CUTLASS_HOST_DEVICE
-  complex<T>& operator=(complex<A> const &z)
-  {
-    _real = static_cast<T>(z.real());
-    _imag = static_cast<T>(z.imag());
-    return *this;
-  }
-
   /// Equality operator
   CUTLASS_HOST_DEVICE bool operator==(complex<T> const &rhs) const {
     return this->real() == rhs.real() && this->imag() == rhs.imag();
@@ -195,6 +191,24 @@ class complex
     template <typename A>
   CUTLASS_HOST_DEVICE complex<T> operator+(complex<A> const &rhs) const {
     return complex<T>(this->real() + rhs.real(), this->imag() + rhs.imag());
+  }
+
+  /// Reduction into memory address.  Components may update out of order.
+  template <typename OtherT>
+  CUTLASS_DEVICE void red(complex<OtherT> *ptr) const {
+    static_assert(platform::is_same<T, OtherT>::value, "Component type must match");
+    cutlass::atomic_add<T> reduce;
+    reduce(&ptr->_real, _real);
+    reduce(&ptr->_imag, _imag);
+  }
+
+  /// Reduction into memory address.  Components may update out of order.  (Half specialization)
+  CUTLASS_DEVICE void red(complex<half_t> *ptr) const {
+    static_assert(platform::is_same<T, half_t>::value, "Component type must match");
+    half2 *h2_ptr = reinterpret_cast<half2*>(ptr);
+    half2 h2_data = reinterpret_cast<half2&>(*this);
+    cutlass::atomic_add<half2> reduce;
+    reduce(h2_ptr, h2_data);
   }
 
   /// Subtraction
@@ -284,6 +298,13 @@ class complex
   CUTLASS_HOST_DEVICE
   T &imag() { return _imag; }
 
+  /// Set the real part of the complex number
+  CUTLASS_HOST_DEVICE
+  void real(T real) { _real = real; }
+
+  /// Set the imaginary part of the complex number
+  CUTLASS_HOST_DEVICE
+  void imag(T imag) { _imag = imag; }
 
   #if !defined(__CUDACC_RTC__)
   /// Converts to cuFloatComplex
@@ -415,33 +436,71 @@ CUTLASS_HOST_DEVICE R norm_accumulate(T const &x, R const & accumulator) {
 /// Norm accumulate specialized for complex types
 template <typename T, typename R>
 CUTLASS_HOST_DEVICE R norm_accumulate(complex<T> const &z, R const &accumulator) {
-  return accumulator + static_cast<R>(real(z)) * static_cast<R>(real(z)) + 
+  return accumulator + static_cast<R>(real(z)) * static_cast<R>(real(z)) +
     static_cast<R>(imag(z)) * static_cast<R>(imag(z));
 }
 
-/// Returns the complex conjugate
 CUTLASS_HOST_DEVICE float conj(float const &z) {
   return z;
 }
 
-/// Returns the complex conjugate
 CUTLASS_HOST_DEVICE double conj(double const &z) {
   return z;
 }
+
+CUTLASS_HOST_DEVICE half_t conj(half_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE int32_t conj(int32_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE uint32_t conj(uint32_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE int64_t conj(int64_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE uint64_t conj(uint64_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE int4b_t conj(int4b_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE uint4b_t conj(uint4b_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE bfloat16_t conj(bfloat16_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE uint1b_t conj(uint1b_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE tfloat32_t conj(tfloat32_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE float_e4m3_t conj(float_e4m3_t const& z) {
+  return z;
+}
+
+CUTLASS_HOST_DEVICE float_e5m2_t conj(float_e5m2_t const& z) {
+  return z;
+}
+
 
 /// Returns the complex conjugate
 template <typename T>
 CUTLASS_HOST_DEVICE complex<T> conj(complex<T> const &z) {
   return complex<T>(real(z), -imag(z));
-}
-/// Indentity transform for non-complex types
-template <typename T>
-CUTLASS_HOST_DEVICE T conj(T const &z) {
-    static_assert( !platform::is_same<T, cuComplex>::value &&
-                   !platform::is_same<T, cuDoubleComplex>::value &&
-                   !platform::is_same<T, cutlass::complex<double>>::value &&
-                   !platform::is_same<T, cutlass::complex<float>>::value, "May not be a complex data type");
-  return z;
 }
 
 /// Projects the complex number z onto the Riemann sphere
@@ -495,24 +554,24 @@ CUTLASS_HOST_DEVICE complex<T> sin(complex<T> const &z) {
   return (exp(-z) - exp(z)) * complex<T>(T(0), T(1) / T(2));
 }
 
-/// Comparison 
+/// Comparison
 template <typename T>
 CUTLASS_HOST_DEVICE bool operator<(complex<T> const &lhs, complex<T> const &rhs) {
-  //TODO
-  return true; 
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for complex-valued type.
 template <typename T>
-struct RealType< complex<T> > {
+struct RealType< complex<T> >
+{
   using Type = T;
 
   /// Number of elements
   static int const kExtent = 2;
 
-CUTLASS_HOST_DEVICE
+  CUTLASS_HOST_DEVICE
   static complex<T> from_real(double x) {
     return complex<T>(static_cast<T>(x));
   }
@@ -549,6 +608,127 @@ template <typename T>
 struct is_complex<complex<T>> {
   static bool const value = true;
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// functional.h numeric specializations
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Squares with optional conversion
+template <typename T, typename Output>
+struct magnitude_squared<complex<T>, Output> {
+  CUTLASS_HOST_DEVICE
+  Output operator()(complex<T> lhs) const {
+    multiplies<Output> mul_op;
+
+    Output y_r = Output(lhs.real());
+    Output y_i = Output(lhs.imag());
+
+    return mul_op(y_r, y_r) + mul_op(y_i, y_i);
+  }
+};
+
+/// Fused multiply-add
+template <typename T>
+struct multiply_add<complex<T>, complex<T>, complex<T>> {
+  CUTLASS_HOST_DEVICE
+  complex<T> operator()(
+    complex<T> const &a,
+    complex<T> const &b,
+    complex<T> const &c) const {
+
+    T real = c.real();
+    T imag = c.imag();
+
+    real += a.real() * b.real();
+    real += -a.imag() * b.imag();
+    imag += a.real() * b.imag();
+    imag += a.imag () * b.real();
+
+    return complex<T>{
+      real,
+      imag
+    };
+  }
+};
+
+/// Fused multiply-add
+template <typename T>
+struct multiply_add<complex<T>, T, complex<T>> {
+  CUTLASS_HOST_DEVICE
+  complex<T> operator()(
+    complex<T> const &a,
+    T const &b,
+    complex<T> const &c) const {
+
+    T real = c.real();
+    T imag = c.imag();
+
+    real += a.real() * b;
+    imag += a.imag () * b;
+
+    return complex<T>{
+      real,
+      imag
+    };
+  }
+};
+
+/// Fused multiply-add
+template <typename T>
+struct multiply_add<T, complex<T>, complex<T>> {
+  CUTLASS_HOST_DEVICE
+  complex<T> operator()(
+    T const &a,
+    complex<T> const &b,
+    complex<T> const &c) const {
+
+    T real = c.real();
+    T imag = c.imag();
+
+    real += a * b.real();
+    imag += a * b.imag();
+
+    return complex<T>{
+      real,
+      imag
+    };
+  }
+};
+
+/// Conjugate
+template <typename T>
+struct conjugate<complex<T>>  {
+  CUTLASS_HOST_DEVICE
+  complex<T> operator()(complex<T> const &a) const {
+    return conj(a);
+  }
+};
+
+/// Computes the square of a difference with optional conversion
+template <typename T, typename Output>
+struct magnitude_squared_difference<complex<T>, Output> {
+  CUTLASS_HOST_DEVICE
+  Output operator()(complex<T> lhs, complex<T> rhs) const {
+    multiplies<Output> mul_op;
+
+    Output y_r = Output(lhs.real()) - Output(rhs.real());
+    Output y_i = Output(lhs.imag()) - Output(rhs.imag());
+
+    return mul_op(y_r, y_r) + mul_op(y_i, y_i);
+  }
+};
+
+/// Reduces value into the data pointed to by ptr (complex<T> specialization)
+template <typename T>
+struct atomic_add<complex<T>> {
+  CUTLASS_DEVICE
+  void operator()(complex<T> *ptr, const complex<T> &data)
+  {
+    data.red(ptr);
+  }
+};
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 

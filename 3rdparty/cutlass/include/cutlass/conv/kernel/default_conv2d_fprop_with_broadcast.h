@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,7 +99,7 @@ struct DefaultConv2dFpropWithBroadcast {
     AlignmentB
   >::Kernel;
 
-  // Replace epilogue
+  // Define epilogue
   using Epilogue = typename cutlass::conv::kernel::detail::DefaultConvEpilogueWithBroadcastTensorOp<
     ArchTag,
     typename ImplicitGemmBase::Epilogue::Shape,
@@ -107,7 +107,7 @@ struct DefaultConv2dFpropWithBroadcast {
     ImplicitGemmBase::Epilogue::kPartitionsK,
     ElementC,
     typename EpilogueOutputOp::ElementT,
-    ElementC,
+    typename EpilogueOutputOp::ElementVector,
     EpilogueOutputOp,
     ImplicitGemmBase::Epilogue::kElementsPerAccess
   >::Epilogue;

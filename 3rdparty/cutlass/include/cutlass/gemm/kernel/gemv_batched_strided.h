@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2017 - 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2017 - 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
@@ -149,7 +149,7 @@ CUTLASS_DEVICE void GemvBatchedStridedDevice(
   mma(problem_size.mnk(), accumulators, iterator_A, iterator_B, accumulators);
 
   //
-  // Epilogue (TODO: Epiloge as template argument)
+  // Epilogue
   //
   typename GemvKernel::FragmentCD fragment_CD;
 
