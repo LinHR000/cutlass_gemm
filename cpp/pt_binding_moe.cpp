@@ -6,10 +6,12 @@
 #include <torch/script.h>
 #include "tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels.h"
 #include "tensorrt_llm/kernels/mixtureOfExperts/moe_kernels.h"
+#include "tensorrt_llm/cutlass_extensions/include/cutlass_extensions/gemm_configs.h"
 #include "tensorrt_llm/thop/thUtils.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/numeric_types.h"
 #include <map>
+#include <optional>
 using torch::Tensor;
 using torch_ext::get_ptr;
 // using tensorrt_llm;
@@ -37,6 +39,46 @@ tensorrt_llm::ActivationType getActivationType(std::string activation_type_str)
     return tensorrt_llm::ActivationType::InvalidType;
 }
 
+tensorrt_llm::cutlass_extensions::CutlassGemmConfig getCusConfig(std::string tile_config,std::string split_k_style, int split_k_factor,int stages)
+{
+    tensorrt_llm::cutlass_extensions::CutlassTileConfig choose_tile_config;
+    tensorrt_llm::cutlass_extensions::SplitKStyle choose_split_k_style;
+    if (tile_config == "CtaShape32x128x64_WarpShape32x32x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape128x128x8_WarpShape64x64x8;
+    }else if (tile_config == "CtaShape32x128x64_WarpShape32x32x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape32x128x64_WarpShape32x32x64;
+    }else if (tile_config == "CtaShape64x128x64_WarpShape32x64x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape64x128x64_WarpShape32x64x64;
+    }else if (tile_config == "CtaShape64x64x128_WarpShape32x64x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape64x64x128_WarpShape32x64x64;
+    }else if (tile_config == "CtaShape64x128x64_WarpShape64x32x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape64x128x64_WarpShape64x32x64;
+    }else if (tile_config == "CtaShape128x64x64_WarpShape64x32x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape128x64x64_WarpShape64x32x64;
+    }else if (tile_config == "CtaShape128x128x64_WarpShape64x32x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape128x128x64_WarpShape64x32x64;
+    }else if (tile_config == "CtaShape128x128x64_WarpShape64x64x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape128x128x64_WarpShape64x64x64;
+    }else if (tile_config == "CtaShape128x128x64_WarpShape128x32x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape128x128x64_WarpShape128x32x64;
+    }else if (tile_config == "CtaShape128x256x64_WarpShape64x64x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape128x256x64_WarpShape64x64x64;
+    }else if (tile_config == "CtaShape256x128x64_WarpShape64x64x64"){
+        choose_tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape256x128x64_WarpShape64x64x64;
+    }else{
+        std::cout << "TileConfig Type: " <<  tile_config << " not supported !";
+    }
+
+    if (split_k_style == "NO_SPLIT_K"){
+        choose_split_k_style = tensorrt_llm::cutlass_extensions::SplitKStyle::NO_SPLIT_K;
+    }else if (split_k_style == "SPLIT_K_SERIAL"){
+        choose_split_k_style = tensorrt_llm::cutlass_extensions::SplitKStyle::SPLIT_K_SERIAL;
+    }else{
+        std::cout << "SplitKStyle Type: " <<  split_k_style << " not supported !";
+    }
+    return tensorrt_llm::cutlass_extensions::CutlassGemmConfig(choose_tile_config,choose_split_k_style,split_k_factor,stages);
+}
+
 
 Tensor moe_gemm(Tensor&         input,
                 Tensor&         weight,
@@ -49,8 +91,8 @@ Tensor moe_gemm(Tensor&         input,
                 int64_t         gemm_k,
                 int             num_experts,
                 std::string     activation_type,
-                int             tile_config, // if tie_config is -1, use default tile config
-                int             split_k_style,
+                std::optional<std::string>             tile_config, // if tie_config is -1, use default tile config
+                std::optional<std::string>             split_k_style,
                 int             split_k_factor,
                 int             stages
 
@@ -71,15 +113,12 @@ Tensor moe_gemm(Tensor&         input,
     }else{
         output = *out;
     }
-
-    tensorrt_llm::cutlass_extensions::CutlassGemmConfig* gemm_config;
+    bool use_config = tile_config ? true : false;
+    tensorrt_llm::cutlass_extensions::CutlassGemmConfig gemm_config;
     //get gemm config
-    if (tile_config != -1) {
-        gemm_config = new tensorrt_llm::cutlass_extensions::CutlassGemmConfig(tensorrt_llm::cutlass_extensions::CutlassTileConfig(tile_config), 
-                                                                            tensorrt_llm::cutlass_extensions::SplitKStyle(split_k_style), 
-                                                                            split_k_factor, stages);
-    }else{
-        gemm_config = nullptr;
+    if (use_config) {
+        // std::string 
+        gemm_config = getCusConfig(tile_config.value(),split_k_style.value(),split_k_factor,stages);
     }
 
     // according input data type, initialize the moe gemm runner and choose the corresponding gemm function
@@ -91,6 +130,7 @@ Tensor moe_gemm(Tensor&         input,
         half* weight_scales_ptr = weight_scales ? reinterpret_cast<half*>(weight_scales.value().data_ptr()) : nullptr;
         if (weight.scalar_type() == at::ScalarType::Half){
             tensorrt_llm::MoeGemmRunner<half,half> cutlass_runner;
+            cutlass_runner.setBestConfig(gemm_config);
                 // run the moe gemm
             if (use_bias){ // use bias api
                 cutlass_runner.moeGemmBiasAct(get_ptr<half>(input),
@@ -120,6 +160,7 @@ Tensor moe_gemm(Tensor&         input,
             }
         }else if (weight.scalar_type() == at::ScalarType::Char){
             tensorrt_llm::MoeGemmRunner<half,uint8_t> cutlass_runner;
+            cutlass_runner.setBestConfig(gemm_config);
                 // run the moe gemm
             if (use_bias){ // use bias api
                 cutlass_runner.moeGemmBiasAct(get_ptr<half>(input),
@@ -149,6 +190,7 @@ Tensor moe_gemm(Tensor&         input,
             }
         } else if (weight.scalar_type() == at::ScalarType::QUInt4x2){
             tensorrt_llm::MoeGemmRunner<half,cutlass::uint4b_t> cutlass_runner;
+            cutlass_runner.setBestConfig(gemm_config);
                 // run the moe gemm
             if (use_bias){ // use bias api
                 cutlass_runner.moeGemmBiasAct(get_ptr<half>(input),
@@ -184,6 +226,7 @@ Tensor moe_gemm(Tensor&         input,
         __nv_bfloat16* weight_scales_ptr = weight_scales ? reinterpret_cast<__nv_bfloat16*>(weight_scales.value().data_ptr()) : nullptr;
         if (weight.scalar_type() == at::ScalarType::BFloat16){
             tensorrt_llm::MoeGemmRunner<__nv_bfloat16,__nv_bfloat16> cutlass_runner;
+            cutlass_runner.setBestConfig(gemm_config);
             if (use_bias){ // use bias api
                 cutlass_runner.moeGemmBiasAct(get_ptr<__nv_bfloat16>(input),
                                             get_ptr<__nv_bfloat16>(weight),
@@ -212,6 +255,7 @@ Tensor moe_gemm(Tensor&         input,
             }
         }else if (weight.scalar_type() == at::ScalarType::Char){
             tensorrt_llm::MoeGemmRunner<__nv_bfloat16,uint8_t> cutlass_runner;
+            cutlass_runner.setBestConfig(gemm_config);
                 // run the moe gemm
             if (use_bias){ // use bias api
                 cutlass_runner.moeGemmBiasAct(get_ptr<__nv_bfloat16>(input),
@@ -241,6 +285,7 @@ Tensor moe_gemm(Tensor&         input,
             }
         } else if (weight.scalar_type() == at::ScalarType::QUInt4x2){
             tensorrt_llm::MoeGemmRunner<__nv_bfloat16,cutlass::uint4b_t> cutlass_runner;
+            cutlass_runner.setBestConfig(gemm_config);
                 // run the moe gemm
             if (use_bias){ // use bias api
                 cutlass_runner.moeGemmBiasAct(get_ptr<__nv_bfloat16>(input),
@@ -291,8 +336,8 @@ Tensor run_moe_fc_helper(Tensor                            input_activations, //
                          c10::optional<Tensor>             fc2_expert_scales,
                          const int                         active_rows,
                          const int                         k,
-                         int                               tile_config, // if tie_config is -1, use default tile config
-                         int                               split_k_style,
+                         std::optional<std::string>        tile_config, // if tie_config is -1, use default tile config
+                         std::optional<std::string>        split_k_style,
                          int                               split_k_factor,
                          int                               stages)
 {
@@ -338,11 +383,12 @@ Tensor run_moe_fc_helper(Tensor                            input_activations, //
     // tensorrt_llm::cutlass_extensions::CutlassGemmConfig gemm_config;
     // gemm_config.tile_config = tensorrt_llm::cutlass_extensions::CutlassTileConfig::CtaShape128x128x64_WarpShape128x32x64;
     // gemm_config.stages = 4;
-    if (tile_config && tile_config != -1){
+    if (tile_config){
         tensorrt_llm::cutlass_extensions::CutlassGemmConfig gemm_config;
-        gemm_config = tensorrt_llm::cutlass_extensions::CutlassGemmConfig(tensorrt_llm::cutlass_extensions::CutlassTileConfig(tile_config), 
-                                                                          tensorrt_llm::cutlass_extensions::SplitKStyle(split_k_style), 
-                                                                          split_k_factor, stages);
+        gemm_config = getCusConfig(tile_config.value(),split_k_style.value(),split_k_factor,stages);
+        // gemm_config = tensorrt_llm::cutlass_extensions::CutlassGemmConfig(tensorrt_llm::cutlass_extensions::CutlassTileConfig(tile_config), 
+        //                                                                   tensorrt_llm::cutlass_extensions::SplitKStyle(split_k_style), 
+        //                                                                   split_k_factor, stages);
         moe_runner.setTactic(gemm_config);
     }
 
@@ -412,8 +458,8 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                   c10::optional<Tensor>             fc2_expert_scales,
                   int64_t     active_rows,
                   int64_t     k,
-                  int                               tile_config, // if tie_config is -1, use default tile config
-                  int                               split_k_style,
+                  std::optional<std::string>        tile_config, // if tie_config is -1, use default tile config
+                  std::optional<std::string>        split_k_style,
                   int                               split_k_factor,
                   int                               stages)
 {
