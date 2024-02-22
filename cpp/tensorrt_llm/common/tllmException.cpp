@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2022-2024, NVIDIA CORPORATION.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ TllmException::TllmException(char const* file, std::size_t line, const std::stri
 }
 #endif
 
-TllmException::~TllmException() = default;
+TllmException::~TllmException() noexcept = default;
 
 std::string TllmException::getTrace() const
 {

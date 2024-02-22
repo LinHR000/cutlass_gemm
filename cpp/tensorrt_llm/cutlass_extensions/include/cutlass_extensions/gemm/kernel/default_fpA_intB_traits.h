@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ struct MixedGemmArchTraits<float, float, arch>
     static constexpr int Stages = 2;
     using OperatorClass = cutlass::arch::OpClassSimt;
     using AccType = float;
-    using LayoutB = cutlass::layout::RowMajor;
+    using LayoutB = cutlass::layout::ColumnMajor;
 
     static constexpr int ElementsPerAccessA = 1;
     static constexpr int ElementsPerAccessB = 1;

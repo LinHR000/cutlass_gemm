@@ -48,7 +48,7 @@ public:
     template <typename T>
     [[nodiscard]] T* reMalloc(T* ptr, size_t sizeBytes, const bool setZero = true)
     {
-        TLLM_LOG_DEBUG(__PRETTY_FUNCTION__);
+        TLLM_LOG_TRACE(__PRETTY_FUNCTION__);
         // TODO martinma: why do we need this size extension?
         auto const sizeAligned = ((sizeBytes + 31) / 32) * 32; // make the buffer align with 32 bytes
         if (contains(ptr))
@@ -69,7 +69,7 @@ public:
             else
             {
                 assert(realloc == ReallocType::REUSE);
-                TLLM_LOG_DEBUG("Reuse original buffer %p with size %d and do nothing for reMalloc.", ptr, sizeAligned);
+                TLLM_LOG_DEBUG("Reuse original buffer %p with size %lu and do nothing for reMalloc.", ptr, sizeAligned);
                 if (setZero)
                 {
                     memSet(ptr, 0, sizeAligned);
