@@ -208,6 +208,7 @@ sources_fpAIntB=[
         'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int8_gemm_fg_scalebias.cu',
         'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int8_gemm_fg_scaleonly.cu',
         'cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fp16_int8_gemm_per_col.cu',
+        "cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_heuristic.cpp",
         "cpp/tensorrt_llm/common/stringUtils.cpp",
         "cpp/tensorrt_llm/common/logger.cpp",
         "cpp/tensorrt_llm/common/tllmException.cpp",

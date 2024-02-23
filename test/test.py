@@ -1,2 +1,2 @@
 import torch
-from cutlass_gemm import gemm_op_moe
+from cutlass_gemm import gemm_op_moe,gemm_op_fpAIntB

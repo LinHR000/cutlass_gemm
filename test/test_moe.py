@@ -58,20 +58,37 @@ class TestMoe(unittest.TestCase):
   def generate_weights(self, hidden_size, inter_size, num_experts, dtype, quant_type):
     weights = dict()
     quantize = quant_type == torch.int8 or quant_type == torch.quint4x2
+    if quantize:
+      from cutlass_gemm import gemm_op_utils
 
     weights["fc1_expert_weights_for_ref"] = random_cuda_tensor([num_experts, hidden_size, inter_size], dtype, mean=0, std=0.02)
     weights["fc1_expert_weights_for_ft"] = weights["fc1_expert_weights_for_ref"]
+    if quantize:
+      _,weight_quant,weight_scale = gemm_op_utils.symmetric_quantize_last_axis_of_batched_matrix(weights["fc1_expert_weights_for_ref"].cpu(), 0 if quant_type == torch.int8 else 1)
+      weights["fc1_expert_weights_for_ft_scale"] = weight_scale.to(weights["fc1_expert_weights_for_ft"].device)
+      weights["fc1_expert_weights_for_ft"] = weight_quant.to(weights["fc1_expert_weights_for_ft"].device)
+    else:
+      weights["fc1_expert_weights_for_ft_scale"] = None
 
     weights["fc2_expert_weights_for_ref"] = random_cuda_tensor([num_experts, inter_size, hidden_size], dtype, mean=0, std=0.02)
     weights["fc2_expert_weights_for_ft"] = weights["fc2_expert_weights_for_ref"]
+    if quantize:
+      _,weight_quant,weight_scale = gemm_op_utils.symmetric_quantize_last_axis_of_batched_matrix(weights["fc2_expert_weights_for_ft"].cpu(), 0 if quant_type == torch.int8 else 1)
+      weights["fc2_expert_weights_for_ft_scale"] = weight_scale.to(weights["fc2_expert_weights_for_ft"].device)
+      weights["fc2_expert_weights_for_ft"] = weight_quant.to(weights["fc2_expert_weights_for_ft"].device)
+    else:
+      weights["fc2_expert_weights_for_ft_scale"] = None
     return weights
   
-  def run_ft_moe(self, input_dict, active_rows, k, activation_str):
+  def run_ft_moe(self, input_dict, active_rows, k, activation_str,quant_type):
+
     moe_output = self.run_moe_fc(input_dict["input_activations"], input_dict["gating_output"], \
                     input_dict["fc1_expert_weights_for_ft"],\
                     activation_str, \
                     input_dict["fc2_expert_weights_for_ft"], \
-                    active_rows, k)
+                      None,None,input_dict["fc1_expert_weights_for_ft_scale"],input_dict["fc2_expert_weights_for_ft_scale"],\
+                        None,\
+                    active_rows, k,None,None,0,0)
     return moe_output
   
   def run_ref_moe(self, input_dict, k, activation_str):
@@ -101,6 +118,12 @@ class TestMoe(unittest.TestCase):
     rows = [2, 16, 512, 2048]
     ks = [2, 4]
 
+    quant_mode = 'W16A16'
+    if quant_type == torch.int8:
+      quant_mode = 'W8A16'
+    if quant_type == torch.quint4x2:
+      quant_mode = 'W4A16'
+
     for hidden_size in hidden_sizes:
       for inter_size in inter_sizes:
         for experts in experts_list:
@@ -113,7 +136,7 @@ class TestMoe(unittest.TestCase):
                 input_dict = self.generate_inputs(row, active_rows, hidden_size, experts, dtype, quant_type)
                 input_dict.update(weights)            
 
-                act_output = self.run_ft_moe(input_dict, row, k, activation_str)
+                act_output = self.run_ft_moe(input_dict, row, k, activation_str,quant_mode)
                 ref_output = self.run_ref_moe(input_dict, k, activation_str)
 
                 msg = "Moe Failed on rows={}, active_rows={}, experts={}, k={}, hidden_size={}, inter_size={}" \
@@ -134,11 +157,22 @@ class TestMoe(unittest.TestCase):
   #                        experts_list=[32], hidden_sizes=[1024, 2048], \
   #                        inter_sizes=[4096])
 
+  # def test_moe_bf16_gelu(self):
+  #   self.moe_test_helper(torch.bfloat16, torch.bfloat16, rtol=1e-3, atol=0.05, \
+  #                        activation_str="silu", \
+  #                        experts_list=[32], hidden_sizes=[1024, 2048], \
+  #                        inter_sizes=[4096])
+  # def test_moe_bf16_gelu(self):
+  #   self.moe_test_helper(torch.bfloat16, torch.int8, rtol=1e-3, atol=0.05, \
+  #                        activation_str="silu", \
+  #                        experts_list=[32], hidden_sizes=[1024, 2048], \
+  #                        inter_sizes=[4096])
   def test_moe_bf16_gelu(self):
-    self.moe_test_helper(torch.bfloat16, torch.bfloat16, rtol=1e-3, atol=0.05, \
+    self.moe_test_helper(torch.bfloat16, torch.quint4x2, rtol=1e-3, atol=0.05, \
                          activation_str="silu", \
                          experts_list=[32], hidden_sizes=[1024, 2048], \
                          inter_sizes=[4096])
+
 
 if __name__ == '__main__':
     unittest.main()

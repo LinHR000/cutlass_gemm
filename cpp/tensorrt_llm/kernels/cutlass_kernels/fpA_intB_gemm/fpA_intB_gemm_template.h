@@ -419,12 +419,12 @@ void CutlassFpAIntBGemmRunner<ActivationType, WeightType, QuantOp, ScaleZeroType
             QuantOp, EpilogueTag>(A, B, weight_scales, weight_zero_points, biases, alpha, C, m, n, k, group_size,
             workspace_ptr, workspace_bytes, gemm_config, stream, occupancy);
     }
-    else if (sm_ == 90)
-    {
-        sm90_dispatch_gemm_to_cutlass<ActivationType, WeightType, ScaleZeroType, BiasType, OutputType, QuantOp,
-            EpilogueTag>(A, B, weight_scales, weight_zero_points, biases, alpha, C, m, n, k, group_size, workspace_ptr,
-            workspace_bytes, gemm_config, stream, occupancy);
-    }
+    // else if (sm_ == 90)
+    // {
+    //     sm90_dispatch_gemm_to_cutlass<ActivationType, WeightType, ScaleZeroType, BiasType, OutputType, QuantOp,
+    //         EpilogueTag>(A, B, weight_scales, weight_zero_points, biases, alpha, C, m, n, k, group_size, workspace_ptr,
+    //         workspace_bytes, gemm_config, stream, occupancy);
+    // }
     else
     {
         throw std::runtime_error(

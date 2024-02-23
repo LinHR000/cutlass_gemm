@@ -478,7 +478,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
     const int inter_size  = fc2_expert_weights.size(1);
     const int num_experts = gating_output.size(-1);
 
-    torch::ScalarType quant_type = fc2_expert_weights.scalar_type();
+    // torch::ScalarType quant_type = fc2_expert_weights.scalar_type();
 
     CHECK_INPUT(input_activations, _st);
     TORCH_CHECK(input_activations.dim() == 2, "Invalid rank for activations");
@@ -513,7 +513,13 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
     else {
         fc1_activation_type = getActivationType(fc1_activation_type_str);
     }
-
+    torch::ScalarType quant_type = fc1_expert_weights.scalar_type();
+    if (fc1_expert_scales){
+        if (fc1_expert_weights.size(-1) == fc1_expert_scales.value().size(-1) / 2) {
+                quant_type = at::ScalarType::QUInt4x2;
+            }
+    }
+    
     switch (_st) {
         case at::ScalarType::Float: {
 
@@ -560,7 +566,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                                 split_k_style,
                                                                 split_k_factor,
                                                                 stages);
-            }else if (quant_type == at::ScalarType::Char){
+            }else if (quant_type == torch::kInt8){
                 output_tensor = run_moe_fc_helper<half, uint8_t>(input_activations,
                                                               gating_output,
                                                               fc1_expert_weights,
@@ -620,7 +626,7 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                                                                 split_k_style,
                                                                 split_k_factor,
                                                                 stages);
-            }else if (quant_type == at::ScalarType::Char){
+            }else if (quant_type == torch::kInt8){
                 output_tensor = run_moe_fc_helper<__nv_bfloat16, uint8_t>(input_activations,
                                                               gating_output,
                                                               fc1_expert_weights,

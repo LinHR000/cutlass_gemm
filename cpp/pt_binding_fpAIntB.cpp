@@ -1,14 +1,19 @@
-#include <torch/extension.h>
-#include <c10/util/Optional.h>
-#include <ATen/cuda/CUDAContext.h>
+
+#include <cublas_v2.h>
+#include <iostream>
+#include <vector>
 #include "torch/csrc/cuda/Stream.h"
 #include <torch/custom_class.h>
 #include <torch/script.h>
 #include "tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm.h"
 #include "tensorrt_llm/cutlass_extensions/include/cutlass_extensions/gemm_configs.h"
 #include "tensorrt_llm/thop/thUtils.h"
-#include <optional>
+#include "tensorrt_llm/common/cudaBf16Wrapper.h"
 #include "cutlass/numeric_types.h"
+#include <cstdlib>
+#include <chrono>
+#include <optional>
+
 using torch::Tensor;
 using torch_ext::get_ptr;
 
@@ -51,329 +56,272 @@ tensorrt_llm::cutlass_extensions::CutlassGemmConfig getCusConfig(std::string til
     }
     return tensorrt_llm::cutlass_extensions::CutlassGemmConfig(choose_tile_config,choose_split_k_style,split_k_factor,stages);
 }
-//const void* A, const void* B, const void* weight_scales, void* C, int m, int n, int k,
-//        tkc::CutlassGemmConfig gemmConfig, char* workspace_ptr, const size_t workspace_bytes,
-//        cudaStream_t stream
-template<typename T, typename WeightType>
-Tensor fpAIntB_gemm_helper(Tensor&         input,
-                    Tensor&         weight,
-                    c10::optional<torch::Tensor>&            out, // if out is None, allocate a new tensor
-                    c10::optional<torch::Tensor>&            bias,
-                    c10::optional<torch::Tensor>&            weight_scales,
-                    c10::optional<torch::Tensor>&            weight_zero_points,
-                    std::optional<float>                     alpha,
-                    std::optional<int64_t>                   group_size,
-                    cutlass::WeightOnlyQuantOp               quant_op,
-                    int             m,
-                    int             n,
-                    int             k,
-                    std::optional<std::string>               tile_config, // if tie_config is -1, use default tile config
-                    std::optional<std::string>               split_k_style,
-                    int                                      split_k_factor,
-                    int                                      stages
 
-){
-    auto stream = at::cuda::getCurrentCUDAStream().stream();
+
+template<typename T, typename WeightType>
+Tensor fused_gemm_dq_helper(
+    Tensor                                  output_tensor,
+    Tensor                                  input_activations, 
+    Tensor                                  weight, 
+    Tensor                                  weight_scales,
+    c10::optional<torch::Tensor>            biases,
+    c10::optional<torch::Tensor>            weight_zero_points,
+    std::optional<int>                      group_size,
+    std::optional<float>                    alpha,
+    cutlass::WeightOnlyQuantOp              quant_op,
+    std::optional<tensorrt_llm::cutlass_extensions::CutlassGemmConfig> gemm_config
+    )
+{
+    const at::ScalarType _st    = input_activations.scalar_type();
+    int m_ = 1;
+    
+    if (input_activations.dim() == 2){
+        m_ = input_activations.size(0);
+    }else if (input_activations.dim() == 3){
+        m_ = input_activations.size(0) * input_activations.size(1);
+    }else{
+        throw std::runtime_error("Invalid rank for activations");
+    }
+
+    const int            m      = m_;
+    const int            n      = weight_scales.size(0);
+    const int            k      = weight.size(0);
+    auto                 stream = at::cuda::getCurrentCUDAStream().stream();
+    bool                 use_alpha = alpha ? true:false;
+
+    const T*          input_act_ptr = get_ptr<const T>(input_activations);
+    const WeightType* weight_ptr    = get_ptr<const WeightType>(weight);
+    const T*          scales_ptr    = get_ptr<const T>(weight_scales);
+    T*   output_tensor_ptr = get_ptr<T>(output_tensor);
+    T*   weight_zero_points_ptr = weight_zero_points ? get_ptr<T>(weight_zero_points.value()) : nullptr;
+    T*   bias_ptr = biases ? get_ptr<T>(biases.value()) : nullptr;
+
+    if (quant_op == cutlass::WeightOnlyQuantOp::PER_COLUMN_SCALE_ONLY){
+        tensorrt_llm::kernels::cutlass_kernels::CutlassFpAIntBGemmRunner<T, WeightType, cutlass::WeightOnlyQuantOp::PER_COLUMN_SCALE_ONLY> fused_gemm_dq_runner;
+        const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
+        auto ws_tensor     = torch::empty({ws_bytes}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
+        char* ws_ptr            = get_ptr<char>(ws_tensor);
+        
+        if (use_alpha){
+            fused_gemm_dq_runner.gemm(input_act_ptr, 
+                                    weight_ptr, 
+                                    scales_ptr, 
+                                    alpha.value(),
+                                    output_tensor_ptr, 
+                                    m,
+                                    n, 
+                                    k, 
+                                    gemm_config,
+                                    ws_ptr, 
+                                    ws_bytes, 
+                                    stream);
+        }else{
+            fused_gemm_dq_runner.gemm(input_act_ptr, 
+                                    weight_ptr, 
+                                    scales_ptr, 
+                                    output_tensor_ptr, 
+                                    m,
+                                    n, 
+                                    k, 
+                                    gemm_config,
+                                    ws_ptr, 
+                                    ws_bytes, 
+                                    stream);
+        }
+        
+
+    }else if (quant_op == cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_ONLY){
+        tensorrt_llm::kernels::cutlass_kernels::CutlassFpAIntBGemmRunner<T, WeightType, cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_ONLY> fused_gemm_dq_runner;
+        const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
+        auto ws_tensor     = torch::empty({ws_bytes}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
+        char* ws_ptr            = get_ptr<char>(ws_tensor);
+        if (use_alpha){
+            fused_gemm_dq_runner.gemm(input_act_ptr,
+                            weight_ptr,
+                            scales_ptr,
+                            weight_zero_points_ptr,
+                            bias_ptr,
+                            alpha.value(),
+                            output_tensor_ptr,
+                            m,
+                            n,
+                            k,
+                            group_size.value(),
+                            gemm_config,
+                            ws_ptr,
+                            ws_bytes,
+                            stream);
+        }else{
+            fused_gemm_dq_runner.gemm(input_act_ptr,
+                            weight_ptr,
+                            scales_ptr,
+                            weight_zero_points_ptr,
+                            bias_ptr,
+                            output_tensor_ptr,
+                            m,
+                            n,
+                            k,
+                            group_size.value(),
+                            gemm_config,
+                            ws_ptr,
+                            ws_bytes,
+                            stream);
+
+        }
+        
+    }else if (quant_op == cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_AND_ZEROS){
+        tensorrt_llm::kernels::cutlass_kernels::CutlassFpAIntBGemmRunner<T, WeightType, cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_AND_ZEROS> fused_gemm_dq_runner;
+        const int ws_bytes = fused_gemm_dq_runner.getWorkspaceSize(m, n, k);
+        auto ws_tensor     = torch::empty({ws_bytes}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
+        char* ws_ptr            = get_ptr<char>(ws_tensor);
+        if (use_alpha){
+            fused_gemm_dq_runner.gemm(input_act_ptr,
+                            weight_ptr,
+                            scales_ptr,
+                            weight_zero_points_ptr,
+                            nullptr,
+                            alpha.value(),
+                            output_tensor_ptr,
+                            m,
+                            n,
+                            k,
+                            group_size.value(),
+                            gemm_config,
+                            ws_ptr,
+                            ws_bytes,
+                            stream);
+
+        }else{
+            fused_gemm_dq_runner.gemm(input_act_ptr,
+                            weight_ptr,
+                            scales_ptr,
+                            weight_zero_points_ptr,
+                            nullptr,
+                            output_tensor_ptr,
+                            m,
+                            n,
+                            k,
+                            group_size.value(),
+                            gemm_config,
+                            ws_ptr,
+                            ws_bytes,
+                            stream);
+
+        }
+    }
+
+    
+
+   return output_tensor;
+}
+
+Tensor fpAIntB_gemm(
+    Tensor                                  input_activations, 
+    Tensor                                  weight, 
+    Tensor                                  weight_scales,
+    c10::optional<torch::Tensor>&           bias,
+    c10::optional<torch::Tensor>&           out,
+    c10::optional<torch::Tensor>&           weight_zero_points,
+    std::optional<float>                    alpha,
+    std::optional<int>                      group_size,
+    std::optional<std::string>              tile_config, // if tie_config is -1, use default tile config
+    std::optional<std::string>              split_k_style,
+    std::optional<int>                      split_k_factor,
+    std::optional<int>                      stages
+    )
+{
+    const at::ScalarType _st = input_activations.scalar_type();
+    CHECK_INPUT(weight_scales, _st);
+
+    // TORCH_CHECK(input_activations.dim() == 2, "Invalid rank for activations");
+    TORCH_CHECK(weight.dim() == 2, "Invalid rank for weight");
+    TORCH_CHECK(weight_scales.dim() == 1, "Invalid rank for scales");
+
+    cutlass::WeightOnlyQuantOp quant_op;
+    bool use_weight_zero_points = weight_zero_points ? true : false;
+    bool use_group = group_size ? true : false;
+    if (use_group){
+        if (use_weight_zero_points){
+            quant_op = cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_AND_ZEROS;
+        }else{
+            quant_op = cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_ONLY;
+        }
+    }else{
+        quant_op = cutlass::WeightOnlyQuantOp::PER_COLUMN_SCALE_ONLY;
+    }
+
+    const int n = weight_scales.size(0);
+
+    // TORCH_CHECK(input_activations.size(1) == weight.size(0), "dim 1 of act and dim 0 of weight must be equal");
+
+    // We signal int4 by having the last weight dim be half the size of the scales.
+    // This is because int4 elements are packed into a single byte.
+    torch::ScalarType quant_type = weight.scalar_type();
+    if (weight.size(-1) == weight_scales.size(-1) / 2) {
+        quant_type = at::ScalarType::QUInt4x2;
+    }
+    else {
+        TORCH_CHECK(weight.size(-1) == weight_scales.size(-1),
+                    "Last dim of weight and scales must be equal for int8 "
+                    "or last dim of scale must be 2x last dim of weight for int4.");
+    }
+    Tensor output_tensor;
     bool allocate_out = out ? false : true;
-    at::ScalarType output_data_type = input.scalar_type();
-    Tensor output;
     if (allocate_out){
-        if (input.dim() == 2) {
-            output = torch::zeros({input.size(0), n},
-                                torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
-        } else if (input.dim() == 3) {
-            output = torch::empty({input.size(0), input.size(1), n},
-                                torch::dtype(output_data_type).device(torch::kCUDA).requires_grad(false));
+        if (input_activations.dim() == 2) {
+            output_tensor = torch::zeros({input_activations.size(0), n}, torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
+        } else if (input_activations.dim() == 3) {
+            output_tensor = torch::empty({input_activations.size(0), input_activations.size(1), n},
+                                torch::dtype(_st).device(torch::kCUDA).requires_grad(false));
         } else {
             throw std::runtime_error("Invalid rank for activations");
         }
     }else{
-        Tensor &output = *out;
+        Tensor &output_tensor = *out;
     }
-    
-    bool use_alpha = alpha ? true:false;
-    T* input_ptr = get_ptr<T>(input);
-    T* bias_ptr = bias ? reinterpret_cast<T*>(bias.value().data_ptr()) : nullptr;
-    T* weight_scales_ptr = weight_scales ? reinterpret_cast<T*>(weight_scales.value().data_ptr()) : nullptr;
-    T* weight_zero_points_ptr = weight_zero_points ? reinterpret_cast<T*>(weight_zero_points.value().data_ptr()) : nullptr;
-    T* output_ptr = allocate_out ? get_ptr<T>(output):  reinterpret_cast<T*>(out.value().data_ptr()) ;
 
     std::optional<tensorrt_llm::cutlass_extensions::CutlassGemmConfig> gemm_config;
-    //get gemm config
     bool set_config = tile_config ? true : false;
     if (set_config) {
-        gemm_config = getCusConfig(tile_config.value(), split_k_style.value(), split_k_factor, stages);
+        gemm_config = getCusConfig(tile_config.value(), split_k_style.value(), split_k_factor.value(), stages.value());
     }
 
-    char* d_workspace;
-
-    // run the moe gemm
-    if (quant_op == cutlass::WeightOnlyQuantOp::PER_COLUMN_SCALE_ONLY) {
-        tensorrt_llm::kernels::cutlass_kernels::CutlassFpAIntBGemmRunner<T, WeightType, cutlass::WeightOnlyQuantOp::PER_COLUMN_SCALE_ONLY> cutlass_runner;
-         // get workspace
-        size_t workspace_bytes = cutlass_runner.getWorkspaceSize(m,n,k);
-        cudaMalloc(&d_workspace, workspace_bytes * sizeof(char));
-        if (use_alpha){
-            cutlass_runner.gemm(input_ptr,
-                            get_ptr<WeightType>(weight),
-                            weight_scales_ptr,
-                            alpha.value(),
-                            output_ptr,
-                            m,
-                            n,
-                            k,
-                            gemm_config,
-                            d_workspace,
-                            workspace_bytes,
-                            stream);
-        }else{
-            cutlass_runner.gemm(input_ptr,
-                            get_ptr<WeightType>(weight),
-                            weight_scales_ptr,
-                            output_ptr,
-                            m,
-                            n,
-                            k,
-                            gemm_config,
-                            d_workspace,
-                            workspace_bytes,
-                            stream);
-
-        }
-
-    } else if (quant_op == cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_AND_ZEROS) {
-        tensorrt_llm::kernels::cutlass_kernels::CutlassFpAIntBGemmRunner<T, WeightType, cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_AND_ZEROS> cutlass_runner;
-        size_t workspace_bytes = cutlass_runner.getWorkspaceSize(m,n,k);
-        char* d_workspace;
-        cudaMalloc(&d_workspace, workspace_bytes * sizeof(char));
-        if (use_alpha){
-            cutlass_runner.gemm(input_ptr,
-                            get_ptr<WeightType>(weight),
-                            weight_scales_ptr,
-                            weight_zero_points_ptr,
-                            bias_ptr,
-                            alpha.value(),
-                            output_ptr,
-                            m,
-                            n,
-                            k,
-                            group_size.value(),
-                            gemm_config,
-                            d_workspace,
-                            workspace_bytes,
-                            stream);
-        }else{
-            cutlass_runner.gemm(input_ptr,
-                            get_ptr<WeightType>(weight),
-                            weight_scales_ptr,
-                            weight_zero_points_ptr,
-                            bias_ptr,
-                            output_ptr,
-                            m,
-                            n,
-                            k,
-                            group_size.value(),
-                            gemm_config,
-                            d_workspace,
-                            workspace_bytes,
-                            stream);
-        }
-    } else if (quant_op == cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_ONLY){
-        tensorrt_llm::kernels::cutlass_kernels::CutlassFpAIntBGemmRunner<T, WeightType, cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_ONLY> cutlass_runner;
-        size_t workspace_bytes = cutlass_runner.getWorkspaceSize(m,n,k);
-        char* d_workspace;
-        cudaMalloc(&d_workspace, workspace_bytes * sizeof(char));
-        if (use_alpha){
-            cutlass_runner.gemm(input_ptr,
-                            get_ptr<WeightType>(weight),
-                            weight_scales_ptr,
-                            weight_zero_points_ptr,
-                            bias_ptr,
-                            alpha.value(),
-                            output_ptr,
-                            m,
-                            n,
-                            k,
-                            group_size.value(),
-                            gemm_config,
-                            d_workspace,
-                            workspace_bytes,
-                            stream);
-        }else{
-            cutlass_runner.gemm(input_ptr,
-                            get_ptr<WeightType>(weight),
-                            weight_scales_ptr,
-                            weight_zero_points_ptr,
-                            bias_ptr,
-                            output_ptr,
-                            m,
-                            n,
-                            k,
-                            group_size.value(),
-                            gemm_config,
-                            d_workspace,
-                            workspace_bytes,
-                            stream);
-        }
-        
-    }
-    else {
-        throw std::runtime_error("unsupported quantization type");
-    }
-    cudaFree(d_workspace);
-    return output;
-}
-
-Tensor fpAIntB_gemm(Tensor&         input,
-                    Tensor&         weight,
-                    c10::optional<torch::Tensor>&            out, // if out is None, allocate a new tensor
-                    c10::optional<torch::Tensor>&            bias,
-                    c10::optional<torch::Tensor>&            weight_scales,
-                    c10::optional<torch::Tensor>&            weight_zero_points,
-                    std::optional<float>                     alpha,
-                    std::optional<int64_t>                   group_size,
-                    std::string     quant_type,
-                    int             m,
-                    int             n,
-                    int             k,
-                    std::optional<std::string>               tile_config, // if tie_config is -1, use default tile config
-                    std::optional<std::string>               split_k_style,
-                    int                                      split_k_factor,
-                    int                                      stages
-
-) {
-    Tensor output_tensor;
-    cutlass::WeightOnlyQuantOp quant_op;
-    bool use_weight_scales = weight_scales ? true: false;
-    bool use_weight_zero_points = weight_zero_points ? true : false;
-    bool use_group = group_size ? true : false;
-    if (use_weight_scales){
-        if (use_group){
-            if (use_weight_zero_points){
-                quant_op = cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_AND_ZEROS;
-            }else{
-                quant_op = cutlass::WeightOnlyQuantOp::FINEGRAINED_SCALE_ONLY;
+    switch (_st) {
+        case at::ScalarType::Half: {
+            if (quant_type == torch::kInt8) {
+                output_tensor =
+                    fused_gemm_dq_helper<half, uint8_t>(output_tensor, input_activations, weight, weight_scales, bias, weight_zero_points, group_size, alpha, quant_op,gemm_config);
             }
-        }else{
-            quant_op = cutlass::WeightOnlyQuantOp::PER_COLUMN_SCALE_ONLY;
+            else if (quant_type == at::ScalarType::QUInt4x2) {
+                output_tensor = fused_gemm_dq_helper<half, cutlass::uint4b_t>(
+                    output_tensor, input_activations, weight, weight_scales, bias, weight_zero_points, group_size, alpha, quant_op,gemm_config);
+            }
+            else {
+                std::string err_msg = "Unsupported weight type " + std::string(at::toString(quant_type));
+                throw std::runtime_error(err_msg);
+            }
+            break;
         }
-    }else{
-        quant_op = cutlass::WeightOnlyQuantOp::UNDEFINED;
+#ifdef ENABLE_BF16
+        case at::ScalarType::BFloat16: {
+            if (quant_type == torch::kInt8) {
+                output_tensor = fused_gemm_dq_helper<__nv_bfloat16, uint8_t>(
+                    output_tensor, input_activations, weight, weight_scales, bias, weight_zero_points, group_size, alpha, quant_op,gemm_config);
+            }
+            else if (quant_type == at::ScalarType::QUInt4x2) {
+                output_tensor = fused_gemm_dq_helper<__nv_bfloat16, cutlass::uint4b_t>(
+                    output_tensor, input_activations, weight, weight_scales, bias, weight_zero_points, group_size, alpha, quant_op,gemm_config);
+            }
+            else {
+                std::string err_msg = "Unsupported weight type " + std::string(at::toString(quant_type));
+                throw std::runtime_error(err_msg);
+            }
+            break;
+        }
+#endif
+        default:
+            throw std::runtime_error("Unsupported tensor type. Got " + std::string(at::toString(_st)));
     }
-
-
-    const at::ScalarType _st = input.scalar_type();
-    if (_st == at::ScalarType::Half){
-        if (quant_type == "auto" || quant_type == "W16A16"){
-            output_tensor = fpAIntB_gemm_helper<half, half>(input,
-                                                            weight,
-                                                            out,
-                                                            bias,
-                                                            weight_scales,
-                                                            weight_zero_points,
-                                                            alpha,
-                                                            group_size,
-                                                            quant_op,
-                                                            m,n,k,
-                                                            tile_config,
-                                                            split_k_style,
-                                                            split_k_factor,
-                                                            stages);
-        }else if (quant_type == "W8A16"){
-            output_tensor = fpAIntB_gemm_helper<half, uint8_t>(input,
-                                                            weight,
-                                                            out,
-                                                            bias,
-                                                            weight_scales,
-                                                            weight_zero_points,
-                                                            alpha,
-                                                            group_size,
-                                                            quant_op,
-                                                            m,n,k,
-                                                            tile_config,
-                                                            split_k_style,
-                                                            split_k_factor,
-                                                            stages);
-            
-        }else if (quant_type == "W4A14"){
-            output_tensor = fpAIntB_gemm_helper<half, cutlass::uint4b_t>(input,
-                                                            weight,
-                                                            out,
-                                                            bias,
-                                                            weight_scales,
-                                                            weight_zero_points,
-                                                            alpha,
-                                                            group_size,
-                                                            quant_op,
-                                                            m,n,k,
-                                                            tile_config,
-                                                            split_k_style,
-                                                            split_k_factor,
-                                                            stages);
-
-        }else{
-            std::string err_msg = "Unsupported quant type " + std::string(at::toString(quant_type));
-            throw std::runtime_error(err_msg);
-        }
-
-    }else if (_st == at::ScalarType::BFloat16){
-        if (quant_type == "auto" || quant_type == "W16A16"){
-            output_tensor = fpAIntB_gemm_helper<__nv_bfloat16, __nv_bfloat16>(input,
-                                                            weight,
-                                                            out,
-                                                            bias,
-                                                            weight_scales,
-                                                            weight_zero_points,
-                                                            alpha,
-                                                            group_size,
-                                                            quant_op,
-                                                            m,n,k,
-                                                            tile_config,
-                                                            split_k_style,
-                                                            split_k_factor,
-                                                            stages);
-
-        }else if (quant_type == "W8A16"){
-            output_tensor = fpAIntB_gemm_helper<__nv_bfloat16, uint8_t>(input,
-                                                            weight,
-                                                            out,
-                                                            bias,
-                                                            weight_scales,
-                                                            weight_zero_points,
-                                                            alpha,
-                                                            group_size,
-                                                            quant_op,
-                                                            m,n,k,
-                                                            tile_config,
-                                                            split_k_style,
-                                                            split_k_factor,
-                                                            stages);
-            
-        }else if (quant_type == "W4A14"){
-            output_tensor = fpAIntB_gemm_helper<__nv_bfloat16, cutlass::uint4b_t>(input,
-                                                            weight,
-                                                            out,
-                                                            bias,
-                                                            weight_scales,
-                                                            weight_zero_points,
-                                                            alpha,
-                                                            group_size,
-                                                            quant_op,
-                                                            m,n,k,
-                                                            tile_config,
-                                                            split_k_style,
-                                                            split_k_factor,
-                                                            stages);
-
-        }else{
-            std::string err_msg = "Unsupported quant type " + std::string(at::toString(quant_type));
-            throw std::runtime_error(err_msg);
-        }
-    }else{
-        std::string err_msg = "Unsupported weight type " + std::string(at::toString(_st));
-        throw std::runtime_error(err_msg);
-    }
-
     return output_tensor;
 }
 
