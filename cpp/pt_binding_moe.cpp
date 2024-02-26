@@ -339,8 +339,8 @@ Tensor run_moe_fc_helper(Tensor                            input_activations, //
                          const int                         k,
                          std::optional<std::string>        tile_config, // if tie_config is -1, use default tile config
                          std::optional<std::string>        split_k_style,
-                         int                               split_k_factor,
-                         int                               stages)
+                         std::optional<int>                split_k_factor,
+                         std::optional<int>                stages)
 {
 
     const int num_rows    = input_activations.size(0); //(num_tokens, hidden_size)
@@ -386,7 +386,7 @@ Tensor run_moe_fc_helper(Tensor                            input_activations, //
     // gemm_config.stages = 4;
     if (tile_config){
         tensorrt_llm::cutlass_extensions::CutlassGemmConfig gemm_config;
-        gemm_config = getCusConfig(tile_config.value(),split_k_style.value(),split_k_factor,stages);
+        gemm_config = getCusConfig(tile_config.value(),split_k_style.value(),split_k_factor.value(),stages.value());
         // gemm_config = tensorrt_llm::cutlass_extensions::CutlassGemmConfig(tensorrt_llm::cutlass_extensions::CutlassTileConfig(tile_config), 
         //                                                                   tensorrt_llm::cutlass_extensions::SplitKStyle(split_k_style), 
         //                                                                   split_k_factor, stages);
@@ -467,8 +467,8 @@ Tensor run_moe_fc(Tensor      input_activations, //(num_tokens, hidden_size)
                   int64_t     k,
                   std::optional<std::string>        tile_config, // if tie_config is -1, use default tile config
                   std::optional<std::string>        split_k_style,
-                  int                               split_k_factor,
-                  int                               stages)
+                  std::optional<int>                split_k_factor,
+                  std::optional<int>                stages)
 {
 
     const at::ScalarType _st = input_activations.scalar_type();
