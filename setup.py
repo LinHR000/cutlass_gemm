@@ -169,7 +169,7 @@ sources_moe=["cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_heuristic.cpp",
         ]
 
 th_moe_extension = CUDAExtension(
-    name="cutlass_gemm.gemm_op_moe",
+    name="gemm_op.gemm_op_moe",
     sources=sources_moe,
     extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
     include_dirs=include_path
@@ -188,7 +188,7 @@ sources_utils=[
         ]
 
 th_utils_extension = CUDAExtension(
-    name="cutlass_gemm.gemm_op_utils",
+    name="gemm_op.gemm_op_utils",
     sources=sources_utils,
     extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
     include_dirs=include_path
@@ -216,7 +216,7 @@ sources_fpAIntB=[
         ]
 
 th_utils_extension = CUDAExtension(
-    name="cutlass_gemm.gemm_op_fpAIntB",
+    name="gemm_op.gemm_op_fpAIntB",
     sources=sources_fpAIntB,
     extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
     include_dirs=include_path
@@ -242,7 +242,7 @@ def get_requirements() -> List[str]:
 
 
 setuptools.setup(
-    name="cutlass_gemm",
+    name="gemm_op",
     version="0.0.1",
     author="skywork",
     license="Apache 2.0",
