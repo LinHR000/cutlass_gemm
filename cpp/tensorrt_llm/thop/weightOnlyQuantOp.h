@@ -21,4 +21,8 @@ namespace torch_ext
 {
     using torch::Tensor;
     std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weight, int quant_mode);
+    Tensor preprocess_weights_for_mixed_gemm_(Tensor row_major_quantized_weight, int quant_mode);
+    Tensor pack_int8_tensor_to_packed_int4(Tensor weight);
+    Tensor unpack_int4_packed_tensor_to_int8(Tensor weight);
+    Tensor permute_B_rows_for_mixed_gemm(Tensor quantized_tensor, torch::ScalarType quant_type, const int64_t arch_version);
 }

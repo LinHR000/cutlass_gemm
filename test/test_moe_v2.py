@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 import torch.nn.functional as F
 import numpy as np
 import unittest
@@ -27,23 +29,17 @@ def basic_moe_fc(activations, expert_for_row, weights):
       torch.matmul(activations[row], weights[row_expert], out=res[row : row + 1, :])
   return res
 
-# def apply_act(inp, act_str):
-#   if act_str == "identity":
-#     return inp
-#   elif act_str == "silu":
-#     return torch.nn.SiLU()(inp)
-#   elif act_str == "relu":
-#     return torch.nn.ReLU()(inp)
-#   elif act_str == "gelu":
-#     return torch.nn.GELU(approximate="tanh")(inp)
-#   else:
-#     assert False, "Unsupported activation"
-
-def apply_act(input,act_str):
-    inter_size = input.shape[-1] // 2
-    x = input[:, :inter_size]
-    y = input[:, inter_size:]
-    return torch.nn.SiLU()(x) * y
+def apply_act(inp, act_str):
+  if act_str == "identity":
+    return inp
+  elif act_str == "silu":
+    return torch.nn.SiLU()(inp)
+  elif act_str == "relu":
+    return torch.nn.ReLU()(inp)
+  elif act_str == "gelu":
+    return torch.nn.GELU(approximate="tanh")(inp)
+  else:
+    assert False, "Unsupported activation"
 
 
 class TestMoe(unittest.TestCase):
@@ -58,11 +54,6 @@ class TestMoe(unittest.TestCase):
     inputs = dict()
     inputs["input_activations"] = random_cuda_tensor([num_rows, hidden_size], dtype, mean=0, std=0.02)
     inputs["gating_output"] = random_cuda_tensor([num_rows, num_experts], dtype)
-
-    inputs_ref = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_ft_hidden_states.pt').to(inputs["input_activations"].device).to(inputs["input_activations"].dtype)
-    gate_ref = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_ft_gating_output.pt').to(inputs["gating_output"].device).to(inputs["gating_output"].dtype)
-    inputs["input_activations"] = inputs_ref.view(inputs["input_activations"].shape)
-    inputs["gating_output"] = gate_ref.view(inputs["gating_output"].shape)
     return inputs
   
   def generate_weights(self, hidden_size, inter_size, num_experts, dtype, quant_type):
@@ -72,9 +63,9 @@ class TestMoe(unittest.TestCase):
       from gemm_op import gemm_op_utils
 
     weights["fc1_expert_weights_for_ref"] = random_cuda_tensor([num_experts, hidden_size, inter_size], dtype, mean=0, std=0.02)
-    fc1_weight = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_fc1_weight_fp.pt')
-    fc1_weight = fc1_weight.to(weights["fc1_expert_weights_for_ref"].dtype).to(weights["fc1_expert_weights_for_ref"].device)
-    weights["fc1_expert_weights_for_ref"] =  fc1_weight
+    # fc1_weight = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_fc1_weight_fp.pt')
+    # fc1_weight = fc1_weight.to(weights["fc1_expert_weights_for_ref"].dtype).to(weights["fc1_expert_weights_for_ref"].device)
+    # weights["fc1_expert_weights_for_ref"] =  fc1_weight
     weights["fc1_expert_weights_for_ft"] = weights["fc1_expert_weights_for_ref"]
     
     if quantize:
@@ -85,9 +76,9 @@ class TestMoe(unittest.TestCase):
       weights["fc1_expert_weights_for_ft_scale"] = None
 
     weights["fc2_expert_weights_for_ref"] = random_cuda_tensor([num_experts, inter_size, hidden_size], dtype, mean=0, std=0.02)
-    fc2_weight = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_fc2_weight_fp.pt')
-    fc2_weight = fc2_weight.to(weights["fc2_expert_weights_for_ref"].dtype).to(weights["fc2_expert_weights_for_ref"].device)
-    weights["fc2_expert_weights_for_ref"] =  fc2_weight
+    # fc2_weight = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_fc2_weight_fp.pt')
+    # fc2_weight = fc2_weight.to(weights["fc2_expert_weights_for_ref"].dtype).to(weights["fc2_expert_weights_for_ref"].device)
+    # weights["fc2_expert_weights_for_ref"] =  fc2_weight
     weights["fc2_expert_weights_for_ft"] = weights["fc2_expert_weights_for_ref"]
 
 

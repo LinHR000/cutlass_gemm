@@ -235,7 +235,7 @@ Tensor fpAIntB_gemm(
 
     // TORCH_CHECK(input_activations.dim() == 2, "Invalid rank for activations");
     TORCH_CHECK(weight.dim() == 2, "Invalid rank for weight");
-    TORCH_CHECK(weight_scales.dim() == 1, "Invalid rank for scales");
+    // TORCH_CHECK(weight_scales.dim() == 1, "Invalid rank for scales");
 
     cutlass::WeightOnlyQuantOp quant_op;
     bool use_weight_zero_points = weight_zero_points ? true : false;
@@ -250,21 +250,23 @@ Tensor fpAIntB_gemm(
         quant_op = cutlass::WeightOnlyQuantOp::PER_COLUMN_SCALE_ONLY;
     }
 
-    const int n = weight_scales.size(0);
+    // const int n = weight_scales.size(-1);
+    const int n = 1024;
 
-    // TORCH_CHECK(input_activations.size(1) == weight.size(0), "dim 1 of act and dim 0 of weight must be equal");
+    TORCH_CHECK(input_activations.size(1) == weight.size(0), "dim 1 of act and dim 0 of weight must be equal");
 
     // We signal int4 by having the last weight dim be half the size of the scales.
     // This is because int4 elements are packed into a single byte.
     torch::ScalarType quant_type = weight.scalar_type();
-    if (weight.size(-1) == weight_scales.size(-1) / 2) {
-        quant_type = at::ScalarType::QUInt4x2;
-    }
-    else {
-        TORCH_CHECK(weight.size(-1) == weight_scales.size(-1),
-                    "Last dim of weight and scales must be equal for int8 "
-                    "or last dim of scale must be 2x last dim of weight for int4.");
-    }
+    // if (weight.size(-1) == weight_scales.size(-1) / 2) {
+    //     quant_type = at::ScalarType::QUInt4x2;
+    // }
+    quant_type = at::ScalarType::QUInt4x2;
+    // else {
+    //     TORCH_CHECK(weight.size(-1) == weight_scales.size(-1),
+    //                 "Last dim of weight and scales must be equal for int8 "
+    //                 "or last dim of scale must be 2x last dim of weight for int4.");
+    // }
     Tensor output_tensor;
     bool allocate_out = out ? false : true;
     if (allocate_out){

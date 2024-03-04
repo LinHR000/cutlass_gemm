@@ -141,6 +141,14 @@ Tensor preprocess_weights_for_mixed_gemm(Tensor row_major_quantized_weight, torc
     return processed_tensor;
 }
 
+Tensor preprocess_weights_for_mixed_gemm_(Tensor row_major_quantized_weight, int quant_mode){
+    if (quant_mode == 0){
+        return preprocess_weights_for_mixed_gemm(row_major_quantized_weight, torch::kInt8);
+    }else{
+        return preprocess_weights_for_mixed_gemm(row_major_quantized_weight, at::ScalarType::QUInt4x2);
+    }
+}
+
 std::vector<Tensor> symmetric_quantize_helper(
     Tensor weight, torch::ScalarType quant_type, bool return_unprocessed_quantized_tensor)
 {

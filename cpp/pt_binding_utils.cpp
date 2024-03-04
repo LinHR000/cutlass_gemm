@@ -17,4 +17,20 @@ m.def(
     "symmetric_quantize_last_axis_of_batched_matrix",
     &torch_ext::_symmetric_quantize_last_axis_of_batched_matrix,
     "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "preprocess_weights_for_mixed_gemm",
+    &torch_ext::preprocess_weights_for_mixed_gemm_,
+    "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "pack_int8_tensor_to_packed_int4",
+    &torch_ext::pack_int8_tensor_to_packed_int4,
+    "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "unpack_int4_packed_tensor_to_int8",
+    &torch_ext::unpack_int4_packed_tensor_to_int8,
+    "Compute the attention between an input query and the cached key/value tensors");
+m.def(
+    "permute_B_rows_for_mixed_gemm",
+    &torch_ext::permute_B_rows_for_mixed_gemm,
+    "Compute the attention between an input query and the cached key/value tensors");
 }
