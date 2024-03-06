@@ -41,17 +41,17 @@ class TestFpAInt8(unittest.TestCase):
       from gemm_op import gemm_op_utils
 
     weights["weights_for_ref"] = random_cuda_tensor([k, n], dtype, mean=0, std=0.02)
-    weights["weights_for_ft"] = weights["weights_for_ref"]
+    weights["weights_for_ft"] = weights["weights_for_ref"].t().contiguous()
     if quantize:
-      x = weights["weights_for_ref"]
-      x = x.view(128,-1)
-      x_max = x.abs().max(dim=0)[0]
-      x_scale = x_max / 7
+      x = weights["weights_for_ft"]
+      x = x.view(-1,128)
+      x_max = x.abs().amax(dim=1, keepdim=True)
+      x_scale = x_max / 8
       x_int = (x / x_scale).round().clamp(-8,7)
       x_dequant = x_int * x_scale
-      x_dequant = x_dequant.view(weights["weights_for_ref"].shape)
-      x_scale = x_scale.view(-1,weights["weights_for_ref"].shape[1]).T.contiguous()
-      x_int4 = gemm_op_utils.pack_int8_tensor_to_packed_int4(x_int.char().cpu().view(weights["weights_for_ref"].shape))
+      x_dequant = x_dequant.view(weights["weights_for_ft"].shape).t()
+      x_scale = x_scale.view(weights["weights_for_ref"].shape[1],-1).contiguous()
+      x_int4 = gemm_op_utils.pack_int8_tensor_to_packed_int4(x_int.char().cpu().view(weights["weights_for_ft"].shape).t().contiguous())
       x_int4 = gemm_op_utils.preprocess_weights_for_mixed_gemm(x_int4,1)
       weights["weights_for_ft_scale"] = x_scale.to(weights["weights_for_ft"].device)
       weights["weights_for_ft"] = x_int4.to(weights["weights_for_ft"].device)
@@ -108,7 +108,35 @@ class TestFpAInt8(unittest.TestCase):
     self.gemm_test_helper(torch.bfloat16, torch.int8, rtol=1e-3, atol=0.05, \
                          hidden_sizes=[1024, 2048], \
                          inter_sizes=[4096])
+  def a():
+    m,n,k=16,1024, 4096
+    x = torch.randn(m,k).cuda().to(torch.bfloat16)
+    w = torch.randn(n,k).cuda().to(torch.bfloat16)
+    wq = w.reshape(-1,128)
+    max_val = wq.abs().amax(dim=1, keepdim=True)
+    scales = max_val / 8
+    wqq = (wq / scales).round().clamp(-8,7)
+    wqq = wqq.view(w.shape)
+    wqq = wqq.t().contiguous()
+    from gemm_op import gemm_op_utils
+    w_int4 = gemm_op_utils.pack_int8_tensor_to_packed_int4(wqq.char().cpu())
+    w_int4 = gemm_op_utils.preprocess_weights_for_mixed_gemm(w_int4,1)
+    scales = scales.view(1024,-1)
+    from gemm_op import gemm_op_fpAIntB
+    output = gemm_op_fpAIntB.fpAIntB_gemm(x,
+                                w_int4, 
+                                scales,
+                                None,# bias
+                                None,#out
+                                None,#weight_zero_points
+                                None,#alpha
+                                128,# group_size
+                                None,#tile config
+                                None,# split_k_style
+                                None,# split_k_factor
+                                None) # stages
 
 
 if __name__ == '__main__':
     unittest.main()
+
