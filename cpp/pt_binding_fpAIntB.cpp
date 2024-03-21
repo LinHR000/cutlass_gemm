@@ -9,6 +9,7 @@
 #include "tensorrt_llm/cutlass_extensions/include/cutlass_extensions/gemm_configs.h"
 #include "tensorrt_llm/thop/thUtils.h"
 #include "tensorrt_llm/common/cudaBf16Wrapper.h"
+#include <cuda_fp8.h>
 #include "cutlass/numeric_types.h"
 #include <cstdlib>
 #include <chrono>
@@ -321,6 +322,20 @@ Tensor fpAIntB_gemm(
             break;
         }
 #endif
+#ifdef ENABLE_FP8
+        case at::ScalarType::QInt8: {
+            if (quant_type == at::ScalarType::QUInt4x2) {
+                output_tensor = fused_gemm_dq_helper<__nv_fp8_e4m3, cutlass::uint4b_t>(
+                    output_tensor, input_activations, weight, weight_scales, bias, weight_zero_points, group_size, alpha, quant_op,gemm_config);
+            }
+            else {
+                std::string err_msg = "Unsupported weight type " + std::string(at::toString(quant_type));
+                throw std::runtime_error(err_msg);
+            }
+            break;
+        }
+#endif
+
         default:
             throw std::runtime_error("Unsupported tensor type. Got " + std::string(at::toString(_st)));
     }

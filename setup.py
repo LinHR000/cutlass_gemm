@@ -22,9 +22,9 @@ NVCC_FLAGS = ["-O2", "-std=c++17"]
 
 ABI = 1 if torch._C._GLIBCXX_USE_CXX11_ABI else 0
 
-CXX_FLAGS += ["-DENABLE_BF16"]
+CXX_FLAGS += ["-DENABLE_BF16","-DENABLE_FP8"]
 
-NVCC_FLAGS += ["-DENABLE_BF16"]
+NVCC_FLAGS += ["-DENABLE_BF16","-DENABLE_FP8"]
 
 NVCC_FLAGS += [f"-D_GLIBCXX_USE_CXX11_ABI={ABI}", "-U__CUDA_NO_HALF_OPERATORS__", "-U__CUDA_NO_HALF_CONVERSIONS__", "-U__CUDA_NO_BFLOAT16_CONVERSIONS__", "-U__CUDA_NO_HALF2_OPERATORS__"]
 
@@ -161,6 +161,10 @@ sources_moe=["cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_heuristic.cpp",
         "cpp/tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels_fp16_uint4.cu",
         "cpp/tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels_fp16_uint8.cu",
         "cpp/tensorrt_llm/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels_fp32_fp32.cu",
+        "cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/e4m3_int4_gemm_fg_scalebias_f16_out_f16.cu",
+        "cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/e4m3_int4_gemm_fg_scaleonly_f16_out_f16.cu",
+        "cpp/tensorrt_llm/kernels/cutlass_kernels/fpA_intB_gemm/e4m3_int4_gemm_per_col_f16_out_f16.cu",
+        "cpp/tensorrt_llm/common/cudaFp8Utils.cu",
         "cpp/tensorrt_llm/common/stringUtils.cpp",
         "cpp/tensorrt_llm/common/logger.cpp",
         "cpp/tensorrt_llm/common/tllmException.cpp",
