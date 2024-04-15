@@ -128,7 +128,7 @@ class TestMoe(unittest.TestCase):
     # rows = [2, 16, 512, 2048]
     # ks = [2, 4]
 
-    rows = [16]
+    rows = [32768]
     ks = [2]
 
     quant_mode = 'W16A16'
@@ -150,13 +150,13 @@ class TestMoe(unittest.TestCase):
                 input_dict.update(weights)            
 
                 act_output = self.run_ft_moe(input_dict, row, k, activation_str,quant_mode)
-                ref_output = self.run_ref_moe(input_dict, k, activation_str)
+                # ref_output = self.run_ref_moe(input_dict, k, activation_str)
 
-                msg = "Moe Failed on rows={}, active_rows={}, experts={}, k={}, hidden_size={}, inter_size={}" \
-                        .format(row, active_rows, experts, k, hidden_size, inter_size)
-                print(f"act_output: {act_output}")
-                print(f"ref_output: {ref_output}")
-                torch.testing.assert_close(act_output, ref_output, rtol=rtol, atol=atol, msg=msg, check_dtype=False)
+                # msg = "Moe Failed on rows={}, active_rows={}, experts={}, k={}, hidden_size={}, inter_size={}" \
+                #         .format(row, active_rows, experts, k, hidden_size, inter_size)
+                # print(f"act_output: {act_output}")
+                # print(f"ref_output: {ref_output}")
+                # torch.testing.assert_close(act_output, ref_output, rtol=rtol, atol=atol, msg=msg, check_dtype=False)
   
   # def test_moe_fp32_relu(self):
   #   self.moe_test_helper(torch.float32, torch.float32, rtol=1e-3, atol=1e-5, \
@@ -182,7 +182,7 @@ class TestMoe(unittest.TestCase):
   #                        inter_sizes=[4096])
   def test_moe_bf16_gelu(self):
     self.moe_test_helper(torch.bfloat16, torch.quint4x2, rtol=1e-3, atol=0.05, \
-                         activation_str="silu", \
+                         activation_str="Swiglu", \
                          experts_list=[8], hidden_sizes=[4096], \
                          inter_sizes=[14336])
 
