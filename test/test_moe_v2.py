@@ -62,7 +62,7 @@ class TestMoe(unittest.TestCase):
     if quantize:
       from gemm_op import gemm_op_utils
 
-    weights["fc1_expert_weights_for_ref"] = random_cuda_tensor([num_experts, hidden_size, inter_size], dtype, mean=0, std=0.02)
+    weights["fc1_expert_weights_for_ref"] = random_cuda_tensor([num_experts, hidden_size, inter_size*2], dtype, mean=0, std=0.02)
     # fc1_weight = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_fc1_weight_fp.pt')
     # fc1_weight = fc1_weight.to(weights["fc1_expert_weights_for_ref"].dtype).to(weights["fc1_expert_weights_for_ref"].device)
     # weights["fc1_expert_weights_for_ref"] =  fc1_weight
@@ -166,9 +166,9 @@ class TestMoe(unittest.TestCase):
 
   # def test_moe_fp16_gelu(self):
   #   self.moe_test_helper(torch.float16, torch.float16, rtol=1e-3, atol=0.05, \
-  #                        activation_str="silu", \
-  #                        experts_list=[32], hidden_sizes=[1024, 2048], \
-  #                        inter_sizes=[4096])
+  #                        activation_str="Swiglu", \
+  #                        experts_list=[32], hidden_sizes=[4096], \
+  #                        inter_sizes=[14336])
 
   # def test_moe_bf16_gelu(self):
   #   self.moe_test_helper(torch.bfloat16, torch.bfloat16, rtol=1e-3, atol=0.05, \
