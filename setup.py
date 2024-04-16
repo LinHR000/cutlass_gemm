@@ -215,13 +215,51 @@ sources_fpAIntB=[
         "cpp/pt_binding_fpAIntB.cpp"
         ]
 
-th_utils_extension = CUDAExtension(
+th_fpAfpB_extension = CUDAExtension(
     name="gemm_op.gemm_op_fpAIntB",
     sources=sources_fpAIntB,
     extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
     include_dirs=include_path
 )
-ext_modules.append(th_utils_extension)
+ext_modules.append(th_fpAfpB_extension)
+
+# build fp8
+sm_version = list(compute_capabilities)[0]
+if sm_version >='8.9':
+    print(f"build FP8 for SM{sm_version}")
+    sources_fp8=[
+        'cpp/tensorrt_llm/kernels/fp8_cublaslt/cublasLt_fp8Matmul.cu',
+        "cpp/tensorrt_llm/common/stringUtils.cpp",
+        "cpp/tensorrt_llm/common/logger.cpp",
+        "cpp/tensorrt_llm/common/tllmException.cpp",
+        "cpp/pt_binding_fp8_cublasLt.cpp"
+        ]
+
+    th_fp8_extension = CUDAExtension(
+        name="gemm_op.gemm_op_fp8",
+        sources=sources_fp8,
+        extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
+        include_dirs=include_path
+    )
+    ext_modules.append(th_fp8_extension)
+
+    sources_fp8_converter=[
+        'cpp/tensorrt_llm/kernels/fp8_dtype_converter/fp8_quanttools.cu',
+        "cpp/tensorrt_llm/common/stringUtils.cpp",
+        "cpp/tensorrt_llm/common/logger.cpp",
+        "cpp/tensorrt_llm/common/tllmException.cpp",
+        "cpp/pt_binging_fp8_quanttools.cpp"
+        ]
+
+    th_fp8_converter_extension = CUDAExtension(
+        name="gemm_op.fp8_dtype_converter",
+        sources=sources_fp8_converter,
+        extra_compile_args={"nvcc": NVCC_FLAGS, "cxx": CXX_FLAGS},
+        include_dirs=include_path
+    )
+    ext_modules.append(th_fp8_converter_extension)
+
+
 
 
 
