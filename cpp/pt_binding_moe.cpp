@@ -393,9 +393,9 @@ Tensor run_moe_fc_helper(Tensor                            input_activations, //
         moe_runner.setTactic(gemm_config);
     }
 
-    long int bytes        = moe_runner.getWorkspaceSize(num_rows, hidden_size, inter_size, num_experts, k, fc1_activation_type, moe_parallel_config);
+    static long int bytes        = moe_runner.getWorkspaceSize(num_rows, hidden_size, inter_size, num_experts, k, fc1_activation_type, moe_parallel_config);
 
-    auto workspace_tensor = torch::empty({bytes * 4}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
+    static auto workspace_tensor = torch::empty({bytes * 8}, torch::dtype(torch::kInt8).device(torch::kCUDA).requires_grad(false));
     char* workspace_ptr   = get_ptr<char>(workspace_tensor);
 
     const at::ScalarType _st = input_activations.scalar_type();
