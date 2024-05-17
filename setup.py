@@ -150,7 +150,9 @@ include_path = []
 include_path.append(os.path.join(base_dir, '3rdparty/cutlass/include/'))
 include_path.append(os.path.join(base_dir, 'cpp/'))
 include_path.append(os.path.join(base_dir, 'cpp/tensorrt_llm/cutlass_extensions/include/'))
-include_path.append("/usr/local/tensorrt/include/")
+# include_path.append("/usr/local/tensorrt/include/")
+include_path.append(os.path.join(base_dir, '3rdparty/tensorrt/include/'))
+
 
 sources_moe=["cpp/tensorrt_llm/kernels/cutlass_kernels/cutlass_heuristic.cpp",
         "cpp/tensorrt_llm/kernels/mixtureOfExperts/moe_kernels.cu",

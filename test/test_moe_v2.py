@@ -52,7 +52,7 @@ class TestMoe(unittest.TestCase):
   
   def generate_inputs(self, num_rows, active_rows, hidden_size, num_experts, dtype, quant_type):
     inputs = dict()
-    inputs["input_activations"] = random_cuda_tensor([num_rows, hidden_size], dtype, mean=0, std=0.02)
+    inputs["input_activations"] = random_cuda_tensor([num_rows, hidden_size], dtype, mean=0, std=0.2)
     inputs["gating_output"] = random_cuda_tensor([num_rows, num_experts], dtype)
     return inputs
   
@@ -63,29 +63,31 @@ class TestMoe(unittest.TestCase):
       from gemm_op import gemm_op_utils
 
     weights["fc1_expert_weights_for_ref"] = random_cuda_tensor([num_experts, hidden_size, inter_size], dtype, mean=0, std=0.02)
-    # fc1_weight = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_fc1_weight_fp.pt')
-    # fc1_weight = fc1_weight.to(weights["fc1_expert_weights_for_ref"].dtype).to(weights["fc1_expert_weights_for_ref"].device)
-    # weights["fc1_expert_weights_for_ref"] =  fc1_weight
     weights["fc1_expert_weights_for_ft"] = weights["fc1_expert_weights_for_ref"]
     
     if quantize:
-      _,weight_quant,weight_scale = gemm_op_utils.symmetric_quantize_last_axis_of_batched_matrix(weights["fc1_expert_weights_for_ref"].cpu(), 0 if quant_type == torch.int8 else 1)
+      unprocess_weight,weight_quant,weight_scale = gemm_op_utils.symmetric_quantize_last_axis_of_batched_matrix(weights["fc1_expert_weights_for_ref"].cpu(), 0 if quant_type == torch.int8 else 1)
       weights["fc1_expert_weights_for_ft_scale"] = weight_scale.to(weights["fc1_expert_weights_for_ft"].device)
       weights["fc1_expert_weights_for_ft"] = weight_quant.to(weights["fc1_expert_weights_for_ft"].device)
+      if quant_type == torch.quint4x2:
+        unprocess_weight = gemm_op_utils.unpack_int4_packed_tensor_to_int8(unprocess_weight)
+      w_dequant = unprocess_weight.to(weight_scale.dtype) * weight_scale.unsqueeze(1)
+      weights["fc1_expert_weights_for_ref"] = w_dequant.to(weights["fc1_expert_weights_for_ref"].device)
     else:
       weights["fc1_expert_weights_for_ft_scale"] = None
 
     weights["fc2_expert_weights_for_ref"] = random_cuda_tensor([num_experts, inter_size, hidden_size], dtype, mean=0, std=0.02)
-    # fc2_weight = torch.load('/mnt/infra/haoran.lin2/vllm-moe/test_fc2_weight_fp.pt')
-    # fc2_weight = fc2_weight.to(weights["fc2_expert_weights_for_ref"].dtype).to(weights["fc2_expert_weights_for_ref"].device)
-    # weights["fc2_expert_weights_for_ref"] =  fc2_weight
     weights["fc2_expert_weights_for_ft"] = weights["fc2_expert_weights_for_ref"]
 
 
     if quantize:
-      _,weight_quant,weight_scale = gemm_op_utils.symmetric_quantize_last_axis_of_batched_matrix(weights["fc2_expert_weights_for_ft"].cpu(), 0 if quant_type == torch.int8 else 1)
+      unprocess_weight,weight_quant,weight_scale = gemm_op_utils.symmetric_quantize_last_axis_of_batched_matrix(weights["fc2_expert_weights_for_ft"].cpu(), 0 if quant_type == torch.int8 else 1)
       weights["fc2_expert_weights_for_ft_scale"] = weight_scale.to(weights["fc2_expert_weights_for_ft"].device)
       weights["fc2_expert_weights_for_ft"] = weight_quant.to(weights["fc2_expert_weights_for_ft"].device)
+      if quant_type == torch.quint4x2:
+        unprocess_weight = gemm_op_utils.unpack_int4_packed_tensor_to_int8(unprocess_weight)
+      w_dequant = unprocess_weight.to(weight_scale.dtype) * weight_scale.unsqueeze(1)
+      weights["fc2_expert_weights_for_ref"] = w_dequant.to(weights["fc2_expert_weights_for_ref"].device)
     else:
       weights["fc2_expert_weights_for_ft_scale"] = None
     return weights
@@ -178,13 +180,18 @@ class TestMoe(unittest.TestCase):
   # def test_moe_bf16_gelu(self):
   #   self.moe_test_helper(torch.bfloat16, torch.int8, rtol=1e-3, atol=0.05, \
   #                        activation_str="silu", \
-  #                        experts_list=[32], hidden_sizes=[1024, 2048], \
-  #                        inter_sizes=[4096])
+  #                        experts_list=[160], hidden_sizes=[5120], \
+  #                        inter_sizes=[1536])
   def test_moe_bf16_gelu(self):
     self.moe_test_helper(torch.bfloat16, torch.quint4x2, rtol=1e-3, atol=0.05, \
                          activation_str="silu", \
-                         experts_list=[8], hidden_sizes=[4096], \
-                         inter_sizes=[14336])
+                         experts_list=[8], hidden_sizes=[5120], \
+                         inter_sizes=[1536])
+  # def test_moe_bf16_gelu(self):
+  #   self.moe_test_helper(torch.bfloat16, torch.quint4x2, rtol=1e-3, atol=0.05, \
+  #                        activation_str="Swiglu", \
+  #                        experts_list=[8], hidden_sizes=[5120], \
+  #                        inter_sizes=[1536])
 
 
 if __name__ == '__main__':
