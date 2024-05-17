@@ -645,8 +645,9 @@ void symmetric_quantize(int8_t* processed_quantized_weight, int8_t* unprocessed_
     std::vector<float> per_col_max(num_cols);
 
     for (int expert = 0; expert < num_experts; ++expert)
-    {
-        const WeightType* current_weight = input_weight_ptr + expert * input_mat_size;
+    {   
+        int64_t index_shift = (int64_t)expert * (int64_t)input_mat_size;
+        const WeightType* current_weight = input_weight_ptr + index_shift;
         int8_t* current_quantized_weight = unprocessed_quantized_weight + expert * quantized_mat_size;
 
         // First we find the per column max for this expert weight.
