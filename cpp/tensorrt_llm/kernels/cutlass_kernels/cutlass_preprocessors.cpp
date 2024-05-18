@@ -640,7 +640,7 @@ void symmetric_quantize(int8_t* processed_quantized_weight, int8_t* unprocessed_
 
     const int input_mat_size = num_rows * num_cols;
     const int quantized_mat_size = num_rows * bytes_per_out_col;
-    const float quant_range_scale = 1.f / float(1 << (bits_in_type - 1));
+    const float quant_range_scale = 1.f / float((1 << (bits_in_type - 1)) - 1);
 
     std::vector<float> per_col_max(num_cols);
 
