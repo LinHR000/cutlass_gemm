@@ -231,6 +231,90 @@ std::vector<Tensor> symmetric_quantize_helper(
     return std::vector<Tensor>{processed_quantized_weight, scales};
 }
 
+
+std::vector<Tensor> symmetric_quantize_helper_by_scale(
+    Tensor weight, Tensor scales, torch::ScalarType quant_type, bool return_unprocessed_quantized_tensor)
+{
+    CHECK_CPU(weight);
+    CHECK_CONTIGUOUS(weight);
+    TORCH_CHECK(weight.numel() != 0, "weight should not be empty tensor");
+    TORCH_CHECK(weight.dim() == 2 || weight.dim() == 3, "Invalid dim. The dim of weight should be 2 or 3");
+
+    auto _st = weight.scalar_type();
+    TORCH_CHECK(_st == torch::kFloat32 || _st == torch::kFloat16 || _st == torch::kBFloat16,
+        "Invalid datatype. Weight must be FP16 or BF16");
+    check_quant_type_allowed(quant_type);
+    QuantType ft_quant_type = get_ft_quant_type(quant_type);
+
+    const size_t num_experts = weight.dim() == 2 ? 1 : weight.size(0);
+    const size_t num_rows = weight.size(-2);
+    const size_t num_cols = weight.size(-1);
+
+    const size_t bits_in_type = get_bits_in_quant_type(ft_quant_type);
+    const size_t bytes_per_out_col = num_cols * bits_in_type / 8;
+
+    const size_t input_mat_size = num_rows * num_cols;
+    const size_t quantized_mat_size = num_rows * bytes_per_out_col;
+
+    std::vector<int64_t> quantized_weight_shape;
+    std::vector<int64_t> scale_shape;
+    if (weight.dim() == 2)
+    {
+        quantized_weight_shape = {int64_t(num_rows), int64_t(bytes_per_out_col)};
+        scale_shape = {int64_t(num_cols)};
+    }
+    else if (weight.dim() == 3)
+    {
+        quantized_weight_shape = {int64_t(num_experts), int64_t(num_rows), int64_t(bytes_per_out_col)};
+        scale_shape = {int64_t(num_experts), int64_t(num_cols)};
+    }
+    else
+    {
+        TORCH_CHECK(false, "Invalid weight dimension. Weight must have dim 2 or 3");
+    }
+
+    Tensor unprocessed_quantized_weight
+        = torch::empty(quantized_weight_shape, torch::dtype(torch::kInt8).device(torch::kCPU).requires_grad(false));
+
+    Tensor processed_quantized_weight = torch::empty_like(unprocessed_quantized_weight);
+
+    // Tensor scales = torch::empty(scale_shape, torch::dtype(weight.dtype()).device(torch::kCPU).requires_grad(false));
+
+    int8_t* unprocessed_quantized_weight_ptr = get_ptr<int8_t>(unprocessed_quantized_weight);
+    int8_t* processed_quantized_weight_ptr = get_ptr<int8_t>(processed_quantized_weight);
+
+    if (weight.scalar_type() == at::ScalarType::Float)
+    {
+        symmetric_quantize_by_scale<float, float>(processed_quantized_weight_ptr, unprocessed_quantized_weight_ptr,
+            get_ptr<float>(scales), get_ptr<const float>(weight), {num_experts, num_rows, num_cols}, ft_quant_type);
+    }
+    else if (weight.scalar_type() == at::ScalarType::Half)
+    {
+        symmetric_quantize_by_scale<half, half>(processed_quantized_weight_ptr, unprocessed_quantized_weight_ptr,
+            get_ptr<half>(scales), get_ptr<const half>(weight), {num_experts, num_rows, num_cols}, ft_quant_type);
+    }
+#ifdef ENABLE_BF16
+    else if (weight.scalar_type() == at::ScalarType::BFloat16)
+    {
+        symmetric_quantize_by_scale<__nv_bfloat16, __nv_bfloat16>(processed_quantized_weight_ptr,
+            unprocessed_quantized_weight_ptr, get_ptr<__nv_bfloat16>(scales), get_ptr<const __nv_bfloat16>(weight),
+            {num_experts, num_rows, num_cols}, ft_quant_type);
+    }
+#endif
+    else
+    {
+        TORCH_CHECK(false, "Invalid datatype. Weight must be BF16/FP16");
+    }
+
+    if (return_unprocessed_quantized_tensor)
+    {
+        return std::vector<Tensor>{unprocessed_quantized_weight, processed_quantized_weight, scales};
+    }
+
+    return std::vector<Tensor>{processed_quantized_weight, scales};
+}
+
+
 std::vector<Tensor> symmetric_quantize_last_axis_of_batched_matrix(Tensor weight, torch::ScalarType quant_type)
 {
     return symmetric_quantize_helper(weight, quant_type, false);
@@ -243,6 +327,12 @@ std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix(Tensor weigh
 {
     torch::ScalarType quant_type = (quant_mode == 0) ?  torch::kInt8 : at::ScalarType::QUInt4x2;
     return symmetric_quantize_helper(weight, quant_type, true);
+}
+
+std::vector<Tensor> _symmetric_quantize_last_axis_of_batched_matrix_by_scale(Tensor weight, Tensor scales, int quant_mode)
+{
+    torch::ScalarType quant_type = (quant_mode == 0) ?  torch::kInt8 : at::ScalarType::QUInt4x2;
+    return symmetric_quantize_helper_by_scale(weight, scales, quant_type, true);
 }
 
 Tensor add_bias_and_interleave_int4s(Tensor weight)

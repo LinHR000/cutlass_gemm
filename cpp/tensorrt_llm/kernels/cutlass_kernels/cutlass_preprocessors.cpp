@@ -723,6 +723,99 @@ void symmetric_quantize(int8_t* processed_quantized_weight, int8_t* unprocessed_
     preprocess_weights_for_mixed_gemm(processed_quantized_weight, unprocessed_quantized_weight, shape, quant_type);
 }
 
+template <typename ComputeType, typename WeightType>
+void symmetric_quantize_by_scale(int8_t* processed_quantized_weight, int8_t* unprocessed_quantized_weight,
+    ComputeType* scale_ptr, const WeightType* input_weight_ptr, const std::vector<size_t>& shape, QuantType quant_type)
+{
+
+    TLLM_CHECK_WITH_INFO(processed_quantized_weight, "Processed quantized tensor is NULL");
+    TLLM_CHECK_WITH_INFO(scale_ptr, "Scale output pointer is NULL");
+    TLLM_CHECK_WITH_INFO(input_weight_ptr, "Input weight pointer is NULL");
+
+    TLLM_CHECK_WITH_INFO(shape.size() == 2 || shape.size() == 3, "Shape must be 2-D or 3-D");
+    const size_t num_experts = shape.size() == 2 ? 1 : shape[0];
+    const size_t num_rows = shape.size() == 2 ? shape[0] : shape[1];
+    const size_t num_cols = shape.size() == 2 ? shape[1] : shape[2];
+
+    const int bits_in_type = get_bits_in_quant_type(quant_type);
+    const int bytes_per_out_col = num_cols * bits_in_type / 8;
+
+    std::vector<int8_t> weight_buf;
+    if (unprocessed_quantized_weight == nullptr)
+    {
+        weight_buf.resize(num_experts * num_rows * num_cols);
+        unprocessed_quantized_weight = weight_buf.data();
+    }
+
+    const int input_mat_size = num_rows * num_cols;
+    const int quantized_mat_size = num_rows * bytes_per_out_col;
+    const float quant_range_scale = 1.f / float((1 << (bits_in_type - 1)) - 1);
+
+    std::vector<float> per_col_max(num_cols);
+
+    for (int expert = 0; expert < num_experts; ++expert)
+    {   
+        int64_t index_shift = (int64_t)expert * (int64_t)input_mat_size;
+        const WeightType* current_weight = input_weight_ptr + index_shift;
+        int8_t* current_quantized_weight = unprocessed_quantized_weight + expert * quantized_mat_size;
+
+        // Then, we construct the scales
+        ComputeType* current_scales = scale_ptr + expert * num_cols;
+        for (int jj = 0; jj < num_cols; ++jj)
+        {
+            per_col_max[jj] = float(current_scales[jj]);
+        }
+
+        // Finally, construct the weights.
+        for (int ii = 0; ii < num_rows; ++ii)
+        {
+            int8_t* current_quantized_weight_row = current_quantized_weight + ii * bytes_per_out_col;
+            const WeightType* current_weight_row = current_weight + ii * num_cols;
+            for (int jj = 0; jj < bytes_per_out_col; ++jj)
+            {
+
+                if (quant_type == QuantType::INT8_WEIGHT_ONLY)
+                {
+                    const float col_scale = per_col_max[jj];
+                    const float weight_elt = float(current_weight_row[jj]);
+                    const float scaled_weight = round(weight_elt / col_scale);
+                    const int8_t clipped_weight = int8_t(std::max(-128.f, std::min(127.f, scaled_weight)));
+                    current_quantized_weight_row[jj] = clipped_weight;
+                }
+                else if (quant_type == QuantType::PACKED_INT4_WEIGHT_ONLY)
+                {
+
+                    // We will pack two int4 elements per iteration of the inner loop.
+                    int8_t packed_int4s = 0;
+                    for (int packed_idx = 0; packed_idx < 2; ++packed_idx)
+                    {
+                        const int input_idx = 2 * jj + packed_idx;
+                        if (input_idx < num_cols)
+                        {
+                            const float col_scale = per_col_max[input_idx];
+                            const float weight_elt = float(current_weight_row[input_idx]);
+                            const float scaled_weight = round(weight_elt / col_scale);
+                            int int_weight = int(scaled_weight);
+                            const int8_t clipped_weight = std::max(-8, std::min(7, int_weight));
+
+                            // Kill the sign extension bits (hence 0x0F mask) then shift to upper bits
+                            // if packing the second int4 and or the bits into the final result.
+                            packed_int4s |= ((clipped_weight & 0x0F) << (4 * packed_idx));
+                        }
+                    }
+                    current_quantized_weight_row[jj] = packed_int4s;
+                }
+                else
+                {
+                    TLLM_CHECK_WITH_INFO(false, "Unsupported quantization type");
+                }
+            }
+        }
+    }
+
+    preprocess_weights_for_mixed_gemm(processed_quantized_weight, unprocessed_quantized_weight, shape, quant_type);
+}
+
 template void symmetric_quantize<half, float>(
     int8_t*, int8_t*, half*, const float*, const std::vector<size_t>&, QuantType);
 
@@ -763,6 +856,50 @@ template void symmetric_quantize<half, __nv_bfloat16>(
 template void symmetric_quantize<__nv_bfloat16, float>(
     int8_t*, __nv_bfloat16*, const float*, const std::vector<size_t>&, QuantType);
 #endif
+
+
+
+template void symmetric_quantize_by_scale<half, float>(
+    int8_t*, int8_t*, half*, const float*, const std::vector<size_t>&, QuantType);
+
+template void symmetric_quantize_by_scale<half, half>(
+    int8_t*, int8_t*, half*, const half*, const std::vector<size_t>&, QuantType);
+
+#ifdef ENABLE_BF16
+template void symmetric_quantize_by_scale<__nv_bfloat16, __nv_bfloat16>(
+    int8_t*, int8_t*, __nv_bfloat16*, const __nv_bfloat16*, const std::vector<size_t>&, QuantType);
+
+template void symmetric_quantize_by_scale<__nv_bfloat16, float>(
+    int8_t*, int8_t*, __nv_bfloat16*, const float*, const std::vector<size_t>&, QuantType);
+#endif
+
+template <typename ComputeType, typename WeightType>
+void symmetric_quantize_by_scale(int8_t* processed_quantized_weight, ComputeType* scale_ptr, const WeightType* input_weight_ptr,
+    const std::vector<size_t>& shape, QuantType quant_type)
+{
+    symmetric_quantize_by_scale(processed_quantized_weight, nullptr, scale_ptr, input_weight_ptr, shape, quant_type);
+}
+
+template void symmetric_quantize_by_scale<float, float>(int8_t*, float*, const float*, const std::vector<size_t>&, QuantType);
+
+template void symmetric_quantize_by_scale<half, float>(int8_t*, half*, const float*, const std::vector<size_t>&, QuantType);
+
+template void symmetric_quantize_by_scale<half, half>(int8_t*, half*, const half*, const std::vector<size_t>&, QuantType);
+
+#ifdef ENABLE_BF16
+template void symmetric_quantize_by_scale<__nv_bfloat16, __nv_bfloat16>(
+    int8_t*, __nv_bfloat16*, const __nv_bfloat16*, const std::vector<size_t>&, QuantType);
+
+template void symmetric_quantize_by_scale<__nv_bfloat16, half>(
+    int8_t*, __nv_bfloat16*, const half*, const std::vector<size_t>&, QuantType);
+
+template void symmetric_quantize_by_scale<half, __nv_bfloat16>(
+    int8_t*, half*, const __nv_bfloat16*, const std::vector<size_t>&, QuantType);
+
+template void symmetric_quantize_by_scale<__nv_bfloat16, float>(
+    int8_t*, __nv_bfloat16*, const float*, const std::vector<size_t>&, QuantType);
+#endif
+
 
 } // namespace cutlass_kernels
 } // namespace kernels

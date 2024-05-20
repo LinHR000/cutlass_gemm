@@ -59,6 +59,15 @@ template <typename ComputeType, typename WeightType>
 void symmetric_quantize(int8_t* processed_quantized_weight, int8_t* unprocessed_quantized_weight,
     ComputeType* scale_ptr, const WeightType* input_weight_ptr, const std::vector<size_t>& shape, QuantType quant_type);
 
+template <typename ComputeType, typename WeightType>
+void symmetric_quantize_by_scale(int8_t* processed_quantized_weight, ComputeType* scale_ptr, const WeightType* input_weight_ptr,
+    const std::vector<size_t>& shape, QuantType quant_type);
+
+
+template <typename ComputeType, typename WeightType>
+void symmetric_quantize_by_scale(int8_t* processed_quantized_weight, int8_t* unprocessed_quantized_weight,
+    ComputeType* scale_ptr, const WeightType* input_weight_ptr, const std::vector<size_t>& shape, QuantType quant_type);
+
 } // namespace cutlass_kernels
 } // namespace kernels
 } // namespace tensorrt_llm

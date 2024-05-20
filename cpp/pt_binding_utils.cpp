@@ -18,6 +18,10 @@ m.def(
     &torch_ext::_symmetric_quantize_last_axis_of_batched_matrix,
     "Compute the attention between an input query and the cached key/value tensors");
 m.def(
+    "symmetric_quantize_last_axis_of_batched_matrix_by_scale",
+    &torch_ext::_symmetric_quantize_last_axis_of_batched_matrix_by_scale,
+    "Compute the attention between an input query and the cached key/value tensors");
+m.def(
     "preprocess_weights_for_mixed_gemm",
     &torch_ext::preprocess_weights_for_mixed_gemm_,
     "Compute the attention between an input query and the cached key/value tensors");
