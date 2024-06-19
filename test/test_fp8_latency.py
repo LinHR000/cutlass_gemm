@@ -3,9 +3,9 @@ import time
 import torch
 import torch.nn as nn
 from typing import Tuple
-from gemm_op import gemm_op_fp8,fp8_dtype_converter,fp8_gemm_v2
-import transformer_engine.pytorch as te
-from transformer_engine.common import recipe
+from gemm_op import gemm_op_fp8,fp8_dtype_converter
+# import transformer_engine.pytorch as te
+# from transformer_engine.common import recipe
 from gemm_op import gemm_op_utils
 import numpy as np
 import marlin
@@ -60,11 +60,11 @@ thread_k = -1
 thread_n = -1
 groupsize = 128
 
-shape_list = [[7168,5120],[5120,5120],[5120, 13824 * 2],[13824, 5120]]
-shape_list = [[8192*3,8192],[8192,8192],[8192, 24576 * 2],[24576, 8192]]
+shape_list = [[7168,5120],[5120,5120],[5120, 13824 * 2],[13824, 5120]] # 13B
+shape_list = [[9216,7168],[7168,7168],[7168, 20480 * 2],[20480, 5120]] # 34B
+# shape_list = [[8192*3,8192],[8192,8192],[8192, 24576 * 2],[24576, 8192]] # 72B
+# input_len = [4, 8, 16,32,64,128,256,512,1024,2048,4096,8192]
 input_len = [16,32,64,128,256,512,1024,2048,4096,8192]
-input_len = [128,256,512,1024,2048,4096,8192]
-input_len = [8]
 
 def test_fp8_latency(
     m=16,
@@ -87,7 +87,7 @@ def test_fp8_latency(
     amax_d=468.0
     repeate_num = 3
 
-    fp8_recipe = recipe.DelayedScaling(margin=0, interval=1, fp8_format=recipe.Format.E4M3)
+    # fp8_recipe = recipe.DelayedScaling(margin=0, interval=1, fp8_format=recipe.Format.E4M3)
 
     for m in input_len:
         total_time_torch = 0
@@ -111,9 +111,9 @@ def test_fp8_latency(
 
 
             nn_linear = nn.Linear(k, n, bias=False).half().cuda()
-            te_linear = te.Linear(k, n, bias=True).half().cuda()
+            # te_linear = te.Linear(k, n, bias=True).half().cuda()
             nn_linear.weight.data.copy_(weight)
-            te_linear.weight.data.copy_(weight)
+            # te_linear.weight.data.copy_(weight)
             for i in range(10):
                 nn_linear(input)
             time_tmp = 0
@@ -154,42 +154,42 @@ def test_fp8_latency(
                 time_tmp /=repeate_num
                 total_time_fp8 +=time_tmp
 
-                for i in range(10):
-                    with torch.no_grad():
-                        with te.fp8_autocast(enabled=True, fp8_recipe=fp8_recipe):
-                            out_te = te_linear(input)
-                time_tmp = 0
-                for i in range(repeate_num):
-                    torch.cuda.synchronize()
-                    time_s = time.time()
-                    with torch.no_grad():
-                        with te.fp8_autocast(enabled=True, fp8_recipe=fp8_recipe):
-                            out_te = te_linear(input)
-                    torch.cuda.synchronize()
-                    time_e = time.time()
-                    time_tmp +=(time_e - time_s) * 1000
-                time_tmp /=repeate_num
-                total_time_te +=time_tmp
+                # for i in range(10):
+                #     with torch.no_grad():
+                #         with te.fp8_autocast(enabled=True, fp8_recipe=fp8_recipe):
+                #             out_te = te_linear(input)
+                # time_tmp = 0
+                # for i in range(repeate_num):
+                #     torch.cuda.synchronize()
+                #     time_s = time.time()
+                #     with torch.no_grad():
+                #         with te.fp8_autocast(enabled=True, fp8_recipe=fp8_recipe):
+                #             out_te = te_linear(input)
+                #     torch.cuda.synchronize()
+                #     time_e = time.time()
+                #     time_tmp +=(time_e - time_s) * 1000
+                # time_tmp /=repeate_num
+                # total_time_te +=time_tmp
             # ====================
-            for i in range(10):
-                marlin.mul(A, B, input, s, workspace, thread_k, thread_n, -1)
-            time_tmp = 0
-            for i in range(repeate_num):
-                torch.cuda.synchronize()
-                time_s = time.time()
-                marlin.mul(A, B, input, s, workspace, thread_k, thread_n, -1)
-                torch.cuda.synchronize()
-                time_e = time.time()
-                time_tmp +=(time_e - time_s) * 1000
-            time_tmp /=repeate_num
-            total_time_marlin +=time_tmp
+            # for i in range(10):
+            #     marlin.mul(A, B, input, s, workspace, thread_k, thread_n, -1)
+            # time_tmp = 0
+            # for i in range(repeate_num):
+            #     torch.cuda.synchronize()
+            #     time_s = time.time()
+            #     marlin.mul(A, B, input, s, workspace, thread_k, thread_n, -1)
+            #     torch.cuda.synchronize()
+            #     time_e = time.time()
+            #     time_tmp +=(time_e - time_s) * 1000
+            # time_tmp /=repeate_num
+            # total_time_marlin +=time_tmp
 
         print("#"*20 + f"{m}" + "#"*20)
         print(f"torch Linear latency  : {round(total_time_torch,4)}")
         if m>=16:
             print(f"fp8 Linear latency    : {round(total_time_fp8,4)}, speed_up : {round((total_time_torch-total_time_fp8) / total_time_torch * 100, 2)}%")
-            print(f"TE Linear latency     : {round(total_time_te,4)}, speed_up : {round((total_time_torch-total_time_te) / total_time_torch * 100, 2)}%")
-        print(f"Marlin Linear latency : {round(total_time_marlin,4)}, speed_up : {round((total_time_torch-total_time_marlin) / total_time_torch * 100, 2)}%")
+            # print(f"TE Linear latency     : {round(total_time_te,4)}, speed_up : {round((total_time_torch-total_time_te) / total_time_torch * 100, 2)}%")
+        # print(f"Marlin Linear latency : {round(total_time_marlin,4)}, speed_up : {round((total_time_torch-total_time_marlin) / total_time_torch * 100, 2)}%")
 
 test_fp8_latency()
 
