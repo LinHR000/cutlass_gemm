@@ -109,7 +109,12 @@ Tensor fp8_gemm(
                 workspaceSize); //size_t workspace
                 // nullptr, //workspace
                 // 0); //size_t workspace
-    // cudaFree(workspace);
+    cudaFree(workspace);
+    cudaFree(d_a_scale);
+    cudaFree(d_b_scale);
+    cudaFree(d_c_scale);
+    cudaFree(d_d_scale);
+    cudaFree(d_amax_d_scale);
     return output_tensor;
 }
 

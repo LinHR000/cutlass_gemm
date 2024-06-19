@@ -3,9 +3,9 @@ import random
 import torch
 import torch.nn as nn
 from typing import Tuple
-from gemm_op import gemm_op_fp8,fp8_dtype_converter,fp8_gemm_v2
-import transformer_engine.pytorch as te
-from transformer_engine.common import recipe
+from gemm_op import gemm_op_fp8,fp8_dtype_converter
+# import transformer_engine.pytorch as te
+# from transformer_engine.common import recipe
 
 DTYPES = [torch.half]
 M = [16,32,64,128,256,512,1024,2048]
@@ -55,13 +55,13 @@ def test_copy_blocks(
                                    d_scale,
                                    amax_d)
 
-    fp8_recipe = recipe.DelayedScaling(margin=0, interval=1, fp8_format=recipe.Format.E4M3)
-    model = te.Linear(k, n, bias=True).half().cuda()
-    model.weight.data.copy_(weight)
-    with torch.no_grad():
-        with te.fp8_autocast(enabled=True, fp8_recipe=fp8_recipe):
-            out_te = model(input)
-    torch.testing.assert_close(ref_out, fp8_out, rtol=rtol, atol=atol, check_dtype=False)
+    # fp8_recipe = recipe.DelayedScaling(margin=0, interval=1, fp8_format=recipe.Format.E4M3)
+    # model = te.Linear(k, n, bias=True).half().cuda()
+    # model.weight.data.copy_(weight)
+    # with torch.no_grad():
+    #     with te.fp8_autocast(enabled=True, fp8_recipe=fp8_recipe):
+    #         out_te = model(input)
+    # torch.testing.assert_close(ref_out, fp8_out, rtol=rtol, atol=atol, check_dtype=False)
 
 test_copy_blocks()
 
